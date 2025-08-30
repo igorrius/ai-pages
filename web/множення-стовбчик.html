@@ -1,0 +1,405 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Тренажер множення в стовпчик</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap');
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f3f4f6;
+        }
+        .digit-box {
+            display: inline-flex;
+            justify-content: center;
+            align-items: center;
+            width: 3rem;
+            height: 3rem;
+            font-size: 1.5rem;
+            font-weight: 500;
+            background-color: #e5e7eb;
+            border-radius: 0.5rem;
+            margin: 0.25rem;
+            transition: all 0.3s ease-in-out;
+            color: #374151;
+            box-sizing: border-box; /* Ensures padding and border are included in the element's total width and height */
+            border: 2px solid transparent; /* Prevents shifting when a border is added */
+        }
+        .carry-box {
+            position: absolute;
+            top: -1.5rem;
+            font-size: 0.9rem;
+            color: #ef4444;
+            font-weight: 700;
+            animation: pulse 1.5s infinite;
+        }
+        .highlight {
+            background-color: #d1fae5;
+            border-color: #10b981;
+            transform: scale(1.1);
+        }
+        .highlight-secondary {
+            background-color: #e0f2fe;
+            border-color: #3b82f6;
+        }
+        .line {
+            height: 2px;
+            background-color: #6b7280;
+            margin: 1rem 0;
+            width: 100%;
+        }
+        @keyframes pulse {
+            0% {
+                transform: scale(1);
+            }
+            50% {
+                transform: scale(1.2);
+            }
+            100% {
+                transform: scale(1);
+            }
+        }
+        #loading-indicator {
+            display: none;
+            text-align: center;
+            padding: 1rem;
+            color: #4b5563;
+        }
+    </style>
+</head>
+<body class="flex items-center justify-center min-h-screen p-4">
+
+    <div class="bg-white rounded-xl shadow-2xl p-8 max-w-2xl w-full">
+        <h1 class="text-3xl font-bold text-center mb-6 text-gray-800">Тренажер множення в стовпчик</h1>
+        <p class="text-center text-gray-600 mb-8">
+            Привіт! 👋 Давай навчимося множити великі числа разом! Введи два числа і натисни "Почати".
+        </p>
+
+        <div class="flex flex-col sm:flex-row items-center justify-center space-y-4 sm:space-y-0 sm:space-x-4 mb-8">
+            <input type="number" id="num1" class="w-full sm:w-auto px-4 py-2 text-center text-lg rounded-lg border-2 border-gray-300 focus:outline-none focus:border-blue-500" placeholder="Перше число (до 4 цифр)">
+            <span class="text-2xl text-gray-600 font-semibold">×</span>
+            <input type="number" id="num2" class="w-full sm:w-auto px-4 py-2 text-center text-lg rounded-lg border-2 border-gray-300 focus:outline-none focus:border-blue-500" placeholder="Друге число (до 3 цифр)">
+        </div>
+
+        <div class="flex justify-center space-x-4 mb-8">
+            <button id="startButton" class="bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-6 rounded-lg shadow-md transition-all duration-200">
+                Почати
+            </button>
+            <button id="nextButton" class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-6 rounded-lg shadow-md transition-all duration-200" style="display: none;">
+                Далі
+            </button>
+            <button id="resetButton" class="bg-gray-400 hover:bg-gray-500 text-white font-bold py-2 px-6 rounded-lg shadow-md transition-all duration-200" style="display: none;">
+                Почати знову
+            </button>
+        </div>
+
+        <div id="visualizer" class="flex flex-col items-center min-h-[300px] bg-gray-50 rounded-lg p-6 relative overflow-hidden">
+            <p id="message" class="text-center text-gray-500 mt-4">Введіть числа та натисніть "Почати".</p>
+        </div>
+    </div>
+
+    <script>
+        window.onload = function() {
+            const num1Input = document.getElementById('num1');
+            const num2Input = document.getElementById('num2');
+            const startButton = document.getElementById('startButton');
+            const nextButton = document.getElementById('nextButton');
+            const resetButton = document.getElementById('resetButton');
+            const visualizer = document.getElementById('visualizer');
+            const messageEl = document.getElementById('message');
+
+            let num1, num2;
+            let steps = [];
+            let currentStepIndex = 0;
+
+            // Simple modal-like message box
+            function showMessageBox(msg) {
+                const modal = document.createElement('div');
+                modal.className = 'fixed inset-0 bg-gray-900 bg-opacity-50 flex items-center justify-center p-4 z-50';
+                modal.innerHTML = `
+                    <div class="bg-white rounded-lg p-6 shadow-xl max-w-sm w-full text-center">
+                        <p class="text-lg font-semibold mb-4 text-gray-800">${msg}</p>
+                        <button id="closeModal" class="bg-blue-500 hover:bg-blue-600 text-white py-2 px-4 rounded-lg">ОК</button>
+                    </div>
+                `;
+                document.body.appendChild(modal);
+                document.getElementById('closeModal').onclick = () => document.body.removeChild(modal);
+            }
+
+            function clearVisualizer() {
+                visualizer.innerHTML = '';
+            }
+
+            // Function to render messages, supporting basic markdown for bolding
+            function showMessage(msg) {
+                let existingMsg = document.getElementById('message');
+                if (!existingMsg) {
+                    existingMsg = document.createElement('p');
+                    existingMsg.id = 'message';
+                    existingMsg.className = 'text-center text-gray-500 mt-4';
+                    visualizer.appendChild(existingMsg);
+                }
+                // Replace markdown bold with HTML bold and set innerHTML
+                existingMsg.innerHTML = msg.replace(/\*\*(.*?)\*\*/g, '<b>$1</b>');
+            }
+
+            function updateButtons() {
+                if (currentStepIndex === 0) {
+                    nextButton.style.display = 'inline-block';
+                    resetButton.style.display = 'none';
+                } else {
+                    nextButton.style.display = 'inline-block';
+                    resetButton.style.display = 'inline-block';
+                }
+
+                if (currentStepIndex >= steps.length - 1) {
+                    nextButton.style.display = 'none';
+                    resetButton.style.display = 'inline-block';
+                } else {
+                    nextButton.style.display = 'inline-block';
+                }
+            }
+
+            function renderStep(step) {
+                clearVisualizer();
+                const container = document.createElement('div');
+                container.className = 'flex flex-col items-end w-full';
+
+                const num1Len = String(num1).length;
+                
+                let maxLen = Math.max(num1Len, String(num2).length + 1);
+
+                // Determine max length from all numbers to ensure alignment
+                const finalResultLength = step.finalResult ? String(step.finalResult).length : 0;
+                maxLen = Math.max(maxLen, finalResultLength);
+                
+                step.partialProducts.forEach(product => {
+                    if (product) {
+                        maxLen = Math.max(maxLen, String(product).length);
+                    }
+                });
+
+                // Helper to create digit boxes with padding
+                const createDigitBoxes = (str, len) => {
+                    const digits = String(str).split('');
+                    const div = document.createElement('div');
+                    div.className = 'flex flex-row';
+                    // Calculate padding to ensure proper right alignment
+                    const paddingCount = len - digits.length;
+                    for (let i = 0; i < paddingCount; i++) {
+                        const emptyBox = document.createElement('div');
+                        emptyBox.className = 'digit-box';
+                        div.appendChild(emptyBox);
+                    }
+                    digits.forEach(d => {
+                        const digitBox = document.createElement('div');
+                        digitBox.className = 'digit-box';
+                        digitBox.textContent = d;
+                        div.appendChild(digitBox);
+                    });
+                    return div;
+                };
+
+                // Render num1
+                container.appendChild(createDigitBoxes(num1, maxLen));
+                
+                // Render num2
+                const num2Div = createDigitBoxes('× ' + num2, maxLen + 1);
+                num2Div.classList.add('mt-2');
+                const num2Digits = String(num2).split('');
+                if (step.highlightNum2Index !== undefined) {
+                    // Adjust index to account for the 'x ' and padding
+                    const highlightIndex = num2Div.children.length - 1 - (num2Digits.length - 1 - step.highlightNum2Index);
+                    const boxToHighlight = num2Div.children[highlightIndex];
+                    if (boxToHighlight) {
+                        boxToHighlight.classList.add('highlight');
+                    }
+                }
+                container.appendChild(num2Div);
+
+                const lineDiv = document.createElement('div');
+                lineDiv.className = 'line';
+                lineDiv.style.width = `${maxLen * 3.5 + 4}rem`;
+                container.appendChild(lineDiv);
+
+                // Render intermediate products
+                step.partialProducts.forEach((product, i) => {
+                    if (product !== null) {
+                        const productDiv = createDigitBoxes(product, maxLen);
+                        productDiv.classList.add('relative');
+                        if (step.highlightProductIndex !== undefined && i === step.highlightProductIndex) {
+                            productDiv.classList.add('highlight-secondary');
+                        }
+                        container.appendChild(productDiv);
+                    }
+                });
+                
+                // Render final result
+                if (step.finalResult !== undefined) {
+                    const lineDiv2 = document.createElement('div');
+                    lineDiv2.className = 'line';
+                    lineDiv2.style.width = `${maxLen * 3.5 + 4}rem`;
+                    container.appendChild(lineDiv2);
+                    
+                    const resultDiv = createDigitBoxes(step.finalResult, maxLen);
+                    container.appendChild(resultDiv);
+                }
+
+                // Render carries
+                if (step.carries) {
+                    step.carries.forEach(carry => {
+                        if (carry.value > 0) {
+                            const carryDiv = document.createElement('div');
+                            carryDiv.className = 'carry-box';
+                            carryDiv.textContent = carry.value;
+                            // Recalculate position based on maxLen
+                            const rightOffset = (maxLen - (String(num1).length - carry.position)) * 3.5 + 1.75;
+                            carryDiv.style.right = `${rightOffset}rem`;
+                            carryDiv.style.top = `${5 + carry.offset}rem`;
+                            container.appendChild(carryDiv);
+                        }
+                    });
+                }
+
+                visualizer.appendChild(container);
+                showMessage(step.message);
+            }
+
+            function generateSteps(n1, n2) {
+                const s1 = String(n1);
+                const s2 = String(n2);
+                steps = [];
+                const partialProducts = [];
+            
+                // Step 0: Initial setup
+                steps.push({
+                    message: `Чудово! ✨ Ми множимо **${n1}** на **${n2}**. Почнемо з найменшої цифри у другого числа.`,
+                    partialProducts: [],
+                });
+            
+                // Multiplication steps for each digit of num2
+                for (let i = s2.length - 1; i >= 0; i--) {
+                    const digit2 = parseInt(s2[i]);
+                    let carry = 0;
+                    let product = '';
+                    const carries = [];
+            
+                    // Add padding zeros for each new product line
+                    if (s2.length - 1 - i > 0) {
+                        product = '0'.repeat(s2.length - 1 - i);
+                    }
+            
+                    // Step 1: Start multiplying with the current digit
+                    steps.push({
+                        message: `Крок **${s2.length - i}**. Давай помножимо **${n1}** на **${digit2}**. Дивись, як ми це робимо по одній цифрі!`,
+                        partialProducts: [...partialProducts, null],
+                        highlightNum2Index: i,
+                        carries: [],
+                    });
+            
+                    // Multiply num1 by digit2, one digit at a time
+                    for (let j = s1.length - 1; j >= 0; j--) {
+                        const digit1 = parseInt(s1[j]);
+                        const tempProduct = (digit1 * digit2) + carry;
+                        const currentDigit = tempProduct % 10;
+                        carry = Math.floor(tempProduct / 10);
+                        product = currentDigit + product;
+                        
+                        if (carry > 0) {
+                            carries.push({
+                                value: carry,
+                                position: j,
+                                offset: 5 + (s2.length - 1 - i) * 3
+                            });
+                        }
+            
+                        // Step for each digit multiplication
+                        steps.push({
+                            message: `Помножимо **${digit1}** на **${digit2}**. Отримали **${tempProduct}**. Ми залишаємо **${currentDigit}** внизу, а **${carry}** переносимо на наступний розряд. ✨`,
+                            partialProducts: [...partialProducts, product], // Show partial progress
+                            highlightNum2Index: i,
+                            carries: [...carries],
+                        });
+                    }
+            
+                    if (carry > 0) {
+                        product = carry + product;
+                    }
+                    partialProducts[s2.length - 1 - i] = product;
+            
+                    // Step: After getting the full partial product
+                    steps.push({
+                        message: `Ми отримали повний частковий добуток для **${digit2}**: **${product}**. Це перший рядочок нашої відповіді.`,
+                        partialProducts: [...partialProducts],
+                        highlightProductIndex: s2.length - 1 - i,
+                        carries: [],
+                    });
+                }
+            
+                // Step: Summing up the partial products
+                steps.push({
+                    message: 'Майже готово! 💪 Тепер додамо всі наші часткові добутки, щоб отримати фінальну відповідь.',
+                    partialProducts: [...partialProducts],
+                });
+            
+                // Step: Final result
+                const finalResult = partialProducts.reduce((sum, current) => BigInt(sum) + BigInt(current), BigInt(0)).toString();
+                steps.push({
+                    message: `Вітаємо! 🎉 Остаточна відповідь: **${finalResult}**. Ти молодець!`,
+                    partialProducts: [...partialProducts],
+                    finalResult: finalResult,
+                });
+            }
+
+            startButton.addEventListener('click', () => {
+                const n1 = parseInt(num1Input.value);
+                const n2 = parseInt(num2Input.value);
+                
+                if (isNaN(n1) || isNaN(n2) || n1 <= 0 || n2 <= 0) {
+                    showMessageBox('Будь ласка, введіть додатні числа.');
+                    return;
+                }
+                
+                if (String(n1).length > 4 || String(n2).length > 3) {
+                    showMessageBox('Для наочності, будь ласка, використовуйте числа з не більше ніж 4 і 3 цифрами відповідно.');
+                    return;
+                }
+
+                num1 = n1;
+                num2 = n2;
+                currentStepIndex = 0;
+                generateSteps(num1, num2);
+                renderStep(steps[currentStepIndex]);
+                startButton.style.display = 'none';
+                nextButton.style.display = 'inline-block';
+                resetButton.style.display = 'inline-block';
+                updateButtons();
+            });
+
+            nextButton.addEventListener('click', () => {
+                if (currentStepIndex < steps.length - 1) {
+                    currentStepIndex++;
+                    renderStep(steps[currentStepIndex]);
+                } else {
+                    showMessage('Це останній крок.');
+                }
+                updateButtons();
+            });
+
+            resetButton.addEventListener('click', () => {
+                num1Input.value = '';
+                num2Input.value = '';
+                startButton.style.display = 'inline-block';
+                nextButton.style.display = 'none';
+                resetButton.style.display = 'none';
+                currentStepIndex = 0;
+                steps = [];
+                clearVisualizer();
+                showMessage('Введіть числа та натисніть "Почати".');
+            });
+        };
+    </script>
+</body>
+</html>
