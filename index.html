@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AI Pages — Індекс</title>
+  <meta name="description" content="Збірка корисних сторінок та інструментів цього репозиторію." />
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ccircle cx='50' cy='50' r='45' fill='%231f2937'/%3E%3Ctext x='50' y='58' font-size='44' text-anchor='middle' fill='white' font-family='Arial'%3EAI%3C/text%3E%3C/svg%3E" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
+    body { font-family: 'Inter', sans-serif; }
+    .card:hover { transform: translateY(-2px); }
+  </style>
+</head>
+<body class="min-h-screen bg-gray-100 text-gray-800">
+  <header class="bg-white/80 backdrop-blur sticky top-0 border-b border-gray-200">
+    <div class="max-w-5xl mx-auto px-4 py-4 flex items-center justify-between">
+      <h1 class="text-xl sm:text-2xl font-bold">AI Pages</h1>
+      <span id="updated" class="text-sm text-gray-500"></span>
+    </div>
+  </header>
+
+  <main class="max-w-5xl mx-auto px-4 py-8">
+    <section class="mb-6">
+      <p class="text-gray-600">Вітання! Нижче — корисні сторінки з цього репозиторію. Оберіть інструмент або матеріал.</p>
+    </section>
+
+    <!-- Розділи -->
+    <section class="space-y-8">
+      <!-- Розділ: Фінанси / Money -->
+      <div>
+        <div class="flex items-baseline justify-between mb-3">
+          <h2 class="text-lg sm:text-xl font-semibold">Фінанси</h2>
+          <a class="text-sm text-indigo-600 hover:text-indigo-800" href="./web/">/web</a>
+        </div>
+        <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          <a class="card block rounded-xl border border-gray-200 bg-white p-5 shadow-sm transition hover:shadow-md" href="./web/money/invest-calc.html">
+            <div class="flex items-start justify-between">
+              <div>
+                <h3 class="font-semibold">Інвестиційний калькулятор</h3>
+                <p class="mt-1 text-sm text-gray-600">Розрахунок складних відсотків та регулярних поповнень, графік зростання.</p>
+              </div>
+              <span class="ml-3 inline-flex items-center rounded-full bg-green-50 px-2.5 py-0.5 text-xs font-medium text-green-700">інструмент</span>
+            </div>
+          </a>
+        </div>
+      </div>
+
+      <!-- Розділ: Математика / Навчання -->
+      <div>
+        <div class="flex items-baseline justify-between mb-3">
+          <h2 class="text-lg sm:text-xl font-semibold">Навчання • Математика</h2>
+        </div>
+        <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          <a class="card block rounded-xl border border-gray-200 bg-white p-5 shadow-sm transition hover:shadow-md" href="./web/%D0%BC%D0%BD%D0%BE%D0%B6%D0%B5%D0%BD%D0%BD%D1%8F-%D1%81%D1%82%D0%BE%D0%B2%D0%B1%D1%87%D0%B8%D0%BA.html">
+            <div class="flex items-start justify-between">
+              <div>
+                <h3 class="font-semibold">Тренажер множення в стовпчик</h3>
+                <p class="mt-1 text-sm text-gray-600">Покрокова візуалізація множення великих чисел.</p>
+              </div>
+              <span class="ml-3 inline-flex items-center rounded-full bg-blue-50 px-2.5 py-0.5 text-xs font-medium text-blue-700">навчання</span>
+            </div>
+          </a>
+        </div>
+      </div>
+    </section>
+
+    <!-- Дрібниці -->
+    <section class="mt-10 text-sm text-gray-500">
+      <p>Порада: додайте нові сторінки у відповідні підпапки та оновіть цей індекс для швидкого доступу.</p>
+    </section>
+  </main>
+
+  <footer class="mt-12 border-t border-gray-200">
+    <div class="max-w-5xl mx-auto px-4 py-6 text-sm text-gray-500 flex flex-col sm:flex-row sm:items-center sm:justify-between">
+      <span>© <span id="year"></span> AI Pages</span>
+      <a class="mt-2 sm:mt-0 text-indigo-600 hover:text-indigo-800" href="https://github.com/igorrius" target="_blank" rel="noopener">GitHub</a>
+    </div>
+  </footer>
+
+  <script>
+    // Відображення дати оновлення та року
+    (function() {
+      const updated = document.getElementById('updated');
+      const dt = new Date();
+      const two = (n) => n.toString().padStart(2, '0');
+      updated.textContent = `Оновлено: ${two(dt.getDate())}.${two(dt.getMonth()+1)}.${dt.getFullYear()} ${two(dt.getHours())}:${two(dt.getMinutes())}`;
+      document.getElementById('year').textContent = dt.getFullYear();
+    })();
+  </script>
+</body>
+</html>

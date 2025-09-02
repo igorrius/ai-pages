@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Інвестиційний Калькулятор</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f3f4f6;
+            color: #1f2937;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            padding: 1rem;
+            overflow-y: auto;
+        }
+        .message-box {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: white;
+            padding: 2rem;
+            border-radius: 1rem;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+            z-index: 1000;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 p-4">
+
+<div class="max-w-4xl w-full bg-white shadow-xl rounded-2xl p-8 md:p-12">
+    <h1 class="text-3xl md:text-4xl font-bold text-center mb-6 text-gray-800">Інвестиційний Калькулятор</h1>
+    <p class="text-center text-gray-600 mb-8">Розрахуйте, як ваші інвестиції зростатимуть з часом, враховуючи складні відсотки та регулярні поповнення.</p>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+        <!-- Parameters -->
+        <div class="space-y-6">
+            <div>
+                <label for="initialInvestment" class="block text-sm font-medium text-gray-700">Початкова інвестиція (грн)</label>
+                <input type="number" id="initialInvestment" value="10000" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-3 border focus:ring-indigo-500 focus:border-indigo-500 transition duration-200">
+            </div>
+            <div>
+                <label for="annualYield" class="block text-sm font-medium text-gray-700">Річна дохідність (%)</label>
+                <input type="number" id="annualYield" value="10" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-3 border focus:ring-indigo-500 focus:border-indigo-500 transition duration-200">
+            </div>
+            <div>
+                <label for="monthlyContribution" class="block text-sm font-medium text-gray-700">Щомісячне доінвестування (грн)</label>
+                <input type="number" id="monthlyContribution" value="500" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-3 border focus:ring-indigo-500 focus:border-indigo-500 transition duration-200">
+            </div>
+            <div>
+                <label for="taxRate" class="block text-sm font-medium text-gray-700">Розмір податків (%)</label>
+                <input type="number" id="taxRate" value="0" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-3 border focus:ring-indigo-500 focus:border-indigo-500 transition duration-200">
+            </div>
+            <div>
+                <label for="months" class="block text-sm font-medium text-gray-700">Кількість місяців для розрахунку</label>
+                <input type="number" id="months" value="60" min="1" max="1200" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-3 border focus:ring-indigo-500 focus:border-indigo-500 transition duration-200">
+            </div>
+        </div>
+
+        <!-- Results and chart -->
+        <div>
+            <div class="bg-gray-50 p-6 rounded-xl shadow-inner space-y-4">
+                <h3 class="text-xl font-semibold text-gray-800">Результати</h3>
+                <div class="flex justify-between items-center text-lg">
+                    <span class="text-gray-600">Загальна сума інвестицій:</span>
+                    <span id="totalInvestment" class="font-bold text-gray-800">0.00 грн</span>
+                </div>
+                <div class="flex justify-between items-center text-lg">
+                    <span class="text-gray-600">Загальний дохід:</span>
+                    <span id="totalProfit" class="font-bold text-green-600">0.00 грн</span>
+                </div>
+                <div class="flex justify-between items-center text-lg">
+                    <span class="text-gray-600">Кінцева сума:</span>
+                    <span id="finalAmount" class="font-bold text-indigo-600">0.00 грн</span>
+                </div>
+            </div>
+
+            <div class="mt-8">
+                <h3 class="text-xl font-semibold text-center text-gray-800 mb-4">Графік зростання</h3>
+                <div id="growthChart" class="w-full h-80 bg-white rounded-xl shadow-md p-4"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="message-box" class="message-box">
+    <p class="text-gray-700">Кількість місяців занадто велика для розрахунку. Будь ласка, введіть значення, менше ніж 1200.</p>
+    <button onclick="document.getElementById('message-box').style.display='none'" class="mt-4 px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 transition duration-200">Закрити</button>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/plotly.js@latest/dist/plotly.min.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const initialInvestmentEl = document.getElementById('initialInvestment');
+        const annualYieldEl = document.getElementById('annualYield');
+        const monthlyContributionEl = document.getElementById('monthlyContribution');
+        const taxRateEl = document.getElementById('taxRate');
+        const monthsEl = document.getElementById('months');
+        const totalInvestmentEl = document.getElementById('totalInvestment');
+        const totalProfitEl = document.getElementById('totalProfit');
+        const finalAmountEl = document.getElementById('finalAmount');
+        const messageBoxEl = document.getElementById('message-box');
+        const chartDiv = document.getElementById('growthChart');
+
+        function showMessage(message) {
+            messageBoxEl.querySelector('p').textContent = message;
+            messageBoxEl.style.display = 'block';
+        }
+
+        function calculateAndDrawChart() {
+            const initialInvestment = parseFloat(initialInvestmentEl.value);
+            const annualYield = parseFloat(annualYieldEl.value);
+            const monthlyContribution = parseFloat(monthlyContributionEl.value);
+            const taxRate = parseFloat(taxRateEl.value) / 100;
+            let months = parseInt(monthsEl.value, 10);
+
+            if (isNaN(initialInvestment) || isNaN(annualYield) || isNaN(monthlyContribution) || isNaN(taxRate) || isNaN(months) || months < 1) {
+                return;
+            }
+
+            if (months > 1200) {
+                showMessage("Кількість місяців занадто велика для розрахунку. Будь ласка, введіть значення, менше ніж 1200.");
+                months = 1200;
+            }
+
+            const monthlyRate = (annualYield / 100) / 12;
+            let currentBalance = initialInvestment;
+            let totalInvested = initialInvestment;
+            const balanceData = [initialInvestment];
+            const investedData = [initialInvestment];
+            const labels = [0];
+
+            for (let i = 1; i <= months; i++) {
+                const monthlyProfit = currentBalance * monthlyRate;
+                const profitAfterTax = monthlyProfit * (1 - taxRate);
+                currentBalance += profitAfterTax + monthlyContribution;
+                totalInvested += monthlyContribution;
+                balanceData.push(currentBalance);
+                investedData.push(totalInvested);
+                labels.push(i);
+            }
+
+            const totalProfit = currentBalance - totalInvested;
+
+            totalInvestmentEl.textContent = `${totalInvested.toFixed(2)} грн`;
+            totalProfitEl.textContent = `${totalProfit.toFixed(2)} грн`;
+            finalAmountEl.textContent = `${currentBalance.toFixed(2)} грн`;
+
+            const data = [
+                {
+                    x: labels,
+                    y: balanceData,
+                    name: 'Кінцева сума',
+                    mode: 'lines',
+                    line: { color: '#4f46e5' },
+                    type: 'scatter'
+                },
+                {
+                    x: labels,
+                    y: investedData,
+                    name: 'Всього інвестовано',
+                    mode: 'lines',
+                    line: { color: '#10b981', dash: 'dash' },
+                    type: 'scatter'
+                }
+            ];
+
+            const layout = {
+                title: '',
+                xaxis: {
+                    title: 'Кількість місяців',
+                    showgrid: true
+                },
+                yaxis: {
+                    title: 'Сума (грн)',
+                    showgrid: true,
+                    tickformat: '.2f',
+                },
+                margin: { t: 20, r: 20, b: 40, l: 60 },
+                height: 320,
+                responsive: true
+            };
+
+            Plotly.newPlot(chartDiv, data, layout);
+        }
+
+        const inputs = [initialInvestmentEl, annualYieldEl, monthlyContributionEl, taxRateEl, monthsEl];
+        inputs.forEach(input => input.addEventListener('input', calculateAndDrawChart));
+
+        calculateAndDrawChart();
+    });
+</script>
+
+</body>
+</html>
