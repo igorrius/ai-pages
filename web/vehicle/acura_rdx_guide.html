@@ -1,0 +1,1061 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Acura RDX 2024 A-Spec Advance — Посібник користувача</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&family=Space+Mono:wght@400;700&display=swap');
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        :root {
+            --primary: #ff0040;
+            --secondary: #00d9ff;
+            --dark: #0a0e27;
+            --darker: #050714;
+            --light: #e8eaf6;
+            --accent: #ffd700;
+            --text: #b8c5d6;
+            --text-bright: #ffffff;
+            --card-bg: #12182e;
+            --card-border: #1e2844;
+            --shadow: rgba(255, 0, 64, 0.3);
+        }
+        
+        body {
+            font-family: 'Space Mono', monospace;
+            background: linear-gradient(135deg, var(--darker) 0%, var(--dark) 100%);
+            color: var(--text);
+            line-height: 1.7;
+            overflow-x: hidden;
+            position: relative;
+        }
+        
+        /* Animated background effect */
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: 
+                radial-gradient(circle at 20% 30%, rgba(255, 0, 64, 0.05) 0%, transparent 50%),
+                radial-gradient(circle at 80% 70%, rgba(0, 217, 255, 0.05) 0%, transparent 50%);
+            pointer-events: none;
+            z-index: 0;
+        }
+        
+        .container {
+            position: relative;
+            z-index: 1;
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+        
+        /* Header */
+        header {
+            background: linear-gradient(135deg, var(--card-bg) 0%, rgba(18, 24, 46, 0.8) 100%);
+            border-bottom: 2px solid var(--primary);
+            padding: 2rem 0;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+        }
+        
+        .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+        
+        h1 {
+            font-family: 'Orbitron', monospace;
+            font-size: clamp(1.5rem, 5vw, 2.5rem);
+            font-weight: 900;
+            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            animation: glow 3s ease-in-out infinite;
+        }
+        
+        @keyframes glow {
+            0%, 100% { filter: drop-shadow(0 0 10px var(--primary)); }
+            50% { filter: drop-shadow(0 0 20px var(--secondary)); }
+        }
+        
+        .model-badge {
+            display: inline-block;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: var(--text-bright);
+            padding: 0.5rem 1.5rem;
+            border-radius: 50px;
+            font-weight: 700;
+            font-size: 0.9rem;
+            letter-spacing: 1px;
+            box-shadow: 0 4px 15px var(--shadow);
+        }
+        
+        /* Navigation */
+        nav {
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 15px;
+            padding: 1.5rem;
+            margin: 2rem 0;
+            position: sticky;
+            top: 120px;
+            z-index: 50;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+        }
+        
+        .nav-title {
+            font-family: 'Orbitron', monospace;
+            color: var(--secondary);
+            font-size: 1.2rem;
+            margin-bottom: 1rem;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+        
+        .nav-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 0.8rem;
+        }
+        
+        .nav-link {
+            display: block;
+            padding: 0.8rem 1rem;
+            background: linear-gradient(135deg, rgba(255, 0, 64, 0.1), rgba(0, 217, 255, 0.1));
+            border: 1px solid var(--card-border);
+            border-radius: 8px;
+            color: var(--text);
+            text-decoration: none;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            font-size: 0.9rem;
+            font-weight: 700;
+        }
+        
+        .nav-link:hover {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: var(--text-bright);
+            transform: translateX(5px);
+            box-shadow: 0 4px 20px var(--shadow);
+        }
+        
+        /* Content sections */
+        .content {
+            margin-top: 3rem;
+        }
+        
+        section {
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 20px;
+            padding: 2.5rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+            animation: fadeInUp 0.6s ease-out;
+        }
+        
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        section:hover {
+            border-color: var(--primary);
+            box-shadow: 0 12px 40px var(--shadow);
+        }
+        
+        h2 {
+            font-family: 'Orbitron', monospace;
+            font-size: clamp(1.5rem, 4vw, 2rem);
+            color: var(--secondary);
+            margin-bottom: 1.5rem;
+            padding-bottom: 1rem;
+            border-bottom: 2px solid var(--primary);
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+        
+        h3 {
+            font-family: 'Orbitron', monospace;
+            font-size: 1.3rem;
+            color: var(--primary);
+            margin: 2rem 0 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        h3::before {
+            content: '▸';
+            color: var(--secondary);
+            font-size: 1.5rem;
+        }
+        
+        p {
+            margin-bottom: 1rem;
+            color: var(--text);
+        }
+        
+        strong {
+            color: var(--accent);
+            font-weight: 700;
+        }
+        
+        /* Tables */
+        table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
+            margin: 1.5rem 0;
+            background: rgba(30, 40, 68, 0.5);
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+        }
+        
+        th, td {
+            padding: 1rem;
+            text-align: left;
+            border-bottom: 1px solid var(--card-border);
+        }
+        
+        th {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: var(--text-bright);
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-size: 0.9rem;
+        }
+        
+        tr:hover {
+            background: rgba(255, 0, 64, 0.1);
+        }
+        
+        /* Lists */
+        ul, ol {
+            margin: 1rem 0 1rem 2rem;
+        }
+        
+        li {
+            margin-bottom: 0.8rem;
+            padding-left: 0.5rem;
+            position: relative;
+        }
+        
+        ul li::marker {
+            color: var(--primary);
+        }
+        
+        /* Info boxes */
+        .info-box {
+            background: linear-gradient(135deg, rgba(0, 217, 255, 0.1), rgba(255, 0, 64, 0.1));
+            border-left: 4px solid var(--secondary);
+            padding: 1.5rem;
+            margin: 1.5rem 0;
+            border-radius: 8px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        }
+        
+        .warning-box {
+            background: linear-gradient(135deg, rgba(255, 215, 0, 0.1), rgba(255, 0, 64, 0.1));
+            border-left: 4px solid var(--accent);
+            padding: 1.5rem;
+            margin: 1.5rem 0;
+            border-radius: 8px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        }
+        
+        .info-box strong, .warning-box strong {
+            display: block;
+            margin-bottom: 0.5rem;
+            color: var(--secondary);
+            font-size: 1.1rem;
+        }
+        
+        .warning-box strong {
+            color: var(--accent);
+        }
+        
+        /* Back to top button */
+        .back-to-top {
+            position: fixed;
+            bottom: 2rem;
+            right: 2rem;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: var(--text-bright);
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            opacity: 0;
+            transform: translateY(100px);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 4px 20px var(--shadow);
+            z-index: 1000;
+            border: 2px solid var(--text-bright);
+            font-size: 1.5rem;
+            font-weight: 900;
+        }
+        
+        .back-to-top.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        
+        .back-to-top:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 30px var(--shadow);
+        }
+        
+        /* Footer */
+        footer {
+            background: var(--card-bg);
+            border-top: 2px solid var(--primary);
+            padding: 2rem 0;
+            margin-top: 4rem;
+            text-align: center;
+            color: var(--text);
+        }
+        
+        /* Mobile responsiveness */
+        @media (max-width: 768px) {
+            header {
+                padding: 1.5rem 0;
+            }
+            
+            .header-content {
+                flex-direction: column;
+                text-align: center;
+            }
+            
+            nav {
+                top: 100px;
+                padding: 1rem;
+            }
+            
+            .nav-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            section {
+                padding: 1.5rem;
+            }
+            
+            table {
+                font-size: 0.85rem;
+            }
+            
+            th, td {
+                padding: 0.7rem 0.5rem;
+            }
+            
+            .back-to-top {
+                width: 50px;
+                height: 50px;
+                bottom: 1rem;
+                right: 1rem;
+            }
+        }
+        
+        /* Smooth scrolling */
+        html {
+            scroll-behavior: smooth;
+        }
+        
+        /* Selection styling */
+        ::selection {
+            background: var(--primary);
+            color: var(--text-bright);
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="container">
+            <div class="header-content">
+                <h1>Acura RDX 2024</h1>
+                <span class="model-badge">A-Spec Advance</span>
+            </div>
+        </div>
+    </header>
+
+    <div class="container">
+        <nav id="navigation">
+            <div class="nav-title">⚡ Швидка навігація</div>
+            <div class="nav-grid">
+                <a href="#light-systems" class="nav-link">💡 Керування світлом</a>
+                <a href="#mirrors" class="nav-link">🪞 Дзеркала</a>
+                <a href="#driving-modes" class="nav-link">🏎️ Режими водіння</a>
+                <a href="#touchpad" class="nav-link">📱 True Touchpad</a>
+                <a href="#acurawatch" class="nav-link">🛡️ AcuraWatch</a>
+                <a href="#climate" class="nav-link">❄️ Клімат-контроль</a>
+                <a href="#audio" class="nav-link">🔊 ELS Studio 3D</a>
+                <a href="#memory" class="nav-link">💾 Пам'ять сидінь</a>
+                <a href="#remote-start" class="nav-link">🔑 Remote Start</a>
+                <a href="#moonroof" class="nav-link">🌙 Panoramic Roof</a>
+                <a href="#quick-ref" class="nav-link">⚙️ Швидка довідка</a>
+            </div>
+        </nav>
+
+        <div class="content">
+            <section id="light-systems">
+                <h2>💡 Системи керування світлом</h2>
+                
+                <h3>Auto High-Beam: автоматичне перемикання дальнього світла</h3>
+                <p>Система використовує фронтальну камеру для виявлення джерел світла попереду та автоматичного перемикання між дальнім і ближнім світлом.</p>
+                
+                <div class="info-box">
+                    <strong>Умови активації системи (всі мають бути виконані):</strong>
+                    <ul>
+                        <li>Режим живлення — ON</li>
+                        <li>Перемикач світла у положенні AUTO</li>
+                        <li>Важіль у положенні ближнього світла</li>
+                        <li>Фари автоматично активовані</li>
+                        <li>Темна пора доби</li>
+                    </ul>
+                </div>
+
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Перемикає на дальнє</th>
+                            <th>Перемикає на ближнє</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Швидкість ≥ 40 км/г</td>
+                            <td>Швидкість ≤ 24 км/г</td>
+                        </tr>
+                        <tr>
+                            <td>Немає авто попереду</td>
+                            <td>Виявлено зустрічне/попереднє авто</td>
+                        </tr>
+                        <tr>
+                            <td>Мало вуличного освітлення</td>
+                            <td>Багато ліхтарів попереду</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <h3>Повне вимкнення Auto High-Beam</h3>
+                <ol>
+                    <li>Встановіть режим живлення ON, автомобіль нерухомий</li>
+                    <li>Перемикач світла в положенні AUTO</li>
+                    <li>Потягніть важіль на себе і <strong>утримуйте 40 секунд</strong></li>
+                    <li>Коли індикатор <strong>блимне двічі</strong> — відпустіть важіль</li>
+                </ol>
+
+                <h3>Регулювання яскравості приладової панелі</h3>
+                <p><strong>Розташування:</strong> кнопки <strong>+</strong> і <strong>–</strong> на приладовій панелі</p>
+                <ul>
+                    <li>Натисніть <strong>+</strong> для збільшення яскравості</li>
+                    <li>Натисніть <strong>–</strong> для зменшення</li>
+                    <li>Звуковий сигнал лунає при досягненні мінімуму або максимуму</li>
+                </ul>
+
+                <h3>Денні ходові вогні (Chicane™ DRL)</h3>
+                <div class="info-box">
+                    <strong>Автоматична активація при виконанні всіх умов:</strong>
+                    <ul>
+                        <li>Режим живлення ON</li>
+                        <li>Перемикач фар у положенні AUTO</li>
+                        <li>Стоянкове гальмо відпущене</li>
+                    </ul>
+                </div>
+            </section>
+
+            <section id="mirrors">
+                <h2>🪞 Дзеркала: налаштування та функції</h2>
+                
+                <h3>Регулювання положення бокових дзеркал</h3>
+                <p><strong>Органи керування на дверях водія:</strong></p>
+                <ol>
+                    <li>Перемістіть селектор на <strong>L</strong> (ліве) або <strong>R</strong> (праве)</li>
+                    <li>Натискайте джойстик у потрібному напрямку (вгору/вниз/вліво/вправо)</li>
+                    <li><strong>Після налаштування поверніть селектор у центральне положення</strong></li>
+                </ol>
+
+                <h3>Автоматичне складання дзеркал (Power Folding)</h3>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Автоматичне складання ВСЕРЕДИНУ</th>
+                            <th>Автоматичне розкладання</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Заблокуйте двері ключем, пультом або датчиком на ручці</td>
+                            <td>Розблокуйте двері будь-яким способом</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <div class="warning-box">
+                    <strong>Важливо:</strong>
+                    Якщо дзеркала складені кнопкою ручного складання, вони НЕ розкладуться автоматично. Функцію можна вимкнути в меню Customized Features.
+                </div>
+
+                <h3>Auto-Dimming (автозатемнення)</h3>
+                <ul>
+                    <li><strong>Внутрішнє дзеркало:</strong> Натисніть кнопку AUTO на дзеркалі для увімкнення/вимкнення</li>
+                    <li>Індикатор AUTO світиться при активній функції</li>
+                    <li>Автоматично вимикається при русі заднім ходом</li>
+                    <li><strong>Зовнішні дзеркала:</strong> працюють синхронно з внутрішнім</li>
+                </ul>
+
+                <h3>Reverse Tilt: нахил при русі заднім ходом</h3>
+                <ol>
+                    <li>Режим живлення ON</li>
+                    <li>Перемістіть селектор дзеркал на <strong>L</strong> або <strong>R</strong></li>
+                    <li>При перемиканні на задню передачу відповідне дзеркало нахилиться вниз</li>
+                    <li>При виході з Reverse — повернеться у вихідне положення</li>
+                </ol>
+
+                <h3>Система пам'яті положень (2 профілі)</h3>
+                <div class="info-box">
+                    <strong>Збереження позиції:</strong>
+                    <ol>
+                        <li>Налаштуйте сидіння та дзеркала у бажане положення</li>
+                        <li>Натисніть кнопку <strong>SET</strong> на панелі дверей</li>
+                        <li>Протягом <strong>5 секунд</strong> натисніть кнопку <strong>1</strong> або <strong>2</strong></li>
+                        <li>Два звукові сигнали підтверджують збереження</li>
+                    </ol>
+                </div>
+            </section>
+
+            <section id="driving-modes">
+                <h2>🏎️ Динамічні режими водіння: Integrated Dynamics System</h2>
+                
+                <p>Система IDS пропонує <strong>4 режими</strong>, що змінюють характер автомобіля в реальному часі через консольний перемикач Dynamic Mode Dial біля селектора передач.</p>
+
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Режим</th>
+                            <th>Характеристики</th>
+                            <th>Рекомендовано</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong style="color: #00d9ff;">COMFORT</strong></td>
+                            <td>
+                                • Знижене зусилля на кермі<br>
+                                • М'якша підвіска<br>
+                                • Плавний відгук газу
+                            </td>
+                            <td>Щоденні поїздки, траса</td>
+                        </tr>
+                        <tr>
+                            <td><strong style="color: #e8eaf6;">NORMAL</strong></td>
+                            <td>
+                                • Збалансований відгук<br>
+                                • Режим за замовчуванням
+                            </td>
+                            <td>Стандартне використання</td>
+                        </tr>
+                        <tr>
+                            <td><strong style="color: #ff0040;">SPORT</strong></td>
+                            <td>
+                                • Збільшене зусилля керма<br>
+                                • Підвищений відгук газу<br>
+                                • Жорсткіша підвіска<br>
+                                • Посилений SH-AWD<br>
+                                • Auto Idle Stop вимкнено
+                            </td>
+                            <td>Активне водіння</td>
+                        </tr>
+                        <tr>
+                            <td><strong style="color: #e8eaf6;">SNOW</strong></td>
+                            <td>
+                                • Знижений відгук газу<br>
+                                • Оптимізація зчеплення<br>
+                                • Auto Idle Stop вимкнено
+                            </td>
+                            <td>Сніг, лід, слизькі дороги</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <h3>Super Handling All-Wheel Drive (SH-AWD)</h3>
+                <div class="info-box">
+                    <strong>Особливості системи 4-го покоління:</strong>
+                    <ul>
+                        <li>До <strong>70% крутного моменту</strong> може передаватися на задню вісь</li>
+                        <li>До <strong>100% заднього крутного моменту</strong> може направлятися на ОДНЕ заднє колесо</li>
+                        <li>У поворотах збільшує потужність на <strong>зовнішнє заднє колесо</strong></li>
+                        <li>На прямій до 90% потужності йде на передні колеса для економії палива</li>
+                    </ul>
+                </div>
+            </section>
+
+            <section id="touchpad">
+                <h2>📱 True Touchpad Interface: навігація та жести</h2>
+                
+                <h3>Принцип роботи: абсолютне позиціонування</h3>
+                <p>Тачпад використовує технологію <strong>абсолютного позиціонування</strong> — натискання в певній зоні тачпада відповідає тій самій зоні на 10.2-дюймовому екрані. Це <strong>не курсорна навігація</strong>.</p>
+
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Жест</th>
+                            <th>Дія</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>Одиночне натискання</strong></td>
+                            <td>Вибір підсвіченого елемента</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Натиснути й утримувати</strong></td>
+                            <td>Контекстне меню / режим налаштування</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Свайп вліво/вправо</strong></td>
+                            <td>Перемикання сторінок Home Screen</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Свайп вправо з Home</strong></td>
+                            <td>Відкриття списку всіх програм</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <h3>Кнопки швидкого доступу</h3>
+                <ul>
+                    <li><strong>Audio</strong> — миттєвий доступ до аудіосистеми</li>
+                    <li><strong>Navigation</strong> — перехід до навігації</li>
+                    <li><strong>Clock</strong> — відображення годинника</li>
+                    <li><strong>Home</strong> — повернення на головний екран</li>
+                    <li><strong>Back</strong> — повернення на попередній екран</li>
+                </ul>
+            </section>
+
+            <section id="acurawatch">
+                <h2>🛡️ AcuraWatch: системи безпеки</h2>
+                
+                <p>Усі системи AcuraWatch використовують <strong>радар міліметрового діапазону</strong> (за емблемою решітки) та <strong>монокулярну камеру</strong> (верх лобового скла).</p>
+
+                <h3>Collision Mitigation Braking System (CMBS)</h3>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Етап</th>
+                            <th>Реакція системи</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>1</strong></td>
+                            <td>Візуальне + звукове попередження</td>
+                        </tr>
+                        <tr>
+                            <td><strong>2</strong></td>
+                            <td>Попередження + легке гальмування</td>
+                        </tr>
+                        <tr>
+                            <td><strong>3</strong></td>
+                            <td>Попередження + сильне гальмування (зіткнення неминуче)</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <h3>Road Departure Mitigation (RDM)</h3>
+                <div class="info-box">
+                    <strong>Функція:</strong> запобігає виїзду за межі смуги на швидкості <strong>72-145 км/г</strong>.
+                    <br><br>
+                    <strong>При виявленні можливого виїзду:</strong>
+                    <ul>
+                        <li>Візуальне повідомлення на дисплеї</li>
+                        <li><strong>Вібрація керма</strong> + корегуючий момент</li>
+                        <li>Може застосувати гальмування</li>
+                    </ul>
+                </div>
+
+                <h3>Adaptive Cruise Control (ACC)</h3>
+                <div class="info-box">
+                    <strong>Діапазон роботи:</strong>
+                    <ul>
+                        <li>З виявленим авто попереду: <strong>0-145 км/г</strong></li>
+                        <li>Без авто попереду: від <strong>40 км/г</strong></li>
+                        <li>Low-Speed Follow: повна зупинка та старт у заторах</li>
+                    </ul>
+                </div>
+
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Кнопка</th>
+                            <th>Функція</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>MAIN</strong></td>
+                            <td>Увімкнення/вимкнення системи</td>
+                        </tr>
+                        <tr>
+                            <td><strong>RES/+/SET/–</strong></td>
+                            <td>Встановлення та зміна швидкості</td>
+                        </tr>
+                        <tr>
+                            <td><strong>INTERVAL</strong></td>
+                            <td>Зміна дистанції слідування</td>
+                        </tr>
+                        <tr>
+                            <td><strong>CANCEL</strong></td>
+                            <td>Скасування (зберігає налаштування)</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <h3>Lane Keeping Assist System (LKAS)</h3>
+                <p><strong>Умови роботи:</strong></p>
+                <ul>
+                    <li>Розмітка видима з <strong>обох боків</strong></li>
+                    <li>Швидкість <strong>72-145 км/г</strong></li>
+                    <li>Прямий або <strong>злегка вигнутий</strong> шлях</li>
+                    <li>Поворотники вимкнені</li>
+                </ul>
+            </section>
+
+            <section id="climate">
+                <h2>❄️ Dual-Zone клімат-контроль</h2>
+                
+                <p>RDX 2024 A-Spec Advance оснащений <strong>двозонним автоматичним клімат-контролем</strong> з GPS-прив'язкою та контролем вологості.</p>
+
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Кнопка</th>
+                            <th>Функція</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>AUTO</strong></td>
+                            <td>Повністю автоматичний режим</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Температура водія</strong></td>
+                            <td>+/– для водійської зони</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Температура пасажира</strong></td>
+                            <td>+/– для пасажирської зони</td>
+                        </tr>
+                        <tr>
+                            <td><strong>SYNC</strong></td>
+                            <td>Синхронізація обох зон до температури водія</td>
+                        </tr>
+                        <tr>
+                            <td><strong>A/C</strong></td>
+                            <td>Увімкнення/вимкнення кондиціонера</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <div class="info-box">
+                    <strong>GPS-linked Climate Control:</strong> система відстежує положення сонця та автоматично компенсує сонячне нагрівання з боку водія або пасажира.
+                </div>
+
+                <h3>Підігрів/вентиляція сидінь (A-Spec Advance)</h3>
+                <ul>
+                    <li><strong>1 натискання</strong> — HIGH</li>
+                    <li><strong>2 натискання</strong> — MEDIUM</li>
+                    <li><strong>3 натискання</strong> — LOW</li>
+                    <li><strong>4 натискання</strong> — OFF</li>
+                </ul>
+            </section>
+
+            <section id="audio">
+                <h2>🔊 ELS Studio 3D Premium Audio</h2>
+                
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Параметр</th>
+                            <th>Значення</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Кількість динаміків</td>
+                            <td><strong>16</strong></td>
+                        </tr>
+                        <tr>
+                            <td>Потужність</td>
+                            <td><strong>710 Вт</strong></td>
+                        </tr>
+                        <tr>
+                            <td>Дизайнер</td>
+                            <td>Elliot Scheiner (8 Grammy Awards)</td>
+                        </tr>
+                        <tr>
+                            <td>Особливість</td>
+                            <td>Overhead Highline™ динаміки біля панорамного даху</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <h3>Доступні налаштування</h3>
+                <ul>
+                    <li><strong>Bass / Treble / Midrange</strong> — регулювання частот</li>
+                    <li><strong>Roof / Center Volume</strong> — гучність стельових та центрального динаміків</li>
+                    <li><strong>Audio Zones</strong> — Driver Only / Front Only / Rear Only / Full Vehicle</li>
+                    <li><strong>Balance / Fader</strong> — баланс лівий-правий / передні-задні</li>
+                    <li><strong>Speed Volume (SVC)</strong> — авторегулювання від швидкості</li>
+                    <li><strong>DTS Neural Surround</strong> — обробка просторового звуку</li>
+                </ul>
+            </section>
+
+            <section id="memory">
+                <h2>💾 Сидіння з пам'яттю: програмування позицій</h2>
+                
+                <h3>Збереження позиції (2 профілі)</h3>
+                <ol>
+                    <li>Налаштуйте сидіння та дзеркала у бажане положення</li>
+                    <li>Натисніть кнопку <strong>SET</strong> на панелі дверей водія</li>
+                    <li>Протягом <strong>5 секунд</strong> натисніть і утримуйте кнопку <strong>1</strong> або <strong>2</strong></li>
+                    <li><strong>Два звукові сигнали</strong> підтверджують успішне збереження</li>
+                </ol>
+
+                <h3>Виклик збереженої позиції</h3>
+                <div class="info-box">
+                    <strong>Ручний виклик:</strong>
+                    <ol>
+                        <li>Коробка передач у положенні <strong>Park</strong></li>
+                        <li>Натисніть кнопку <strong>1</strong> або <strong>2</strong></li>
+                        <li>Один звуковий сигнал, індикатор блимає</li>
+                        <li>Сидіння та дзеркала переміщуються у збережену позицію</li>
+                    </ol>
+                    
+                    <strong>Автоматичний виклик:</strong>
+                    <ul>
+                        <li><strong>Брелок Driver 1</strong> → Memory Position 1</li>
+                        <li><strong>Брелок Driver 2</strong> → Memory Position 2</li>
+                    </ul>
+                </div>
+            </section>
+
+            <section id="remote-start">
+                <h2>🔑 Remote Engine Start: дистанційний запуск</h2>
+                
+                <h3>Запуск з брелока</h3>
+                <ol>
+                    <li>Натисніть <strong>LOCK</strong> один раз (зелений LED блимне)</li>
+                    <li>Натисніть і <strong>утримуйте</strong> кнопку <strong>ENGINE</strong></li>
+                    <li>Жовтий LED блимає → Зелений LED світиться = двигун запущено</li>
+                </ol>
+
+                <div class="info-box">
+                    <strong>Дальність:</strong> приблизно <strong>100 метрів</strong> (до 180 м на відкритій місцевості)
+                </div>
+
+                <h3>Автоматичне клімат-кондиціонування</h3>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Температура повітря</th>
+                            <th>Реакція системи</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Нижче <strong>7.5°C</strong></td>
+                            <td>Обігрів до 22°C + задній обігрівач + обігрів дзеркал</td>
+                        </tr>
+                        <tr>
+                            <td>Вище <strong>7.5°C</strong></td>
+                            <td>Кондиціонер у режимі AUTO до 22°C</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <div class="warning-box">
+                    <strong>Умови роботи Remote Start:</strong>
+                    <ul>
+                        <li>Коробка в положенні <strong>Park</strong></li>
+                        <li>Педаль гальма не натиснута</li>
+                        <li>Капот <strong>надійно закритий</strong></li>
+                        <li><strong>Всі двері зачинені та заблоковані</strong></li>
+                        <li>Брелок <strong>НЕ всередині</strong> автомобіля</li>
+                    </ul>
+                </div>
+            </section>
+
+            <section id="moonroof">
+                <h2>🌙 Panoramic Moonroof: керування панорамним дахом</h2>
+                
+                <p>Перемикач розташований у <strong>передній частині стелі</strong> (overhead console), між плафонами.</p>
+
+                <h3>Функції керування</h3>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Функція</th>
+                            <th>Дія</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>Tilt (вентиляція)</strong></td>
+                            <td>Натисніть перемикач <strong>вгору</strong> — задня частина скла піднімається</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Повне відкриття</strong></td>
+                            <td>Потягніть перемикач <strong>назад до упору</strong> — автоматичне відкриття</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Повне закриття</strong></td>
+                            <td>Натисніть перемикач <strong>вперед до упору</strong> — автоматичне закриття</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Часткове відкриття</strong></td>
+                            <td>Потягніть злегка і <strong>утримуйте</strong> до бажаного положення</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <div class="info-box">
+                    <strong>Anti-Pinch (захист від защемлення):</strong>
+                    При виявленні перешкоди під час закривання дах автоматично <strong>реверсує та відкривається</strong>. Запобігає травмуванню пальців та рук.
+                </div>
+
+                <div class="warning-box">
+                    <strong>Попередження:</strong> не відкривайте дах при температурі нижче нуля або коли він вкритий снігом/льодом — це може пошкодити механізм.
+                </div>
+            </section>
+
+            <section id="quick-ref">
+                <h2>⚙️ Швидка довідка: розташування кнопок</h2>
+                
+                <h3>Ліворуч від керма / на лівій частині керма</h3>
+                <ul>
+                    <li><strong>CMBS OFF</strong> — вимкнення системи запобігання зіткненням</li>
+                    <li><strong>RDM</strong> — керування системою утримання на дорозі</li>
+                    <li><strong>LKAS</strong> — асистент утримання смуги</li>
+                    <li><strong>VSA OFF</strong> — вимкнення трекшн-контролю</li>
+                </ul>
+
+                <h3>Праворуч на кермі</h3>
+                <ul>
+                    <li><strong>MAIN</strong> — увімкнення адаптивного круїз-контролю</li>
+                    <li><strong>RES/+/SET/–</strong> — керування швидкістю</li>
+                    <li><strong>INTERVAL</strong> — дистанція слідування</li>
+                    <li><strong>CANCEL</strong> — скасування круїз-контролю</li>
+                </ul>
+
+                <h3>Консоль (біля селектора передач)</h3>
+                <ul>
+                    <li><strong>Dynamic Mode Dial</strong> — перемикання режимів водіння</li>
+                    <li><strong>True Touchpad Interface</strong> — керування інфотейнмент-системою</li>
+                </ul>
+
+                <h3>Двері водія</h3>
+                <ul>
+                    <li><strong>SET, 1, 2</strong> — система пам'яті положень</li>
+                    <li><strong>Селектор L/R та джойстик</strong> — налаштування дзеркал</li>
+                    <li><strong>Кнопка складання дзеркал</strong></li>
+                </ul>
+            </section>
+        </div>
+    </div>
+
+    <div class="back-to-top" id="backToTop">↑</div>
+
+    <footer>
+        <div class="container">
+            <p><em>Цей посібник створено на основі офіційної документації Acura: Owner's Manual, Acura Info Center, owners.acura.com та офіційних технічних специфікацій 2024 RDX.</em></p>
+            <p style="margin-top: 1rem;">Для повної інформації завжди звертайтеся до керівництва з експлуатації вашого автомобіля.</p>
+        </div>
+    </footer>
+
+    <script>
+        // Back to top button
+        const backToTop = document.getElementById('backToTop');
+        
+        window.addEventListener('scroll', () => {
+            if (window.pageYOffset > 300) {
+                backToTop.classList.add('visible');
+            } else {
+                backToTop.classList.remove('visible');
+            }
+        });
+        
+        backToTop.addEventListener('click', () => {
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        });
+
+        // Smooth scroll for navigation links
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    const offset = 100;
+                    const targetPosition = target.offsetTop - offset;
+                    window.scrollTo({
+                        top: targetPosition,
+                        behavior: 'smooth'
+                    });
+                }
+            });
+        });
+
+        // Animate sections on scroll
+        const observerOptions = {
+            threshold: 0.1,
+            rootMargin: '0px 0px -50px 0px'
+        };
+
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.style.opacity = '1';
+                    entry.target.style.transform = 'translateY(0)';
+                }
+            });
+        }, observerOptions);
+
+        document.querySelectorAll('section').forEach(section => {
+            section.style.opacity = '0';
+            section.style.transform = 'translateY(30px)';
+            section.style.transition = 'opacity 0.6s ease-out, transform 0.6s ease-out';
+            observer.observe(section);
+        });
+    </script>
+</body>
+</html>
