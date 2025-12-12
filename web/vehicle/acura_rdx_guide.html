@@ -2,7 +2,9 @@
 <html lang="uk">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="mobile-web-app-capable" content="yes">
     <title>Acura RDX 2024 A-Spec Advance — Посібник користувача</title>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&family=Space+Mono:wght@400;700&display=swap');
@@ -64,11 +66,17 @@
             background: linear-gradient(135deg, var(--card-bg) 0%, rgba(18, 24, 46, 0.8) 100%);
             border-bottom: 2px solid var(--primary);
             padding: 2rem 0;
-            position: sticky;
-            top: 0;
             z-index: 100;
             backdrop-filter: blur(10px);
             box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+        }
+        
+        /* Desktop sticky header */
+        @media (min-width: 769px) {
+            header {
+                position: sticky;
+                top: 0;
+            }
         }
         
         .header-content {
@@ -116,11 +124,17 @@
             border-radius: 15px;
             padding: 1.5rem;
             margin: 2rem 0;
-            position: sticky;
-            top: 120px;
-            z-index: 50;
             backdrop-filter: blur(10px);
             box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+        }
+        
+        /* Desktop sticky navigation */
+        @media (min-width: 769px) {
+            nav {
+                position: sticky;
+                top: 120px;
+                z-index: 50;
+            }
         }
         
         .nav-title {
@@ -149,9 +163,12 @@
             transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             font-size: 0.9rem;
             font-weight: 700;
+            -webkit-tap-highlight-color: rgba(255, 0, 64, 0.3);
+            touch-action: manipulation;
         }
         
-        .nav-link:hover {
+        .nav-link:hover,
+        .nav-link:active {
             background: linear-gradient(135deg, var(--primary), var(--secondary));
             color: var(--text-bright);
             transform: translateX(5px);
@@ -324,6 +341,9 @@
             border: 2px solid var(--text-bright);
             font-size: 1.5rem;
             font-weight: 900;
+            -webkit-tap-highlight-color: transparent;
+            touch-action: manipulation;
+            user-select: none;
         }
         
         .back-to-top.visible {
@@ -331,7 +351,8 @@
             transform: translateY(0);
         }
         
-        .back-to-top:hover {
+        .back-to-top:hover,
+        .back-to-top:active {
             transform: translateY(-5px);
             box-shadow: 0 8px 30px var(--shadow);
         }
@@ -348,34 +369,96 @@
         
         /* Mobile responsiveness */
         @media (max-width: 768px) {
+            body {
+                font-size: 14px;
+            }
+            
             header {
-                padding: 1.5rem 0;
+                padding: 1rem 0;
+                position: relative;
             }
             
             .header-content {
                 flex-direction: column;
                 text-align: center;
+                gap: 0.5rem;
+            }
+            
+            h1 {
+                font-size: 1.5rem;
+            }
+            
+            .model-badge {
+                padding: 0.4rem 1rem;
+                font-size: 0.8rem;
             }
             
             nav {
-                top: 100px;
+                position: relative;
+                top: 0;
                 padding: 1rem;
+                margin: 1rem 0;
+            }
+            
+            .nav-title {
+                font-size: 1rem;
             }
             
             .nav-grid {
                 grid-template-columns: 1fr;
+                gap: 0.5rem;
             }
             
-            section {
-                padding: 1.5rem;
-            }
-            
-            table {
+            .nav-link {
+                padding: 0.7rem 0.8rem;
                 font-size: 0.85rem;
             }
             
+            section {
+                padding: 1.2rem;
+                margin-bottom: 1.5rem;
+                border-radius: 12px;
+            }
+            
+            h2 {
+                font-size: 1.3rem;
+                margin-bottom: 1rem;
+            }
+            
+            h3 {
+                font-size: 1.1rem;
+                margin: 1.5rem 0 0.8rem;
+            }
+            
+            /* Table improvements for mobile */
+            table {
+                font-size: 0.8rem;
+                display: block;
+                overflow-x: auto;
+                -webkit-overflow-scrolling: touch;
+            }
+            
             th, td {
-                padding: 0.7rem 0.5rem;
+                padding: 0.6rem 0.4rem;
+                min-width: 100px;
+            }
+            
+            th {
+                font-size: 0.75rem;
+            }
+            
+            .info-box, .warning-box {
+                padding: 1rem;
+                margin: 1rem 0;
+            }
+            
+            ul, ol {
+                margin-left: 1.5rem;
+            }
+            
+            li {
+                margin-bottom: 0.6rem;
+                font-size: 0.9rem;
             }
             
             .back-to-top {
@@ -383,6 +466,45 @@
                 height: 50px;
                 bottom: 1rem;
                 right: 1rem;
+                font-size: 1.2rem;
+            }
+            
+            footer {
+                padding: 1.5rem 0;
+                font-size: 0.85rem;
+            }
+        }
+        
+        /* Extra small devices */
+        @media (max-width: 480px) {
+            .container {
+                padding: 0 15px;
+            }
+            
+            h1 {
+                font-size: 1.2rem;
+                letter-spacing: 1px;
+            }
+            
+            h2 {
+                font-size: 1.2rem;
+            }
+            
+            h3 {
+                font-size: 1rem;
+            }
+            
+            section {
+                padding: 1rem;
+            }
+            
+            table {
+                font-size: 0.75rem;
+            }
+            
+            th, td {
+                padding: 0.5rem 0.3rem;
+                min-width: 80px;
             }
         }
         
