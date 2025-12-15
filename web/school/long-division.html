@@ -1,0 +1,845 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Тренажер ділення в стовпчик</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap');
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f3f4f6;
+        }
+        .digit-box {
+            display: inline-flex;
+            justify-content: center;
+            align-items: center;
+            width: 2rem;
+            height: 2rem;
+            font-size: 1.25rem;
+            font-weight: 500;
+            /* background-color: #e5e7eb; */ /* Transparent background for better alignment in grid */
+            border-radius: 0.25rem;
+            margin: 0.1rem;
+            transition: all 0.3s ease-in-out;
+            color: #374151;
+            box-sizing: border-box;
+            border: 2px solid transparent;
+        }
+        .digit-box-filled {
+             background-color: #e5e7eb;
+        }
+        .highlight {
+            background-color: #d1fae5;
+            border-color: #10b981;
+            transform: scale(1.1);
+        }
+        .highlight-secondary {
+            background-color: #e0f2fe;
+            border-color: #3b82f6;
+        }
+        .line-horizontal {
+            height: 2px;
+            background-color: #6b7280;
+            width: 100%;
+        }
+        .line-vertical {
+            width: 2px;
+            background-color: #6b7280;
+            height: 100%;
+            position: absolute;
+            left: 0;
+            top: 0;
+        }
+        .division-grid {
+            display: grid;
+            grid-template-columns: repeat(20, 2rem); /* Flexible grid */
+            gap: 2px;
+            font-family: monospace;
+        }
+        #loading-indicator {
+            display: none;
+            text-align: center;
+            padding: 1rem;
+            color: #4b5563;
+        }
+        .math-symbol {
+            display: inline-flex;
+            justify-content: center;
+            align-items: center;
+            width: 1.5rem;
+            height: 2rem;
+            font-weight: bold;
+            color: #6b7280;
+        }
+    </style>
+</head>
+<body class="flex items-center justify-center min-h-screen p-4">
+
+    <div class="bg-white rounded-xl shadow-2xl p-8 max-w-3xl w-full">
+        <h1 class="text-3xl font-bold text-center mb-6 text-gray-800">Тренажер ділення в стовпчик</h1>
+        <p class="text-center text-gray-600 mb-8">
+            Привіт! 👋 Давай навчимося ділити числа разом! Введи ділене та дільник і натисни "Почати".
+        </p>
+
+        <div class="flex flex-col sm:flex-row items-center justify-center space-y-4 sm:space-y-0 sm:space-x-4 mb-8">
+            <input type="number" id="num1" class="w-full sm:w-auto px-4 py-2 text-center text-lg rounded-lg border-2 border-gray-300 focus:outline-none focus:border-blue-500" placeholder="Ділене (до 5 цифр)">
+            <span class="text-2xl text-gray-600 font-semibold">÷</span>
+            <input type="number" id="num2" class="w-full sm:w-auto px-4 py-2 text-center text-lg rounded-lg border-2 border-gray-300 focus:outline-none focus:border-blue-500" placeholder="Дільник (до 2 цифр)">
+        </div>
+
+        <div class="flex justify-center space-x-4 mb-8">
+            <button id="startButton" class="bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-6 rounded-lg shadow-md transition-all duration-200">
+                Почати
+            </button>
+            <button id="nextButton" class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-6 rounded-lg shadow-md transition-all duration-200" style="display: none;">
+                Далі
+            </button>
+            <button id="resetButton" class="bg-gray-400 hover:bg-gray-500 text-white font-bold py-2 px-6 rounded-lg shadow-md transition-all duration-200" style="display: none;">
+                Почати знову
+            </button>
+        </div>
+
+        <div id="visualizer" class="flex flex-col items-center min-h-[400px] bg-gray-50 rounded-lg p-6 relative overflow-auto">
+            <p id="message" class="text-center text-gray-500 mt-4 mb-4">Введіть числа та натисніть "Почати".</p>
+            <div id="grid-container" class="relative mt-4"></div>
+        </div>
+    </div>
+
+    <script>
+        window.onload = function() {
+            const num1Input = document.getElementById('num1');
+            const num2Input = document.getElementById('num2');
+            const startButton = document.getElementById('startButton');
+            const nextButton = document.getElementById('nextButton');
+            const resetButton = document.getElementById('resetButton');
+            const visualizer = document.getElementById('visualizer');
+            const gridContainer = document.getElementById('grid-container');
+            const messageEl = document.getElementById('message');
+
+            let dividend, divisor;
+            let steps = [];
+            let currentStepIndex = 0;
+
+            function showMessageBox(msg) {
+                const modal = document.createElement('div');
+                modal.className = 'fixed inset-0 bg-gray-900 bg-opacity-50 flex items-center justify-center p-4 z-50';
+                modal.innerHTML = `
+                    <div class="bg-white rounded-lg p-6 shadow-xl max-w-sm w-full text-center">
+                        <p class="text-lg font-semibold mb-4 text-gray-800">${msg}</p>
+                        <button id="closeModal" class="bg-blue-500 hover:bg-blue-600 text-white py-2 px-4 rounded-lg">ОК</button>
+                    </div>
+                `;
+                document.body.appendChild(modal);
+                document.getElementById('closeModal').onclick = () => document.body.removeChild(modal);
+            }
+
+            function updateButtons() {
+                if (currentStepIndex === 0) {
+                    nextButton.style.display = 'inline-block';
+                    resetButton.style.display = 'none';
+                } else {
+                    nextButton.style.display = 'inline-block';
+                    resetButton.style.display = 'inline-block';
+                }
+
+                if (currentStepIndex >= steps.length - 1) {
+                    nextButton.style.display = 'none';
+                    resetButton.style.display = 'inline-block';
+                } else {
+                    nextButton.style.display = 'inline-block';
+                }
+            }
+
+            function showMessage(msg) {
+                let existingMsg = document.getElementById('message');
+                existingMsg.innerHTML = msg.replace(/\*\*(.*?)\*\*/g, '<b>$1</b>');
+            }
+
+            function generateSteps(n1, n2) {
+                const s1 = String(n1);
+                const s2 = String(n2);
+                steps = [];
+                
+                // Initial State
+                steps.push({
+                    message: `Починаємо ділення **${n1}** на **${n2}**. Запишемо числа у "куточок".`,
+                    rows: [],
+                    quotient: "",
+                    highlightDividendRange: null
+                });
+
+                let currentPartial = "";
+                let currentIndex = 0;
+                let quotientStr = "";
+                let rows = []; // Stores { type: 'subtraction'|'remainder', value: number, indent: number }
+                
+                while (currentIndex < s1.length) {
+                    // Bring down digits until >= divisor or out of digits
+                    let broughtDown = false;
+                    
+                    // If we have a remainder from previous step (or 0), we assume it's part of currentPartial
+                    // Logic: 
+                    // 1. If currentPartial is '0' (and not just started), treat as empty unless it's the only thing left? 
+                    // Actually, standard algo: append next digit.
+                    
+                    // Special case for start: grab enough digits
+                    if (currentIndex === 0) {
+                         while (currentIndex < s1.length) {
+                             currentPartial += s1[currentIndex];
+                             currentIndex++;
+                             if (parseInt(currentPartial) >= n2) break;
+                             
+                             // If we consumed a digit and it's still < n2, and it wasn't the very first attempt (leading zeros aren't usually written in quotient unless strictly following "digit by digit" logic. Standard school method often grabs a chunk first).
+                             // Let's implement strict digit-by-digit or the "grab chunk" method? 
+                             // "Grab chunk" is more common for the first step.
+                         }
+                         
+                         // If we ran out of digits and still < n2 (e.g. 5 / 10), then quotient is 0 remainder 5.
+                         if (parseInt(currentPartial) < n2) {
+                             quotientStr = "0";
+                             steps.push({
+                                 message: `Число **${n1}** менше за **${n2}**, тому результат 0, а остача **${n1}**.`,
+                                 rows: [],
+                                 quotient: "0",
+                                 final: true
+                             });
+                             return;
+                         }
+                         
+                         steps.push({
+                             message: `Шукаємо перше неповне ділене. Беремо **${currentPartial}**, оскільки воно більше або дорівнює **${n2}**.`,
+                             rows: [...rows],
+                             quotient: quotientStr,
+                             highlightDividendRange: { start: 0, end: currentIndex },
+                             currentPartialStr: currentPartial,
+                             currentPartialIndent: 0
+                         });
+
+                    } else {
+                        // Bring down ONE digit
+                        currentPartial += s1[currentIndex];
+                        
+                        // Just bringing down formatting
+                        // We need to know where this line is visually.
+                        // The 'rows' array tracks subtraction lines.
+                        
+                        currentIndex++;
+                        
+                        // Visualization note: The "bringing down" happens implicitly in the layout by writing next to remainder.
+                        // But for logic, we have a new currentPartial.
+                    }
+
+                    let partialVal = parseInt(currentPartial);
+                    let qDigit = Math.floor(partialVal / n2);
+                    let product = qDigit * n2;
+                    let remainder = partialVal - product;
+
+                    quotientStr += qDigit;
+
+                    // Step: Found how many times it fits
+                    steps.push({
+                        message: `Скільки разів **${n2}** вміщується у **${partialVal}**? **${qDigit}** разів. Записуємо **${qDigit}** у частку.`,
+                        rows: [...rows],
+                        quotient: quotientStr,
+                        highlightDividendRange: null, // clear highlight
+                        highlightQuotientDigit: quotientStr.length - 1
+                    });
+
+                    // Step: Multiply
+                    steps.push({
+                        message: `Множимо **${qDigit}** на **${n2}**, отримуємо **${product}**.`,
+                        rows: [...rows],
+                        quotient: quotientStr,
+                        productToSubtract: { value: product, indent: currentIndex - String(currentPartial).length }
+                    });
+
+                    // Step: Subtract
+                    rows.push({
+                        type: 'subtraction',
+                        topValue: partialVal, // Implicit, but good for tracking
+                        subValue: product,
+                        indent: currentIndex - String(currentPartial).length, // Align right with the current digit index
+                        result: remainder
+                    });
+                    
+                    steps.push({
+                        message: `Віднімаємо **${product}** від **${partialVal}**. Остача **${remainder}**.`,
+                        rows: [...rows],
+                        quotient: quotientStr,
+                        remainder: { value: remainder, indent: currentIndex - String(remainder).length } 
+                        // Indent logic is tricky. Remainder aligns right with the partial dividend used.
+                        // e.g. 125 / 5. 12 (indent 0) - 10 = 2 (indent 1).
+                        // If currentPartial ended at index X, remainder ends at index X.
+                    });
+
+                    // Update partial for next iteration
+                    // Standard algo: result of subtraction + next digit.
+                    // Visually: The remainder is written. Then next digit drops next to it.
+                    currentPartial = String(remainder);
+                    
+                    // If we have more digits to bring down
+                    if (currentIndex < s1.length) {
+                        steps.push({
+                            message: `Зносимо наступну цифру **${s1[currentIndex]}** до остачі **${remainder}**.`,
+                            rows: [...rows],
+                            quotient: quotientStr,
+                            bringDown: { 
+                                remainderVal: remainder, 
+                                remainderIndent: currentIndex - String(remainder).length, // Align right to previous processed digit
+                                digit: s1[currentIndex],
+                                digitIndent: currentIndex // This is the absolute index of the digit being brought down
+                            }
+                        });
+                    }
+                }
+                
+                // Final Step
+                steps.push({
+                    message: `Ділення завершено! 🎉 Частка: **${quotientStr}**, Остача: **${currentPartial}**.`,
+                    rows: [...rows],
+                    quotient: quotientStr,
+                    final: true
+                });
+            }
+
+            function renderStep(step) {
+                gridContainer.innerHTML = '';
+                
+                // Create Base Grid Structure
+                // We need enough rows and columns.
+                // Col count approx len(num1) + len(num2) + padding
+                
+                // --- Dividend | Divisor ---
+                // Row 0: Dividend Digits ... | Divisor Digits
+                // Row 1:                     | -------
+                // Row 2:                     | Quotient
+                
+                const sDividend = String(dividend);
+                const sDivisor = String(divisor);
+                const colWidth = 2.5; // Rem
+                const startX = 0;
+                const startY = 0;
+
+                // Helper to place text at coords
+                function placeText(text, x, y, className = '', id = '') {
+                    const el = document.createElement('div');
+                    el.className = `absolute flex justify-center items-center font-mono text-xl ${className}`;
+                    el.style.left = `${x * colWidth}rem`;
+                    el.style.top = `${y * 2.5}rem`;
+                    el.style.width = `${colWidth}rem`;
+                    el.style.height = `2.5rem`;
+                    el.innerText = text;
+                    if (id) el.id = id;
+                    gridContainer.appendChild(el);
+                    return el;
+                }
+
+                function placeLine(x, y, width, type = 'horizontal') {
+                    const el = document.createElement('div');
+                    el.className = 'absolute bg-gray-600';
+                    if (type === 'horizontal') {
+                        el.style.left = `${x * colWidth}rem`;
+                        el.style.top = `${y * 2.5}rem`; // Align bottom of row?
+                        el.style.width = `${width * colWidth}rem`;
+                        el.style.height = `2px`;
+                    } else {
+                        el.style.left = `${x * colWidth}rem`;
+                        el.style.top = `${y * 2.5}rem`;
+                        el.style.height = `${width * 2.5}rem`; // Width here acts as length in rows
+                        el.style.width = `2px`;
+                    }
+                    gridContainer.appendChild(el);
+                }
+
+                // Render Dividend
+                for (let i = 0; i < sDividend.length; i++) {
+                    const cell = placeText(sDividend[i], startX + i, startY, 'digit-box digit-box-filled');
+                    if (step.highlightDividendRange && i >= step.highlightDividendRange.start && i < step.highlightDividendRange.end) {
+                        cell.classList.add('highlight');
+                    }
+                }
+
+                // Vertical Separator
+                const divBarX = sDividend.length + 0.5;
+                // Calculate height of vertical bar based on rows? 
+                // Initially minimal, expands as rows grow.
+                // Or just fixed logic: Top part is for divisor/quotient. 
+                // In UA school format:
+                // Dividend | Divisor
+                //          |-------
+                //          | Quotient
+                // Vertical line goes down 2 rows usually.
+                
+                placeLine(divBarX, 0, 2, 'vertical'); 
+                
+                // Render Divisor
+                for (let i = 0; i < sDivisor.length; i++) {
+                    placeText(sDivisor[i], divBarX + 0.5 + i, startY, 'digit-box');
+                }
+
+                // Horizontal Separator under Divisor
+                placeLine(divBarX, 1, sDivisor.length + 0.5, 'horizontal');
+
+                // Render Quotient
+                if (step.quotient) {
+                    const qStr = String(step.quotient);
+                    for (let i = 0; i < qStr.length; i++) {
+                        const cell = placeText(qStr[i], divBarX + 0.5 + i, 1, 'digit-box font-bold text-blue-600');
+                        if (step.highlightQuotientDigit === i) {
+                            cell.classList.add('highlight-secondary');
+                        }
+                    }
+                }
+
+                // Render Subtraction Steps (Rows)
+                let currentRowY = 1; // Start below Dividend
+                
+                // Iterate through rows stored in state
+                step.rows.forEach(row => {
+                    const subValStr = String(row.subValue);
+                    const indent = row.indent; // Indent from left (index 0 of dividend)
+                    
+                    // Minus sign
+                    placeText('-', indent - 1, currentRowY, 'math-symbol');
+                    
+                    // Subtraction value
+                    for (let i = 0; i < subValStr.length; i++) {
+                        placeText(subValStr[i], indent + i, currentRowY, 'digit-box');
+                    }
+                    currentRowY++;
+                    
+                    // Underline
+                    placeLine(indent, currentRowY, subValStr.length, 'horizontal');
+                    // currentRowY += 0.2; // small gap? No, grid is rigid.
+                    
+                    // Result (Remainder for this step)
+                    // If this is not the final remainder (i.e. we brought down something later), logic handles it?
+                    // The 'rows' object stores the subtraction result.
+                    
+                    // Wait, usually the result of subtraction IS the start of the next line, possibly with a digit brought down.
+                    // Let's print the result on the next line if it exists.
+                    const resultStr = String(row.result);
+                    // Indent logic: Right aligned to the subtraction line.
+                    // subValue ends at indent + subValStr.length - 1
+                    // result should end at same place.
+                    const resultIndent = (indent + subValStr.length) - resultStr.length;
+                    
+                    for (let i = 0; i < resultStr.length; i++) {
+                       // placeText(resultStr[i], resultIndent + i, currentRowY, 'digit-box');
+                    }
+                    // Actually, we don't render result here immediately because the "Bring Down" step or next iteration logic handles the placement of the NEW partial.
+                    // BUT, to show history correctly, we must render the intermediate remainders.
+                    
+                    // Let's render the result of the subtraction immediately below the line
+                    // UNLESS it's combined with a "bring down" in the SAME visual block in standard notation?
+                    // Standard:
+                    //   12
+                    // - 10
+                    //   --
+                    //    25  <-- This '2' is the result, '5' is brought down.
+                    
+                    // So we do render '2' (row.result) here.
+                    for (let i = 0; i < resultStr.length; i++) {
+                        placeText(resultStr[i], resultIndent + i, currentRowY, 'digit-box');
+                    }
+                    
+                    // Note: If we brought down a digit, that happens on THIS same row (currentRowY).
+                    // We need to check if we are 'bringing down' relative to THIS row.
+                    // The step generation separates "Subtraction" and "Bring Down". 
+                    // But 'rows' array in `step` is history. 
+                    // We need to know if a digit was brought down NEXT to this result.
+                    
+                    // Let's check `step.bringDown` - but that's for the CURRENT active step. 
+                    // For history, we might need to store the "brought down digit" inside the row object or have a separate history for it.
+                    // Simpler: The `rows` logic in my generator was a bit sparse.
+                    // Let's rely on the generator to provide full snapshot of lines to draw? 
+                    // Or reconstruct history.
+                    
+                    // Re-design `rows` structure for rendering:
+                    // Just store a list of "Lines" to render below dividend.
+                    // Line types: 'subtraction-line' (minus, number), 'bar', 'result-line' (number).
+                    
+                    // But `step.rows` in my generator was: `{ subValue, indent, result }`. 
+                    // It didn't explicitly store the "brought down" digit from history.
+                    
+                    // Let's fix the generator logic to be more explicit about history lines.
+                });
+
+                // Rendering active step specific elements that aren't in `rows` yet
+                if (step.productToSubtract) {
+                    const pVal = String(step.productToSubtract.value);
+                    const indent = step.productToSubtract.indent;
+                    placeText('-', indent - 1, currentRowY, 'math-symbol');
+                    for (let i = 0; i < pVal.length; i++) {
+                        const cell = placeText(pVal[i], indent + i, currentRowY, 'digit-box highlight');
+                    }
+                }
+                
+                if (step.remainder) {
+                     // The line is drawn by the 'rows' logic if we pushed it? 
+                     // No, `step.remainder` implies we just did subtraction and show result.
+                     // We need the horizontal bar first.
+                     const pVal = String(step.productToSubtract?.value || step.rows[step.rows.length-1].subValue); // Fallback if re-rendering?
+                     // Actually `step.remainder` comes after `step.rows` was pushed? 
+                     // In my generator: 
+                     // 1. push row with subValue.
+                     // 2. push step with message "Remainder ...".
+                     // So the row is already in `step.rows`.
+                     
+                     // So the loop above renders the bar and the remainder?
+                     // My loop above renders `row.result`.
+                     // So it should be visible.
+                     // Just need to highlight it?
+                     
+                     // We need to match the current remainder being discussed.
+                     // It is the LAST row's result.
+                     const lastRow = step.rows[step.rows.length - 1];
+                     if (lastRow) {
+                         const resultStr = String(lastRow.result);
+                         const resultIndent = (lastRow.indent + String(lastRow.subValue).length) - resultStr.length;
+                         // Highlight these cells?
+                         // We can re-select them or add logic in the loop.
+                     }
+                }
+
+                if (step.bringDown) {
+                    // This happens on the same row as the last remainder.
+                    // { remainderVal, remainderIndent, digit, digitIndent }
+                    // We need to render the brought down digit.
+                    // The loop above rendered the remainder part.
+                    // Now render the digit.
+                    
+                    // For history consistency, we need to know if previous rows had brought down digits.
+                    // My `rows` structure needs to store "broughtDownDigit" if one existed for that row.
+                }
+
+                showMessage(step.message);
+            }
+            
+            // Redefine generateSteps to include 'broughtDown' in history rows
+            function generateStepsBetter(n1, n2) {
+                const s1 = String(n1);
+                steps = [];
+                
+                steps.push({
+                    message: `Починаємо ділення **${n1}** на **${n2}**.`,
+                    lines: [], // Abstract lines to render: { type: 'sub', val: '...', x: 0 }, { type: 'bar', x: 0, w: 0 }, { type: 'val', val: '...', x: 0 }
+                    quotient: "",
+                    highlightDividendRange: null
+                });
+
+                let currentPartial = "";
+                let currentIndex = 0;
+                let quotientStr = "";
+                let lines = []; 
+
+                // Initial partial (chunking)
+                while (currentIndex < s1.length) {
+                    currentPartial += s1[currentIndex];
+                    currentIndex++;
+                    if (parseInt(currentPartial) >= n2) break;
+                }
+                
+                if (parseInt(currentPartial) < n2) {
+                     // Edge case 0
+                     steps.push({ message: "Результат 0", lines: [], quotient: "0", final: true });
+                     return;
+                }
+
+                steps.push({
+                    message: `Беремо перше число **${currentPartial}**.`,
+                    lines: [],
+                    quotient: quotientStr,
+                    highlightDividendRange: { start: 0, end: currentIndex },
+                    activePartialIndent: 0 // Where the current partial "starts" or "ends" visually? Ends at currentIndex-1
+                });
+                
+                let processingIndex = currentIndex; // Next digit to bring down
+
+                while (true) {
+                    let partialVal = parseInt(currentPartial);
+                    let qDigit = Math.floor(partialVal / n2);
+                    let product = qDigit * n2;
+                    let remainder = partialVal - product;
+                    
+                    quotientStr += qDigit;
+                    
+                    // Visual Indentation Logic
+                    // The 'product' must align right with 'currentPartial'.
+                    // 'currentPartial' ends at 'processingIndex - 1'.
+                    // So product ends at 'processingIndex - 1'.
+                    let productIndent = processingIndex - String(product).length; 
+                    if (productIndent < 0) productIndent = 0; // Safety
+
+                    // Step: Quotient Digit
+                    steps.push({
+                        message: `**${n2}** вміщується у **${partialVal}** **${qDigit}** разів.`,
+                        lines: [...lines],
+                        quotient: quotientStr,
+                        highlightQuotientDigit: quotientStr.length - 1
+                    });
+
+                    // Step: Multiply (Show subtraction prep)
+                    steps.push({
+                        message: `Множимо **${qDigit}** на **${n2}** = **${product}**.`,
+                        lines: [...lines],
+                        quotient: quotientStr,
+                        tempLine: { type: 'sub', val: String(product), x: productIndent }
+                    });
+
+                    // Commit Subtraction Line
+                    lines.push({ type: 'sub', val: String(product), x: productIndent });
+                    lines.push({ type: 'bar', x: productIndent, w: String(product).length });
+                    
+                    // Calculate Remainder Position
+                    // Remainder aligns right with product/partial.
+                    let remStr = String(remainder);
+                    let remIndent = processingIndex - remStr.length;
+                    
+                    // Step: Remainder
+                    // If this is the end, just show remainder.
+                    // If not, we will bring down a digit.
+                    
+                    // Current Partial for next step starts as remainder
+                    // But we might append a digit immediately in the visual flow?
+                    // Usually steps show remainder, THEN arrow/drop digit.
+                    
+                    steps.push({
+                        message: `Остача **${remainder}**.`,
+                        lines: [...lines, { type: 'val', val: remStr, x: remIndent }],
+                        quotient: quotientStr
+                    });
+                    
+                    // Check if done
+                    if (processingIndex >= s1.length) {
+                         lines.push({ type: 'val', val: remStr, x: remIndent });
+                         break; // Done
+                    }
+                    
+                    // Bring down next digit
+                    let nextDigit = s1[processingIndex];
+                    let nextDigitX = processingIndex;
+                    
+                    // Visual: The line with remainder should also have the brought down digit.
+                    // We update the last line in 'lines' or append to it?
+                    // Better to have a distinct line entry that combines them?
+                    // Or just render separate elements.
+                    
+                    // Let's create a combined value for the next line
+                    // The visual line is "Remainder + NextDigit" 
+                    // e.g. " 2" + "5" -> " 25"
+                    // But there might be a gap if remainder is 0 and we skip it? 
+                    // Usually if remainder is 0 (and not end), we don't write it if we bring down? 
+                    // E.g. 10 / 5. 10-10=0. Bring down nothing.
+                    // 125/5. 12-10=2. Bring 5. -> "25".
+                    // 105/5. 10-10=0. Bring 5. -> " 5" (0 is usually omitted or written small). 
+                    // Let's write 0 for clarity in trainer? Or standard practice?
+                    // Standard: write remainder even if 0, then next digit. 
+                    // Exception: if remainder is 0 and we are at the very beginning? No.
+                    
+                    // Step: Bring down
+                    steps.push({
+                        message: `Зносимо цифру **${nextDigit}**.`,
+                        lines: [...lines, { type: 'val', val: remStr, x: remIndent }, { type: 'arrow', x: nextDigitX, toX: nextDigitX, val: nextDigit }], // Arrow visual or just text
+                        quotient: quotientStr,
+                        tempBringDown: { val: nextDigit, x: nextDigitX }
+                    });
+                    
+                    // Commit the new partial line
+                    // It consists of remainder (if non-zero or specific logic) + digit.
+                    // Actually, simpler: The new line IS the new currentPartial.
+                    // currentPartial = remainder + nextDigit (string concat).
+                    // BUT, 'remainder' string might be '0'. 
+                    // If remainder is 0, do we write '05'? No, usually just '5'.
+                    // Unless remainder is the ONLY thing (end of calc).
+                    
+                    let nextPartialDisplay = "";
+                    let nextPartialIndent = 0;
+                    
+                    if (remainder === 0) {
+                        nextPartialDisplay = nextDigit;
+                        nextPartialIndent = nextDigitX;
+                    } else {
+                        nextPartialDisplay = remStr + nextDigit;
+                        nextPartialIndent = remIndent;
+                    }
+                    
+                    // Add this combined line to history for next iteration
+                    lines.push({ type: 'val', val: nextPartialDisplay, x: nextPartialIndent });
+                    
+                    currentPartial = String(remainder) + nextDigit; // Logic value
+                    processingIndex++;
+                }
+
+                steps.push({
+                    message: `Готово! Частка **${quotientStr}**, Остача **${parseInt(currentPartial)%n2 === 0 ? 0 : parseInt(currentPartial)}**. (Остання остача **${parseInt(currentPartial)}**)`, // Logic fix: currentPartial holds the last remainder logic if loop broke correctly
+                    // Actually my loop break logic was slightly off for the last step.
+                    // If processingIndex >= len, we broke.
+                    // The last pushed line was the remainder.
+                    lines: [...lines],
+                    quotient: quotientStr,
+                    final: true
+                });
+            }
+
+            // Corrected Renderer for new 'lines' structure
+            function renderStepFinal(step) {
+                gridContainer.innerHTML = '';
+                const sDividend = String(dividend);
+                const sDivisor = String(divisor);
+                const colWidth = 2.5; 
+                
+                // Helper
+                const place = (txt, x, y, cls='digit-box') => {
+                    const el = document.createElement('div');
+                    el.className = `absolute flex justify-center items-center text-xl font-mono ${cls}`;
+                    el.style.left = `${x * colWidth}rem`;
+                    el.style.top = `${y * 2.5}rem`;
+                    el.style.width = `${colWidth}rem`;
+                    el.style.height = `2.5rem`;
+                    el.innerText = txt;
+                    gridContainer.appendChild(el);
+                    return el;
+                };
+                 const line = (x, y, w, type='h') => {
+                    const el = document.createElement('div');
+                    el.className = 'absolute bg-gray-600';
+                    if (type==='h') {
+                        el.style.left = `${x * colWidth}rem`;
+                        el.style.top = `${y * 2.5 + 2.4}rem`; // Bottom of cell
+                        el.style.width = `${w * colWidth}rem`;
+                        el.style.height = `2px`;
+                    } else {
+                        el.style.left = `${x * colWidth}rem`;
+                        el.style.top = `${y * 2.5}rem`;
+                        el.style.height = `${w * 2.5}rem`;
+                        el.style.width = `2px`;
+                    }
+                    gridContainer.appendChild(el);
+                };
+
+                // Header
+                for (let i=0; i<sDividend.length; i++) {
+                    const cls = (step.highlightDividendRange && i >= step.highlightDividendRange.start && i < step.highlightDividendRange.end) ? 'digit-box highlight' : 'digit-box digit-box-filled';
+                    place(sDividend[i], i, 0, cls);
+                }
+                
+                const barX = sDividend.length + 0.5;
+                line(barX, 0, 2, 'v'); // Vertical bar
+                
+                for(let i=0; i<sDivisor.length; i++) place(sDivisor[i], barX + 0.5 + i, 0);
+                line(barX, 0, sDivisor.length + 0.5, 'h'); // Horizontal bar under divisor
+                
+                if (step.quotient) {
+                    for(let i=0; i<step.quotient.length; i++) {
+                        const cls = (step.highlightQuotientDigit === i) ? 'digit-box font-bold text-blue-600 highlight-secondary' : 'digit-box font-bold text-blue-600';
+                        place(step.quotient[i], barX + 0.5 + i, 1, cls);
+                    }
+                }
+
+                // Body
+                let y = 1;
+                const renderLines = [...step.lines];
+                if (step.tempLine) renderLines.push(step.tempLine);
+                // tempBringDown is a bit special, it modifies the last line visually or adds a partial one?
+                // In my logic `lines` are fully formed rows. `tempBringDown` is an animation step usually showing just the digit dropping.
+                
+                renderLines.forEach(l => {
+                    if (l.type === 'sub') {
+                        place('-', l.x - 0.8, y, 'math-symbol');
+                        for(let i=0; i<l.val.length; i++) place(l.val[i], l.x + i, y);
+                        y++;
+                    } else if (l.type === 'bar') {
+                        line(l.x, y-1, l.w, 'h'); // Draw under previous row
+                    } else if (l.type === 'val') {
+                        for(let i=0; i<l.val.length; i++) place(l.val[i], l.x + i, y);
+                        // Do not increment Y yet, wait for next instruction? 
+                        // Standard spacing: Each value is on a new row.
+                        y++; 
+                    }
+                });
+
+                if (step.tempBringDown) {
+                    // Show the digit being brought down
+                    // It should align with the y of the last value or the empty space if last value was remainder?
+                    // In my logic: remainder line was printed. Now bring down digit.
+                    // Visually it's on the same line as the remainder (last line rendered).
+                    // So y-1.
+                    const d = step.tempBringDown;
+                    const cell = place(d.val, d.x, y-1, 'digit-box highlight');
+                    
+                    // Optional: Draw an arrow from top?
+                    // dividend digit is at (d.x, 0). 
+                    // We are at (d.x, y-1).
+                    // Draw faint line?
+                    const arrow = document.createElement('div');
+                    arrow.className = 'absolute border-l-2 border-dotted border-gray-300';
+                    arrow.style.left = `${d.x * colWidth + colWidth/2}rem`;
+                    arrow.style.top = `2.5rem`;
+                    arrow.style.height = `${(y-1) * 2.5 - 2.5}rem`;
+                    gridContainer.appendChild(arrow);
+                }
+
+                showMessage(step.message);
+                
+                // Adjust container height
+                gridContainer.style.height = `${(y+1) * 2.5}rem`;
+                gridContainer.style.width = `${(sDividend.length + sDivisor.length + 3) * colWidth}rem`;
+            }
+
+            startButton.addEventListener('click', () => {
+                const n1 = parseInt(num1Input.value);
+                const n2 = parseInt(num2Input.value);
+                
+                if (isNaN(n1) || isNaN(n2) || n1 <= 0 || n2 <= 0) {
+                    showMessageBox('Будь ласка, введіть додатні числа.');
+                    return;
+                }
+                
+                if (String(n1).length > 6 || String(n2).length > 3) {
+                    showMessageBox('Для наочності використовуйте до 6 цифр для діленого і до 3 для дільника.');
+                    return;
+                }
+                if (n2 > n1) {
+                    showMessageBox('Дільник не може бути більшим за ділене (у цьому тренажері).');
+                    return;
+                }
+
+                dividend = n1;
+                divisor = n2;
+                currentStepIndex = 0;
+                generateStepsBetter(dividend, divisor);
+                renderStepFinal(steps[currentStepIndex]);
+                startButton.style.display = 'none';
+                nextButton.style.display = 'inline-block';
+                resetButton.style.display = 'inline-block';
+                updateButtons();
+            });
+
+            nextButton.addEventListener('click', () => {
+                if (currentStepIndex < steps.length - 1) {
+                    currentStepIndex++;
+                    renderStepFinal(steps[currentStepIndex]);
+                } else {
+                    showMessage('Це останній крок.');
+                }
+                updateButtons();
+            });
+
+            resetButton.addEventListener('click', () => {
+                num1Input.value = '';
+                num2Input.value = '';
+                startButton.style.display = 'inline-block';
+                nextButton.style.display = 'none';
+                resetButton.style.display = 'none';
+                currentStepIndex = 0;
+                steps = [];
+                gridContainer.innerHTML = '';
+                showMessage('Введіть числа та натисніть "Почати".');
+            });
+        };
+    </script>
+</body>
+</html>
