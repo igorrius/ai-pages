@@ -1,0 +1,1947 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Redis Storage Design — Best Practices (Interactive)</title>
+  <style>
+    :root{
+      --bg:#0b1020; --panel:#101a33; --panel2:#0f1730; --text:#e8eefc; --muted:#aab6d6;
+      --brand:#7aa2ff; --brand2:#7ef0c7; --warn:#ffcc66; --bad:#ff6b6b; --ok:#7ef0c7;
+      --shadow:0 14px 40px rgba(0,0,0,.35);
+      --radius:20px;
+      --code:#0b1226;
+      --grid:rgba(255,255,255,.06);
+      --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      --sans: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji","Segoe UI Emoji";
+    }
+
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{
+      margin:0; font-family:var(--sans); color:var(--text);
+      background:
+        radial-gradient(1200px 800px at 20% 10%, rgba(122,162,255,.22), transparent 60%),
+        radial-gradient(900px 600px at 80% 0%, rgba(126,240,199,.14), transparent 55%),
+        radial-gradient(900px 700px at 70% 90%, rgba(255,204,102,.10), transparent 55%),
+        linear-gradient(180deg, #070a14, var(--bg));
+      overflow:hidden;
+    }
+
+    a{color:var(--brand)}
+
+    /* Layout */
+    .app{height:100vh; display:grid; grid-template-columns: 330px 1fr; gap:18px; padding:18px; max-height:100vh}
+
+    @media (max-width: 980px){
+      body{overflow:auto}
+      .app{grid-template-columns: 1fr; overflow:visible}
+      .sidebar{position:sticky; top:0; z-index:10}
+    }
+
+    .card{
+      background: linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.03));
+      border:1px solid rgba(255,255,255,.08);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(10px);
+    }
+
+    /* Sidebar */
+    .sidebar{padding:14px; display:flex; flex-direction:column; gap:12px; max-height:100vh; overflow:hidden}
+    .brand{
+      display:flex; align-items:center; justify-content:space-between; gap:12px;
+      padding:12px 12px 10px;
+      border-radius: 16px;
+      background: linear-gradient(180deg, rgba(122,162,255,.16), rgba(126,240,199,.10));
+      border:1px solid rgba(255,255,255,.10);
+    }
+    .brand h1{margin:0; font-size:14px; letter-spacing:.4px; text-transform:uppercase}
+    .brand small{display:block; color:var(--muted); margin-top:4px; font-size:12px}
+
+    .pillrow{display:flex; flex-wrap:wrap; gap:8px}
+    .pill{
+      font-size:12px; color:var(--muted);
+      padding:6px 10px; border-radius:999px;
+      background: rgba(255,255,255,.05);
+      border: 1px solid rgba(255,255,255,.08);
+      user-select:none;
+    }
+
+    .search{
+      display:flex; gap:10px; align-items:center;
+      padding:10px; border-radius: 16px;
+      background: rgba(0,0,0,.22);
+      border: 1px solid rgba(255,255,255,.10);
+    }
+    .search input{
+      width:100%; background:transparent; border:0; outline:0;
+      color:var(--text); font-size:13px;
+    }
+
+    .toc{flex:1; overflow:auto; padding-right:6px; min-height:0}
+    .toc .group{margin-top:10px;}
+    .toc .gtitle{
+      font-size:11px; text-transform:uppercase; letter-spacing:.16em;
+      color:rgba(232,238,252,.7);
+      margin:10px 8px;
+    }
+    .toc button{
+      width:100%; text-align:left; cursor:pointer;
+      border:0; border-radius: 14px;
+      background: transparent;
+      color: var(--text);
+      padding:10px 12px;
+      display:flex; align-items:center; justify-content:space-between;
+      gap:12px;
+    }
+    .toc button:hover{background:rgba(255,255,255,.06)}
+    .toc button[aria-current="true"]{
+      background: linear-gradient(180deg, rgba(122,162,255,.20), rgba(126,240,199,.10));
+      border:1px solid rgba(255,255,255,.12);
+    }
+    .toc .meta{font-size:12px; color: var(--muted)}
+
+    /* Main */
+    .main{padding:14px; display:flex; flex-direction:column; gap:12px; min-width:0; max-height:calc(100vh - 36px)}
+
+    .topbar{
+      display:flex; align-items:center; justify-content:space-between; gap:10px;
+      padding:10px 12px;
+      background: rgba(0,0,0,.22);
+      border:1px solid rgba(255,255,255,.10);
+      border-radius: 16px;
+    }
+
+    .navbtns{display:flex; gap:10px; align-items:center; flex-wrap:wrap}
+    .btn{
+      cursor:pointer; border:0;
+      padding:10px 12px; border-radius: 14px;
+      color:var(--text);
+      background: rgba(255,255,255,.06);
+      border: 1px solid rgba(255,255,255,.10);
+      transition: transform .06s ease;
+    }
+    .btn:active{transform: translateY(1px)}
+    .btn.primary{
+      background: linear-gradient(180deg, rgba(122,162,255,.25), rgba(122,162,255,.10));
+      border-color: rgba(122,162,255,.25);
+    }
+    .btn.good{
+      background: linear-gradient(180deg, rgba(126,240,199,.22), rgba(126,240,199,.10));
+      border-color: rgba(126,240,199,.22);
+    }
+
+    .kbd{font-family:var(--mono); font-size:11px; color:rgba(232,238,252,.85);
+      padding:2px 6px; border-radius:8px; background: rgba(0,0,0,.35);
+      border:1px solid rgba(255,255,255,.10);
+    }
+
+    .progress{
+      height:10px; border-radius: 999px;
+      background: rgba(255,255,255,.06);
+      border: 1px solid rgba(255,255,255,.10);
+      overflow:hidden;
+    }
+    .progress > div{height:100%; width:0%; background: linear-gradient(90deg, rgba(122,162,255,.8), rgba(126,240,199,.7));}
+
+    .slide{
+      flex:1;
+      height:calc(100vh - 36px - 14px - 14px - 10px - 52px - 24px);
+      /* viewport - app padding - main padding - progress - topbar - footer */
+      padding:16px;
+      border-radius: var(--radius);
+      background: linear-gradient(180deg, rgba(255,255,255,.05), rgba(255,255,255,.02));
+      border:1px solid rgba(255,255,255,.08);
+      overflow:auto;
+    }
+
+    .title{display:flex; align-items:flex-start; justify-content:space-between; gap:18px; flex-wrap:wrap}
+    h2{margin:0; font-size:28px; letter-spacing:-.02em}
+    .subtitle{margin-top:8px; color:var(--muted); line-height:1.45}
+
+    .grid{display:grid; grid-template-columns: repeat(12, 1fr); gap:12px; margin-top:14px}
+    .col6{grid-column: span 6}
+    .col7{grid-column: span 7}
+    .col5{grid-column: span 5}
+    .col12{grid-column: span 12}
+
+    @media (max-width: 980px){
+      .col6,.col7,.col5{grid-column: span 12}
+    }
+
+    .panel{
+      background: rgba(0,0,0,.20);
+      border:1px solid rgba(255,255,255,.10);
+      border-radius: 16px;
+      padding:12px;
+      min-width:0;
+    }
+
+    .panel h3{margin:0 0 8px; font-size:14px; text-transform:uppercase; letter-spacing:.14em; color:rgba(232,238,252,.8)}
+
+    ul{margin:8px 0 0 18px; color:rgba(232,238,252,.92)}
+    li{margin:6px 0}
+
+    .callout{
+      display:flex; gap:10px; align-items:flex-start;
+      border-radius: 16px;
+      padding:12px;
+      border:1px solid rgba(255,255,255,.10);
+      background: linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.03));
+    }
+    .dot{width:10px; height:10px; border-radius:999px; margin-top:5px; background: var(--brand)}
+    .dot.warn{background: var(--warn)}
+    .dot.bad{background: var(--bad)}
+    .dot.ok{background: var(--ok)}
+
+    .code{
+      background: var(--code);
+      border:1px solid rgba(255,255,255,.10);
+      border-radius: 16px;
+      overflow:hidden;
+    }
+    pre{margin:0; padding:12px; overflow:auto; font-family:var(--mono); font-size:12px; line-height:1.5; color:rgba(232,238,252,.92)}
+    .codebar{display:flex; justify-content:space-between; align-items:center; gap:10px; padding:10px 12px; background: rgba(255,255,255,.04); border-bottom: 1px solid rgba(255,255,255,.08)}
+    .codebar span{font-size:12px; color:var(--muted)}
+
+    .tag{
+      font-size:11px; padding:4px 8px; border-radius: 999px;
+      background: rgba(255,255,255,.06);
+      border:1px solid rgba(255,255,255,.10);
+      color:rgba(232,238,252,.85);
+    }
+
+    .twocol{display:grid; grid-template-columns: 1fr 1fr; gap:12px}
+    @media (max-width: 980px){.twocol{grid-template-columns:1fr}}
+
+    .quiz{
+      display:flex; flex-direction:column; gap:10px;
+    }
+    .q{
+      padding:12px; border-radius: 16px;
+      border:1px solid rgba(255,255,255,.10);
+      background: rgba(0,0,0,.20);
+    }
+    .q h4{margin:0 0 6px; font-size:14px}
+    .q label{display:flex; gap:8px; align-items:flex-start; margin:8px 0; color:rgba(232,238,252,.9); cursor:pointer}
+    .q input{margin-top:3px}
+
+    .result{
+      padding:12px; border-radius: 16px;
+      border:1px solid rgba(255,255,255,.10);
+      background: linear-gradient(180deg, rgba(126,240,199,.18), rgba(0,0,0,.15));
+      display:none;
+    }
+
+    .footerline{display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap; color:var(--muted); font-size:12px}
+
+    .toast{
+      position:fixed; right:18px; bottom:18px; z-index:999;
+      padding:10px 12px; border-radius: 14px;
+      border:1px solid rgba(255,255,255,.12);
+      background: rgba(0,0,0,.55);
+      backdrop-filter: blur(10px);
+      color:rgba(232,238,252,.95);
+      display:none;
+      max-width: min(440px, calc(100vw - 36px));
+      box-shadow: var(--shadow);
+      font-size:13px;
+    }
+
+    .small{font-size:12px; color:var(--muted)}
+
+    details{border-radius: 16px; border:1px solid rgba(255,255,255,.10); background: rgba(0,0,0,.18); padding:10px 12px}
+    details summary{cursor:pointer; color:rgba(232,238,252,.92); font-weight:600}
+    details p{color:rgba(232,238,252,.88); margin:10px 0 0; line-height:1.55}
+
+    .table{width:100%; border-collapse: collapse; overflow:hidden; border-radius: 16px; border:1px solid rgba(255,255,255,.10)}
+    .table th, .table td{padding:10px 10px; border-bottom:1px solid rgba(255,255,255,.08); vertical-align:top}
+    .table th{font-size:11px; text-transform:uppercase; letter-spacing:.14em; color:rgba(232,238,252,.75); background: rgba(255,255,255,.04)}
+    .table td{color:rgba(232,238,252,.92); font-size:13px}
+
+    .muted{color:var(--muted)}
+
+    .chip{
+      display:inline-flex; align-items:center; gap:8px;
+      padding:8px 10px; border-radius: 999px;
+      background: rgba(255,255,255,.06);
+      border:1px solid rgba(255,255,255,.10);
+      font-size:12px; color:rgba(232,238,252,.92);
+    }
+    .chip b{font-family:var(--mono); font-weight:700; font-size:11px}
+
+    .ok{color: var(--ok)}
+    .bad{color: var(--bad)}
+    .warn{color: var(--warn)}
+
+    .divider{height:1px; background: rgba(255,255,255,.08); margin:12px 0}
+
+    .hint{margin-top:8px; color:var(--muted); font-size:12px; line-height:1.45}
+
+    /* Print */
+    @media print{
+      body{background:#fff; color:#000; overflow:visible}
+      .app{grid-template-columns:1fr; padding:0}
+      .sidebar,.topbar,.toast{display:none!important}
+      .card{box-shadow:none; border:0}
+      .slide{min-height:auto; border:0}
+      a{color:#000}
+      pre{color:#000}
+      .code{border:1px solid #ddd}
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <aside class="card sidebar" aria-label="Navigation" style="height:100%">
+      <div class="brand">
+        <div>
+          <h1>Redis Storage Design</h1>
+          <small>Key naming • data modeling • performance • maintainability</small>
+        </div>
+        <div class="pill">v1</div>
+      </div>
+
+      <div class="pillrow" aria-label="Quick tips">
+        <div class="pill">Keep keys short & consistent</div>
+        <div class="pill">Prefer hashes for related fields</div>
+        <div class="pill">Design for scans</div>
+        <div class="pill">Use TTL intentionally</div>
+        <div class="pill">Cluster hash tags</div>
+      </div>
+
+      <div class="search" role="search">
+        <span class="muted" aria-hidden="true">⌕</span>
+        <input id="search" type="search" placeholder="Search slides (e.g., TTL, hash, stream, scan)" autocomplete="off" />
+      </div>
+
+      <nav class="toc" id="toc" aria-label="Table of contents"></nav>
+
+      <div class="footerline">
+        <span>Shortcuts: <span class="kbd">←</span> <span class="kbd">→</span> • <span class="kbd">/</span> search • <span class="kbd">P</span> print</span>
+        <span class="muted" id="count"></span>
+      </div>
+    </aside>
+
+    <main class="card main">
+      <div class="topbar" aria-label="Controls">
+        <div class="navbtns">
+          <button class="btn" id="prev" title="Previous (Left Arrow)">← Prev</button>
+          <button class="btn primary" id="next" title="Next (Right Arrow)">Next →</button>
+          <button class="btn" id="outline" title="Toggle outline">☰ Outline</button>
+        </div>
+        <div class="navbtns">
+          <button class="btn good" id="copyLink" title="Copy deep link to this slide">⎘ Copy link</button>
+          <button class="btn" id="print" title="Print / Save as PDF (P)">🖨 Print</button>
+        </div>
+      </div>
+
+      <div class="progress" aria-label="Progress"><div id="bar"></div></div>
+
+      <section class="slide" id="slide" tabindex="0" aria-live="polite"></section>
+
+      <div class="footerline">
+        <span id="crumbs" class="muted"></span>
+        <span class="muted">Interactive • single-file • no deps</span>
+      </div>
+    </main>
+  </div>
+
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+  <script>
+    // ------------------------------
+    // Slide data
+    // ------------------------------
+    const slides = [
+      {
+        id: "intro",
+        group: "Start",
+        title: "How to design Redis storage that stays fast & maintainable",
+        meta: "Mental model + guardrails",
+        body: `
+          <div class="title">
+            <div>
+              <h2>Redis Storage Design</h2>
+              <div class="subtitle">
+                A practical playbook for <b>key naming</b>, <b>data modeling</b>, <b>TTL strategy</b>,
+                <b>memory & performance</b>, and <b>operational safety</b>.
+              </div>
+            </div>
+            <div class="pillrow">
+              <span class="tag">Keys</span>
+              <span class="tag">Hashes</span>
+              <span class="tag">Sets</span>
+              <span class="tag">Streams</span>
+              <span class="tag">TTL</span>
+            </div>
+          </div>
+
+          <div class="grid">
+            <div class="panel col6">
+              <h3>What this is</h3>
+              <ul>
+                <li>Opinionated best practices for production Redis.</li>
+                <li>Patterns you can reuse across services and teams.</li>
+                <li>Includes checklists, examples, and interactive exercises.</li>
+              </ul>
+              <div class="hint">Tip: use <span class="kbd">/</span> to focus search, and <span class="kbd">P</span> to print as PDF.</div>
+            </div>
+            <div class="panel col6">
+              <h3>What Redis is (for design purposes)</h3>
+              <div class="callout"><span class="dot ok"></span>
+                <div>
+                  <b>An in-memory data structure engine</b> with network latency & single-threaded command execution.
+                  Design for <b>predictable access patterns</b>, <b>bounded work per command</b>, and <b>clean ownership</b>.
+                </div>
+              </div>
+              <div class="divider"></div>
+              <div class="callout"><span class="dot warn"></span>
+                <div>
+                  Redis is not a schemaless dumping ground. The more you rely on it, the more you need <b>conventions</b>.
+                </div>
+              </div>
+            </div>
+
+            <div class="panel col12">
+              <h3>Outcomes</h3>
+              <div class="twocol">
+                <div>
+                  <div class="chip">✅ <b>Consistency</b> predictable keys and structures</div>
+                  <div class="chip">✅ <b>Performance</b> fewer round trips, bounded scans</div>
+                  <div class="chip">✅ <b>Operability</b> introspection, safe deletes, migrations</div>
+                </div>
+                <div>
+                  <div class="chip">✅ <b>Cost control</b> memory + eviction tuning</div>
+                  <div class="chip">✅ <b>Team scaling</b> ownership and naming governance</div>
+                  <div class="chip">✅ <b>Reliability</b> TTL discipline, idempotency, replayability</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        `
+      },
+
+      {
+        id: "principles",
+        group: "Core Principles",
+        title: "Five principles that prevent Redis chaos",
+        meta: "Design constraints",
+        body: `
+          <div class="title">
+            <div>
+              <h2>Principles</h2>
+              <div class="subtitle">If you follow these five, everything else becomes easier.</div>
+            </div>
+            <div class="pillrow"><span class="tag">architecture</span><span class="tag">team</span><span class="tag">performance</span></div>
+          </div>
+
+          <div class="grid">
+            <div class="panel col6">
+              <h3>1) Model access patterns first</h3>
+              <ul>
+                <li>Write down the read/write paths: <b>key lookup</b>, <b>range query</b>, <b>membership</b>, <b>top-N</b>, <b>dedupe</b>.</li>
+                <li>Redis excels when you know the key (O(1)).</li>
+                <li>Avoid designs that require frequent global scans.</li>
+              </ul>
+            </div>
+
+            <div class="panel col6">
+              <h3>2) Bound work per command</h3>
+              <ul>
+                <li>Large values, huge hashes, and big range queries can block the server.</li>
+                <li>Prefer incremental patterns: SCAN, HSCAN, ZSCAN, XREAD with COUNT.</li>
+                <li>Keep payloads small; store large blobs elsewhere (object storage / DB).</li>
+              </ul>
+            </div>
+
+            <div class="panel col6">
+              <h3>3) Make ownership explicit</h3>
+              <ul>
+                <li>Every keyspace belongs to a service/team.</li>
+                <li>Key prefixes must encode ownership and purpose.</li>
+                <li>Adopt a key registry (even a simple markdown doc).</li>
+              </ul>
+            </div>
+
+            <div class="panel col6">
+              <h3>4) Expiration is a feature, not an afterthought</h3>
+              <ul>
+                <li>Defaults matter: if it <i>should</i> expire, enforce it in code.</li>
+                <li>Track TTL decisions with rationale (cache vs state).</li>
+                <li>Beware of making permanent state with fragile conventions.</li>
+              </ul>
+            </div>
+
+            <div class="panel col12">
+              <h3>5) Optimize for change</h3>
+              <ul>
+                <li>Plan for schema evolution: version keys, or encode version in prefix.</li>
+                <li>Prefer additive migrations; keep both versions during rollout.</li>
+                <li>Provide safe delete paths (namespace delete + background cleanup).</li>
+              </ul>
+              <div class="hint">Redis is fast — until you accidentally make it do too much work at once.</div>
+            </div>
+          </div>
+        `
+      },
+
+      {
+        id: "key-naming",
+        group: "Key Naming",
+        title: "Key naming convention: readable, stable, and grep-able",
+        meta: "Prefixes + separators",
+        body: `
+          <div class="title">
+            <div>
+              <h2>Key naming</h2>
+              <div class="subtitle">
+                A strong naming scheme makes Redis observable, debuggable, and safe to operate.
+              </div>
+            </div>
+            <div class="pillrow"><span class="tag">convention</span><span class="tag">ops</span></div>
+          </div>
+
+          <div class="grid">
+            <div class="panel col7">
+              <h3>Recommended pattern</h3>
+              <div class="callout"><span class="dot ok"></span>
+                <div>
+                  <div class="chip">Format: <b>{env}:{app}:{domain}:{entity}:{id}:{qualifier}</b></div>
+                  <div class="hint">Use <b>:</b> as the primary delimiter. It’s readable and works well with prefix scans.</div>
+                </div>
+              </div>
+
+              <div class="divider"></div>
+
+              <table class="table" aria-label="Key parts">
+                <thead><tr><th>Part</th><th>Why</th><th>Example</th></tr></thead>
+                <tbody>
+                  <tr><td><b>env</b></td><td>Prevents cross-env collisions; safer debugging</td><td><span class="chip"><b>prod</b></span></td></tr>
+                  <tr><td><b>app/service</b></td><td>Ownership and blast radius control</td><td><span class="chip"><b>billing</b></span></td></tr>
+                  <tr><td><b>domain</b></td><td>Logical grouping for scans & deletes</td><td><span class="chip"><b>invoice</b></span></td></tr>
+                  <tr><td><b>entity:id</b></td><td>Natural lookup and sharding keys</td><td><span class="chip"><b>inv:9472</b></span></td></tr>
+                  <tr><td><b>qualifier</b></td><td>Meaningful variation</td><td><span class="chip"><b>v2</b></span>, <span class="chip"><b>meta</b></span></td></tr>
+                </tbody>
+              </table>
+            </div>
+
+            <div class="panel col5">
+              <h3>Rules of thumb</h3>
+              <ul>
+                <li><b>Prefer brevity</b> (keys cost memory).</li>
+                <li><b>No spaces</b>, avoid unescaped separators inside ids.</li>
+                <li>Use <b>stable</b> identifiers (numeric IDs, UUIDs).</li>
+                <li>Avoid embedding mutable fields (like email) into keys.</li>
+                <li>Include <b>versioning</b> when structure can change.</li>
+              </ul>
+              <div class="divider"></div>
+              <div class="callout"><span class="dot warn"></span>
+                <div>
+                  <b>Hash tags for Redis Cluster:</b> if you need multi-key ops to hit the same slot, use <b>{...}</b>.
+                  <div class="hint">Example: <span class="kbd">prod:chat:room:{42}:users</span> and <span class="kbd">prod:chat:room:{42}:msgs</span>.</div>
+                </div>
+              </div>
+            </div>
+
+            <div class="panel col12">
+              <h3>Examples</h3>
+              <div class="code">
+                <div class="codebar"><span>Good</span><button class="btn" data-copy="goodKeys">Copy</button></div>
+                <pre id="goodKeys">prod:auth:session:uid:12345
+prod:billing:invoice:inv:9472:summary:v2
+staging:search:cache:query:{tenant-9}:top10:ttl60
+prod:rate:limiter:{user-123}:api:minute</pre>
+              </div>
+              <div class="divider"></div>
+              <div class="code">
+                <div class="codebar"><span>Bad (hard to operate)</span><button class="btn" data-copy="badKeys">Copy</button></div>
+                <pre id="badKeys">SESSION_12345
+invoice-9472
+user:john@example.com
+cache-top10-tenant9-query=redis best practices</pre>
+              </div>
+            </div>
+          </div>
+        `
+      },
+
+      {
+        id: "key-space",
+        group: "Key Naming",
+        title: "Keyspace design: namespaces, versioning, and safe deletes",
+        meta: "Migration strategy",
+        body: `
+          <div class="title">
+            <div>
+              <h2>Namespaces & versioning</h2>
+              <div class="subtitle">Avoid dangerous wildcards; plan for schema changes.</div>
+            </div>
+            <div class="pillrow"><span class="tag">migrations</span><span class="tag">ops</span></div>
+          </div>
+
+          <div class="grid">
+            <div class="panel col6">
+              <h3>Namespace strategy</h3>
+              <ul>
+                <li>One top-level prefix per app/service: <b>prod:billing:</b></li>
+                <li>One sub-prefix per domain: <b>prod:billing:invoice:</b></li>
+                <li>Qualify by entity & id: <b>prod:billing:invoice:inv:9472</b></li>
+              </ul>
+              <div class="hint">This makes it easy to inspect, alert, and delete only what you own.</div>
+            </div>
+
+            <div class="panel col6">
+              <h3>Version keys explicitly</h3>
+              <ul>
+                <li>When changing structure, add version to the key or suffix: <b>:v2</b></li>
+                <li>Run dual-write / dual-read during rollout.</li>
+                <li>Time-box old versions; delete safely later.</li>
+              </ul>
+              <div class="callout"><span class="dot ok"></span>
+                <div><b>Rule:</b> Version key when <i>meaning</i> or <i>shape</i> changes, not for cosmetic changes.</div>
+              </div>
+            </div>
+
+            <div class="panel col12">
+              <h3>Safe deletes (avoid KEYS in prod)</h3>
+              <div class="twocol">
+                <div>
+                  <div class="callout"><span class="dot bad"></span>
+                    <div>
+                      <b>Don’t:</b> <span class="kbd">KEYS prod:billing:invoice:*</span> (blocks server)
+                    </div>
+                  </div>
+                  <div class="divider"></div>
+                  <div class="callout"><span class="dot ok"></span>
+                    <div>
+                      <b>Do:</b> SCAN + UNLINK (non-blocking delete)
+                      <div class="hint">Use incremental SCAN with MATCH and COUNT, and delete in batches.</div>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="code">
+                  <div class="codebar"><span>Example: incremental cleanup</span><button class="btn" data-copy="scanScript">Copy</button></div>
+                  <pre id="scanScript"># Pseudocode
+cursor = 0
+repeat:
+  cursor, keys = SCAN cursor MATCH "prod:billing:invoice:*:v1" COUNT 1000
+  if keys not empty:
+    UNLINK keys...
+until cursor == 0
+</pre>
+                </div>
+              </div>
+            </div>
+          </div>
+        `
+      },
+
+      {
+        id: "cluster-basics",
+        group: "Redis Cluster",
+        title: "Redis Cluster basics: slots, redirects, and what changes for key design",
+        meta: "Slots + MOVED/ASK",
+        body: `
+          <div class="title">
+            <div>
+              <h2>Redis Cluster basics</h2>
+              <div class="subtitle">
+                Cluster scales Redis by <b>sharding keys across nodes</b>. That makes key naming and multi-key operations a first-class design concern.
+              </div>
+            </div>
+            <div class="pillrow"><span class="tag">cluster</span><span class="tag">hash slots</span><span class="tag">routing</span></div>
+          </div>
+
+          <div class="grid">
+            <div class="panel col6">
+              <h3>How keys are placed</h3>
+              <ul>
+                <li>Every key maps to a <b>hash slot</b> (0..16383).</li>
+                <li>A slot is owned by exactly one primary node at a time.</li>
+                <li>Clients must send commands to the right node; otherwise you get <b>MOVED</b> or <b>ASK</b>.</li>
+              </ul>
+              <div class="callout"><span class="dot ok"></span>
+                <div>
+                  <b>Design implication:</b> operations that touch multiple keys should either
+                  <b>avoid multi-key</b> or <b>co-locate keys in the same slot</b>.
+                </div>
+              </div>
+            </div>
+
+            <div class="panel col6">
+              <h3>What becomes expensive</h3>
+              <ul>
+                <li><b>Cross-slot multi-key</b> operations (e.g., MGET across many unrelated keys) → may fail or require client fan-out.</li>
+                <li>Big fan-out increases latency and load on the client and network.</li>
+                <li>Hot keys can overload a single node even if the cluster is large.</li>
+              </ul>
+              <div class="callout"><span class="dot warn"></span>
+                <div>
+                  Cluster gives capacity, but you still need <b>good distribution</b> and <b>bounded per-request work</b>.
+                </div>
+              </div>
+            </div>
+
+            <div class="panel col12">
+              <h3>Rules of thumb</h3>
+              <div class="twocol">
+                <div>
+                  <ul>
+                    <li>Assume any multi-key command must be <b>single-slot</b>.</li>
+                    <li>Use <b>hash tags</b> (<span class="kbd">{...}</span>) only when you intentionally need co-location.</li>
+                    <li>Prefer <b>one key lookup</b> → <b>one node</b>.</li>
+                  </ul>
+                </div>
+                <div>
+                  <ul>
+                    <li>Keep your client cluster-aware and handle redirects.</li>
+                    <li>Refresh topology periodically (or on MOVED storms).</li>
+                    <li>Don’t rely on <b>multi-key transactions</b> across different slots.</li>
+                  </ul>
+                </div>
+              </div>
+              <div class="hint">In cluster, “key design” = “sharding strategy”.</div>
+            </div>
+          </div>
+        `
+      },
+
+      {
+        id: "cluster-hashtags",
+        group: "Redis Cluster",
+        title: "Hash tags: co-locate related keys (without creating hotspots)",
+        meta: "{tag} patterns",
+        body: `
+          <div class="title">
+            <div>
+              <h2>Hash tags</h2>
+              <div class="subtitle">
+                Redis Cluster uses the substring inside <b>{...}</b> for slot hashing. Same tag → same slot → same node.
+              </div>
+            </div>
+            <div class="pillrow"><span class="tag">co-location</span><span class="tag">multi-key</span><span class="tag">pitfalls</span></div>
+          </div>
+
+          <div class="grid">
+            <div class="panel col7">
+              <h3>When to use hash tags</h3>
+              <ul>
+                <li>You need <b>atomic multi-key</b> or <b>multi-key reads</b> for a tight group of related keys.</li>
+                <li>You use Lua scripts touching multiple keys (must be same slot).</li>
+                <li>You intentionally model a “partition”: tenant, room, account, cart, etc.</li>
+              </ul>
+
+              <div class="code">
+                <div class="codebar"><span>Examples</span><button class="btn" data-copy="tagExamples">Copy</button></div>
+                <pre id="tagExamples"># Same {tenant-9} → same slot
+prod:search:cache:{tenant-9}:query:abc
+prod:search:cache:{tenant-9}:top10
+
+# Same {room-42} → same slot
+prod:chat:room:{42}:users
+prod:chat:room:{42}:msgs
+
+# Rate limiter per user partition
+prod:rate:limiter:{user-123}:api:minute</pre>
+              </div>
+            </div>
+
+            <div class="panel col5">
+              <h3>How NOT to use them</h3>
+              <ul>
+                <li><b>Don’t</b> put <span class="kbd">{global}</span> everywhere → everything goes to one node.</li>
+                <li><b>Don’t</b> tag by a low-cardinality field (like plan type).</li>
+                <li><b>Don’t</b> over-tag: most keys should naturally distribute.</li>
+              </ul>
+              <div class="callout"><span class="dot bad"></span>
+                <div>
+                  <b>Hotspot smell:</b> a few tags dominate traffic (top 1% accounts = 80% load).
+                </div>
+              </div>
+              <div class="hint">Use tags like a scalpel, not a hammer.</div>
+            </div>
+
+            <div class="panel col12">
+              <h3>Design pattern: “One entity, one slot”</h3>
+              <div class="twocol">
+                <div>
+                  <div class="callout"><span class="dot ok"></span>
+                    <div>
+                      If you need multiple keys per entity (lock, index, counters), tag by entity id:
+                      <div class="hint"><span class="kbd">prod:cart:{cart-8891}:items</span>, <span class="kbd">prod:cart:{cart-8891}:lock</span>, <span class="kbd">prod:cart:{cart-8891}:meta</span></div>
+                    </div>
+                  </div>
+                </div>
+                <div>
+                  <div class="callout"><span class="dot warn"></span>
+                    <div>
+                      If entity traffic can be huge, consider splitting heavy components into separate partitions (see next slide).
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        `
+      },
+
+      {
+        id: "cluster-hotkeys",
+        group: "Redis Cluster",
+        title: "Hot keys & uneven load: mitigation strategies",
+        meta: "Partitioning",
+        body: `
+          <div class="title">
+            <div>
+              <h2>Hot keys & uneven load</h2>
+              <div class="subtitle">Cluster is not magic: one very hot key can still saturate one node.</div>
+            </div>
+            <div class="pillrow"><span class="tag">hot keys</span><span class="tag">sharding</span><span class="tag">throughput</span></div>
+          </div>
+
+          <div class="grid">
+            <div class="panel col6">
+              <h3>Detect hot keys (practical signals)</h3>
+              <ul>
+                <li>One node has much higher CPU/latency than others.</li>
+                <li>Client sees spikes of timeouts / retries / MOVED storms.</li>
+                <li>A single key or tag dominates traffic (use sampling / commandstats / client metrics).</li>
+              </ul>
+              <div class="hint">The fix is usually in your data model, not in “more nodes”.</div>
+            </div>
+
+            <div class="panel col6">
+              <h3>Mitigation toolbox</h3>
+              <ul>
+                <li><b>Fan-out key</b>: split one counter into N shards (and sum on read).</li>
+                <li><b>Read replicas</b>: offload reads (if your client supports replica reads and consistency is OK).</li>
+                <li><b>Local caching</b>: keep ultra-hot values in process cache with short TTL.</li>
+                <li><b>Change access pattern</b>: avoid polling; use streams/pubsub where applicable.</li>
+              </ul>
+            </div>
+
+            <div class="panel col12">
+              <h3>Pattern: sharded counters (hot INCR)</h3>
+              <div class="twocol">
+                <div class="code">
+                  <div class="codebar"><span>Write</span><button class="btn" data-copy="shardedWrite">Copy</button></div>
+                  <pre id="shardedWrite"># Choose shard 0..15 (random or hash(request_id))
+shard = rand(0, 15)
+INCR prod:metrics:views:{post-99}:shard:\${shard}
+PEXPIRE prod:metrics:views:{post-99}:shard:\${shard} 86400000</pre>
+                </div>
+                <div class="code">
+                  <div class="codebar"><span>Read</span><button class="btn" data-copy="shardedRead">Copy</button></div>
+                  <pre id="shardedRead"># MGET shards (client fan-out) OR keep in one slot using tag
+vals = MGET prod:metrics:views:{post-99}:shard:0 ... :shard:15
+sum(vals)</pre>
+                </div>
+              </div>
+              <div class="callout"><span class="dot warn"></span>
+                <div>
+                  If you tag by <span class="kbd">{post-99}</span>, shards stay on one node (better atomic grouping, worse hotspot).
+                  If you omit the tag, shards distribute (better load), but reads become fan-out.
+                </div>
+              </div>
+            </div>
+
+            <div class="panel col12">
+              <h3>Decision guideline</h3>
+              <ul>
+                <li>Need <b>atomicity</b> across related keys → use hash tags (same slot).</li>
+                <li>Need <b>throughput</b> for a very hot item → distribute shards across slots (accept fan-out / eventual aggregation).</li>
+              </ul>
+            </div>
+          </div>
+        `
+      },
+
+      {
+        id: "cluster-client",
+        group: "Redis Cluster",
+        title: "Client & operational tricks: redirects, pipelines, and slot-safe batching",
+        meta: "Client behavior",
+        body: `
+          <div class="title">
+            <div>
+              <h2>Cluster tricks (client-side)</h2>
+              <div class="subtitle">Most “cluster performance” wins happen in your client: routing, batching per node, and topology refresh.</div>
+            </div>
+            <div class="pillrow"><span class="tag">client</span><span class="tag">pipelining</span><span class="tag">ops</span></div>
+          </div>
+
+          <div class="grid">
+            <div class="panel col6">
+              <h3>Redirects: MOVED vs ASK</h3>
+              <ul>
+                <li><b>MOVED</b>: slot permanently moved → client should update slot map.</li>
+                <li><b>ASK</b>: slot is migrating → client retries with ASKING to the target node.</li>
+                <li>Too many redirects usually means outdated topology or frequent resharding.</li>
+              </ul>
+              <div class="callout"><span class="dot warn"></span>
+                <div>
+                  <b>Tip:</b> refresh topology on MOVED bursts and at a steady interval.
+                </div>
+              </div>
+            </div>
+
+            <div class="panel col6">
+              <h3>Slot-safe batching</h3>
+              <ul>
+                <li>When doing multi-get/multi-set at scale, group keys by their target node/slot.</li>
+                <li>Pipeline per node to reduce RTT without cross-slot errors.</li>
+                <li>Avoid giant pipelines; cap batch size (e.g., 200–1000 ops depending on payload).</li>
+              </ul>
+              <div class="hint">Best pattern: <b>fan-out by node</b> → <b>pipeline</b> → <b>merge results</b>.</div>
+            </div>
+
+            <div class="panel col12">
+              <h3>Cluster-safe patterns checklist</h3>
+              <div class="twocol">
+                <div>
+                  <ul>
+                    <li>Use hash tags only for tight, related groups.</li>
+                    <li>Keep multi-key Lua scripts within one slot.</li>
+                    <li>Prefer hashes to collapse multiple lookups into one key.</li>
+                    <li>Plan for resharding: avoid hard-coding node addresses.</li>
+                  </ul>
+                </div>
+                <div>
+                  <ul>
+                    <li>Watch out for large key deletions → use UNLINK on the owning node.</li>
+                    <li>For scans, use cluster-aware scan (iterate all primaries).</li>
+                    <li>Set timeouts and retry budgets; don’t infinite-retry on MOVED/ASK.</li>
+                    <li>Consider read replicas only when your consistency needs allow it.</li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+
+            <div class="panel col12">
+              <h3>Mini-exercise (mental)</h3>
+              <div class="callout"><span class="dot ok"></span>
+                <div>
+                  You need: fetch 500 user profiles by id.
+                  <ul>
+                    <li><b>Better:</b> store each profile as a HASH and batch HMGET per node (pipeline).</li>
+                    <li><b>Worse:</b> 500 GETs sequentially, or forcing all keys into one slot with a global tag.</li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+          </div>
+        `
+      },
+
+      {
+        id: "data-modeling",
+
+        group: "Data Modeling",
+        title: "Choose the right Redis data type for the job",
+        meta: "String vs Hash vs Set vs ZSet vs Stream",
+        body: `
+          <div class="title">
+            <div>
+              <h2>Data modeling</h2>
+              <div class="subtitle">Pick structures that match your access patterns and keep operations bounded.</div>
+            </div>
+            <div class="pillrow"><span class="tag">data types</span><span class="tag">tradeoffs</span></div>
+          </div>
+
+          <div class="grid">
+            <div class="panel col12">
+              <h3>Quick mapping</h3>
+              <table class="table" aria-label="Data type mapping">
+                <thead><tr><th>Need</th><th>Use</th><th>Notes</th></tr></thead>
+                <tbody>
+                  <tr><td>Single value / blob</td><td><b>String</b></td><td>Best for caches, tokens; keep values small.</td></tr>
+                  <tr><td>Many fields per entity</td><td><b>Hash</b></td><td>Efficient, reduces key count; update specific fields.</td></tr>
+                  <tr><td>Membership / dedupe</td><td><b>Set</b></td><td>Fast contains check; no ordering.</td></tr>
+                  <tr><td>Ranking / top-N</td><td><b>Sorted Set (ZSET)</b></td><td>Scores + range queries; bound with ZREMRANGEBYRANK.</td></tr>
+                  <tr><td>Time series / logs</td><td><b>Streams</b></td><td>Consumer groups, replay, backpressure.</td></tr>
+                  <tr><td>Queue (simple)</td><td><b>List</b></td><td>Use with care; Streams are often better for durability.</td></tr>
+                </tbody>
+              </table>
+            </div>
+
+            <div class="panel col6">
+              <h3>Hash vs many keys</h3>
+              <ul>
+                <li><b>Hash</b>: fewer keys, better grouping, cheaper scans.</li>
+                <li>Many keys: simpler TTL per field (but increases key count and overhead).</li>
+                <li>For entity-like state: prefer <b>one hash per entity</b>.</li>
+              </ul>
+              <div class="callout"><span class="dot warn"></span>
+                <div>
+                  If you need different TTL per field, consider splitting into multiple hashes:
+                  <span class="kbd">user:123:profile</span> vs <span class="kbd">user:123:session</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="panel col6">
+              <h3>Bound your collections</h3>
+              <ul>
+                <li>Every set/zset/list/stream must have a growth policy.</li>
+                <li>Use trimming: <b>LTRIM</b>, <b>XTRIM</b>, <b>ZREMRANGEBYRANK</b>.</li>
+                <li>Use time-based eviction: store timestamps as score and remove old.</li>
+              </ul>
+              <div class="callout"><span class="dot bad"></span>
+                <div><b>Smell:</b> “We keep everything forever in Redis.” That becomes a memory bill (or outage).</div>
+              </div>
+            </div>
+          </div>
+        `
+      },
+
+      {
+        id: "ttl",
+        group: "TTL & Expiration",
+        title: "TTL strategy: cache vs state, jitter, and stampede protection",
+        meta: "Expiration discipline",
+        body: `
+          <div class="title">
+            <div>
+              <h2>TTL & expiration</h2>
+              <div class="subtitle">Expiration policy is part of the data model.</div>
+            </div>
+            <div class="pillrow"><span class="tag">TTL</span><span class="tag">cache</span><span class="tag">reliability</span></div>
+          </div>
+
+          <div class="grid">
+            <div class="panel col6">
+              <h3>Classify every key</h3>
+              <ul>
+                <li><b>Cache</b>: derived from source of truth → should expire.</li>
+                <li><b>Ephemeral state</b>: sessions, rate limits → expires.</li>
+                <li><b>Durable state</b>: must persist; consider DB first.</li>
+              </ul>
+              <div class="callout"><span class="dot warn"></span>
+                <div><b>Rule:</b> if you can recompute it, set TTL by default.</div>
+              </div>
+            </div>
+
+            <div class="panel col6">
+              <h3>Jitter your TTLs</h3>
+              <ul>
+                <li>Avoid “thundering herd” when many keys expire simultaneously.</li>
+                <li>Set TTL = base ± random jitter (e.g., 10%).</li>
+                <li>Apply jitter on write, not read.</li>
+              </ul>
+              <div class="code">
+                <div class="codebar"><span>TTL jitter (pseudo)</span><button class="btn" data-copy="ttlJitter">Copy</button></div>
+                <pre id="ttlJitter">base = 3600
+jitter = randomInt(-base*0.1, base*0.1)
+EXPIRE key (base + jitter)</pre>
+              </div>
+            </div>
+
+            <div class="panel col12">
+              <h3>Stampede protection patterns</h3>
+              <div class="twocol">
+                <div class="panel" style="margin:0">
+                  <h3>1) Probabilistic early refresh</h3>
+                  <ul>
+                    <li>Store value + soft-expiry timestamp.</li>
+                    <li>Serve stale briefly while refreshing in background.</li>
+                  </ul>
+                  <div class="hint">Useful for high-traffic hot keys.</div>
+                </div>
+                <div class="panel" style="margin:0">
+                  <h3>2) Lock + double-check</h3>
+                  <ul>
+                    <li>Use short-lived lock key: <span class="kbd">SET lock NX PX</span></li>
+                    <li>Only one refresher recomputes.</li>
+                    <li>Others serve stale or wait briefly.</li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+
+            <div class="panel col12">
+              <h3>TTL gotchas</h3>
+              <ul>
+                <li><b>EXPIRE resets on overwrite</b> if you use SET without KEEPTTL (Redis 6+ supports KEEPTTL).</li>
+                <li>Hash fields don’t have per-field TTL — TTL applies to the whole key.</li>
+                <li>Eviction policy can remove non-expired keys under memory pressure.</li>
+              </ul>
+            </div>
+          </div>
+        `
+      },
+
+      {
+        id: "pipelines",
+        group: "Performance",
+        title: "Performance hygiene: round trips, pipelining, and bounded commands",
+        meta: "Latency + throughput",
+        body: `
+          <div class="title">
+            <div>
+              <h2>Performance hygiene</h2>
+              <div class="subtitle">Most Redis slowdowns are self-inflicted: too many RTTs, big payloads, or blocking operations.</div>
+            </div>
+            <div class="pillrow"><span class="tag">latency</span><span class="tag">pipeline</span><span class="tag">Lua</span></div>
+          </div>
+
+          <div class="grid">
+            <div class="panel col6">
+              <h3>Minimize round trips</h3>
+              <ul>
+                <li>Prefer <b>MGET</b> / <b>HMGET</b> / <b>HGETALL</b> (when bounded) over many GETs.</li>
+                <li>Use <b>pipelining</b> for batch operations.</li>
+                <li>Co-locate data needed together (hash) to reduce calls.</li>
+              </ul>
+              <div class="callout"><span class="dot ok"></span>
+                <div>
+                  <b>Design goal:</b> common request path uses <b>1–3 Redis commands</b>.
+                </div>
+              </div>
+            </div>
+
+            <div class="panel col6">
+              <h3>Watch for blocking ops</h3>
+              <ul>
+                <li><span class="bad">KEYS</span>, <span class="bad">SMEMBERS</span> on huge sets, big <span class="bad">LRANGE</span>.</li>
+                <li>Prefer incremental scans with <b>SCAN/HSCAN/ZSCAN</b>.</li>
+                <li>Use <b>UNLINK</b> for large deletes.</li>
+              </ul>
+              <div class="callout"><span class="dot warn"></span>
+                <div>
+                  <b>Rule:</b> if the command output can be unbounded, it’s a risk.
+                </div>
+              </div>
+            </div>
+
+            <div class="panel col12">
+              <h3>When to use Lua scripts</h3>
+              <ul>
+                <li>Need atomic read-modify-write across multiple keys.</li>
+                <li>Need to reduce multiple RTTs into one.</li>
+                <li>But keep scripts fast; they block the server while executing.</li>
+              </ul>
+              <div class="code">
+                <div class="codebar"><span>Atomic rate limiter sketch</span><button class="btn" data-copy="luaRate">Copy</button></div>
+                <pre id="luaRate">-- KEYS[1] = counter key
+-- ARGV[1] = limit
+-- ARGV[2] = window_ms
+local current = redis.call('INCR', KEYS[1])
+if current == 1 then
+  redis.call('PEXPIRE', KEYS[1], ARGV[2])
+end
+if current > tonumber(ARGV[1]) then
+  return 0
+end
+return 1</pre>
+              </div>
+            </div>
+          </div>
+        `
+      },
+
+      {
+        id: "memory",
+        group: "Performance",
+        title: "Memory & eviction: know what Redis will delete and when",
+        meta: "maxmemory + policies",
+        body: `
+          <div class="title">
+            <div>
+              <h2>Memory & eviction</h2>
+              <div class="subtitle">You don’t control performance if you don’t control memory.</div>
+            </div>
+            <div class="pillrow"><span class="tag">maxmemory</span><span class="tag">eviction</span><span class="tag">cost</span></div>
+          </div>
+
+          <div class="grid">
+            <div class="panel col6">
+              <h3>Key insights</h3>
+              <ul>
+                <li>Keys and metadata cost memory too (not just values).</li>
+                <li>Big keys count: avoid extreme key cardinality.</li>
+                <li>Eviction may remove keys <b>before TTL</b> under pressure.</li>
+              </ul>
+              <div class="callout"><span class="dot warn"></span>
+                <div>
+                  If your data <b>must not disappear</b>, Redis eviction policies can break you.
+                </div>
+              </div>
+            </div>
+
+            <div class="panel col6">
+              <h3>Eviction policy selection (rule of thumb)</h3>
+              <ul>
+                <li><b>volatile-lru / volatile-ttl</b>: best if <i>everything important has TTL</i>.</li>
+                <li><b>allkeys-lru</b>: for pure cache workloads.</li>
+                <li><b>noeviction</b>: for critical state (but then writes can fail under pressure).</li>
+              </ul>
+              <div class="hint">Choose one intentionally; don’t leave defaults unexamined.</div>
+            </div>
+
+            <div class="panel col12">
+              <h3>Memory hygiene checklist</h3>
+              <div class="twocol">
+                <div>
+                  <ul>
+                    <li>Define max sizes for collections; trim.</li>
+                    <li>Set TTL for caches and ephemeral state.</li>
+                    <li>Use hashes to reduce key count for entity state.</li>
+                    <li>Regularly sample with <b>MEMORY USAGE</b> for hot keys.</li>
+                  </ul>
+                </div>
+                <div>
+                  <ul>
+                    <li>Measure payload sizes; compress if needed (trade CPU).</li>
+                    <li>Avoid storing large JSON blobs repeatedly; normalize.</li>
+                    <li>Keep keys short; prefer numeric ids.</li>
+                    <li>Use <b>UNLINK</b> for big deletes.</li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+          </div>
+        `
+      },
+
+      {
+        id: "indexes",
+        group: "Modeling Patterns",
+        title: "Secondary indexes: how to query without full scans",
+        meta: "ZSET / SET indexes",
+        body: `
+          <div class="title">
+            <div>
+              <h2>Secondary indexes</h2>
+              <div class="subtitle">Redis doesn’t have SQL indexes — you build them explicitly.</div>
+            </div>
+            <div class="pillrow"><span class="tag">index</span><span class="tag">zset</span><span class="tag">set</span></div>
+          </div>
+
+          <div class="grid">
+            <div class="panel col6">
+              <h3>Pattern: entity hash + index</h3>
+              <ul>
+                <li>Store entity state in a hash.</li>
+                <li>Maintain an index set/zset per query dimension.</li>
+                <li>Update both atomically (pipeline or Lua if needed).</li>
+              </ul>
+              <div class="code">
+                <div class="codebar"><span>Example keys</span><button class="btn" data-copy="indexKeys">Copy</button></div>
+                <pre id="indexKeys">prod:orders:order:oid:8891  (HASH)
+prod:orders:idx:status:paid (SET of order ids)
+prod:orders:idx:byCreated   (ZSET score=timestamp, member=order id)</pre>
+              </div>
+            </div>
+
+            <div class="panel col6">
+              <h3>Keep indexes bounded</h3>
+              <ul>
+                <li>Time-based indexes should be trimmed.</li>
+                <li>Use <b>ZREMRANGEBYSCORE</b> for old data.</li>
+                <li>Consider TTL on index keys if they are purely derived.</li>
+              </ul>
+              <div class="callout"><span class="dot warn"></span>
+                <div>
+                  Index maintenance is write amplification. Track its cost.
+                </div>
+              </div>
+            </div>
+
+            <div class="panel col12">
+              <h3>Query example</h3>
+              <div class="code">
+                <div class="codebar"><span>Paid orders created in last hour</span><button class="btn" data-copy="indexQuery">Copy</button></div>
+                <pre id="indexQuery"># 1) Find recent order ids
+ids = ZRANGEBYSCORE prod:orders:idx:byCreated (now-3600) now
+# 2) Intersect with status set (if needed):
+paid_recent = SINTER prod:orders:idx:status:paid ids_as_set
+# 3) Fetch order hashes in pipeline
+</pre>
+              </div>
+              <div class="hint">For complex search, consider Redis Stack / RediSearch; otherwise keep indexes simple.</div>
+            </div>
+          </div>
+        `
+      },
+
+      {
+        id: "transactions",
+        group: "Modeling Patterns",
+        title: "Atomicity patterns: pipelines, WATCH/MULTI, and idempotency",
+        meta: "Correctness",
+        body: `
+          <div class="title">
+            <div>
+              <h2>Atomicity & correctness</h2>
+              <div class="subtitle">Performance is useless if your state is inconsistent.</div>
+            </div>
+            <div class="pillrow"><span class="tag">atomic</span><span class="tag">idempotent</span><span class="tag">lua</span></div>
+          </div>
+
+          <div class="grid">
+            <div class="panel col6">
+              <h3>Pipelines vs transactions</h3>
+              <ul>
+                <li><b>Pipeline</b>: batching RTT, not atomic.</li>
+                <li><b>MULTI/EXEC</b>: atomic sequence of commands.</li>
+                <li><b>WATCH</b>: optimistic concurrency control.</li>
+              </ul>
+              <div class="callout"><span class="dot warn"></span>
+                <div>
+                  Don’t overuse WATCH: can cause retries under contention.
+                </div>
+              </div>
+            </div>
+
+            <div class="panel col6">
+              <h3>Idempotency keys</h3>
+              <ul>
+                <li>For external requests, store processed request IDs.</li>
+                <li>Use <b>SET key value NX EX</b> as a fast guard.</li>
+                <li>Keep TTL aligned with retry window.</li>
+              </ul>
+              <div class="code">
+                <div class="codebar"><span>Example: idempotency</span><button class="btn" data-copy="idem">Copy</button></div>
+                <pre id="idem"># request_id is unique
+ok = SET prod:pay:idem:req:{request_id} "1" NX EX 86400
+if !ok: return "duplicate"
+# proceed</pre>
+              </div>
+            </div>
+
+            <div class="panel col12">
+              <h3>Rule of thumb for correctness</h3>
+              <ul>
+                <li>Prefer <b>single-key atomic operations</b> when possible (INCR, HINCRBY, SETNX).</li>
+                <li>When multiple keys must stay consistent, choose between:
+                  <ul>
+                    <li>Lua (atomic, one RTT, blocks during script)</li>
+                    <li>MULTI/EXEC (atomic, multiple RTT unless pipelined)</li>
+                    <li>Reconcile later (eventual consistency with repair job)</li>
+                  </ul>
+                </li>
+              </ul>
+            </div>
+          </div>
+        `
+      },
+
+      {
+        id: "observability",
+        group: "Operations",
+        title: "Observability: design keys so you can monitor and debug",
+        meta: "Metrics + introspection",
+        body: `
+          <div class="title">
+            <div>
+              <h2>Observability</h2>
+              <div class="subtitle">If you can’t explain what’s in Redis, you can’t run it safely.</div>
+            </div>
+            <div class="pillrow"><span class="tag">ops</span><span class="tag">monitoring</span></div>
+          </div>
+
+          <div class="grid">
+            <div class="panel col6">
+              <h3>Keyspace introspection</h3>
+              <ul>
+                <li>Prefix-based naming enables safe sampling.</li>
+                <li>Use <b>SCAN</b> for analysis (never KEYS in prod).</li>
+                <li>Track top memory keys with <b>MEMORY USAGE</b> sampling.</li>
+              </ul>
+              <details>
+                <summary>Operational script idea</summary>
+                <p>
+                  Sample 1k keys per namespace daily, record size histogram + TTL distribution. Alert if growth exceeds baseline.
+                </p>
+              </details>
+            </div>
+
+            <div class="panel col6">
+              <h3>App-level metrics you should emit</h3>
+              <ul>
+                <li>Redis command latency (p50/p95/p99) per operation class.</li>
+                <li>Cache hit ratio by keyspace.</li>
+                <li>Error rate (timeouts, MOVED/ASK, OOM, READONLY).</li>
+                <li>Lock contention and retries (if using locks/WATCH).</li>
+              </ul>
+              <div class="hint">Don’t wait for Redis CPU to spike—instrument the behaviors you cause.</div>
+            </div>
+
+            <div class="panel col12">
+              <h3>Debuggability conventions</h3>
+              <div class="twocol">
+                <div>
+                  <ul>
+                    <li>Keys indicate purpose: <span class="kbd">cache</span>, <span class="kbd">idx</span>, <span class="kbd">lock</span>, <span class="kbd">job</span>.</li>
+                    <li>Include a version marker where relevant: <span class="kbd">:v2</span>.</li>
+                    <li>Prefer structured values (hash fields), not ad-hoc JSON.</li>
+                  </ul>
+                </div>
+                <div>
+                  <div class="callout"><span class="dot ok"></span>
+                    <div>
+                      Add a lightweight registry:
+                      <div class="hint">A doc mapping prefixes → owner → TTL → data type → size limits → contact.</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        `
+      }
+      ,
+      {
+        id: "security",
+        group: "Operations",
+        title: "Safety & security: avoid foot-guns",
+        meta: "Access + data sensitivity",
+        body: `
+          <div class="title">
+            <div>
+              <h2>Safety & security</h2>
+              <div class="subtitle">Redis is often a shared, high-privilege system. Treat it like one.</div>
+            </div>
+            <div class="pillrow"><span class="tag">security</span><span class="tag">acl</span><span class="tag">pii</span></div>
+          </div>
+
+          <div class="grid">
+            <div class="panel col6">
+              <h3>Access control</h3>
+              <ul>
+                <li>Use Redis ACLs: restrict commands and key patterns per app.</li>
+                <li>Separate instances or databases for high-risk workloads if needed.</li>
+                <li>Rotate credentials; prefer TLS for untrusted networks.</li>
+              </ul>
+              <div class="callout"><span class="dot warn"></span>
+                <div>
+                  Limit destructive commands (<span class="kbd">FLUSHALL</span>, <span class="kbd">CONFIG</span>, <span class="kbd">EVAL</span>) wherever possible.
+                </div>
+              </div>
+            </div>
+
+            <div class="panel col6">
+              <h3>Data sensitivity</h3>
+              <ul>
+                <li>Avoid storing secrets/PII in Redis unless you must.</li>
+                <li>If you store sensitive data, minimize TTL and encrypt at the application layer.</li>
+                <li>Never use emails/phone numbers directly in keys (leaks via logs, monitoring, scans).</li>
+              </ul>
+              <div class="callout"><span class="dot bad"></span>
+                <div>
+                  <b>Bad:</b> <span class="kbd">prod:auth:reset:email:john@example.com</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="panel col12">
+              <h3>Operational guardrails</h3>
+              <ul>
+                <li>Use connection pools and sane timeouts; treat Redis as a network dependency.</li>
+                <li>Backoff + circuit breaker for Redis outages.</li>
+                <li>Plan for failover behavior: read-only replicas, MOVED/ASK in cluster.</li>
+              </ul>
+            </div>
+          </div>
+        `
+      },
+
+      {
+        id: "exercises",
+        group: "Practice",
+        title: "Interactive exercise: fix a key design",
+        meta: "Hands-on",
+        body: `
+          <div class="title">
+            <div>
+              <h2>Practice: improve the design</h2>
+              <div class="subtitle">Use the checklist to turn messy keys into an operable keyspace.</div>
+            </div>
+            <div class="pillrow"><span class="tag">exercise</span><span class="tag">naming</span><span class="tag">ttl</span></div>
+          </div>
+
+          <div class="grid">
+            <div class="panel col6">
+              <h3>Given (messy)</h3>
+              <div class="code">
+                <div class="codebar"><span>Current keys</span><button class="btn" data-copy="messy">Copy</button></div>
+                <pre id="messy">SESSION_123
+user:john@example.com
+invoice-9472
+rateLimit-user-123-min
+order:8891
+</pre>
+              </div>
+              <div class="hint">Problems: mixed delimiters, PII in keys, missing ownership/env, no versioning.</div>
+            </div>
+
+            <div class="panel col6">
+              <h3>Try it</h3>
+              <div class="quiz">
+                <div class="q">
+                  <h4>1) Which key is the biggest operational risk?</h4>
+                  <label><input type="radio" name="q1" value="a"> SESSION_123</label>
+                  <label><input type="radio" name="q1" value="b"> user:john@example.com</label>
+                  <label><input type="radio" name="q1" value="c"> invoice-9472</label>
+                </div>
+                <div class="q">
+                  <h4>2) Best refactor for a user session key?</h4>
+                  <label><input type="radio" name="q2" value="a"> prod:session:123</label>
+                  <label><input type="radio" name="q2" value="b"> prod:auth:session:uid:123:ttl3600</label>
+                  <label><input type="radio" name="q2" value="c"> auth:prod:uid=123:session</label>
+                </div>
+                <div class="q">
+                  <h4>3) For invoice state with multiple fields, prefer…</h4>
+                  <label><input type="radio" name="q3" value="a"> One JSON string per invoice</label>
+                  <label><input type="radio" name="q3" value="b"> One hash per invoice</label>
+                  <label><input type="radio" name="q3" value="c"> One key per field</label>
+                </div>
+                <button class="btn primary" id="grade">Grade</button>
+                <div class="result" id="result"></div>
+              </div>
+            </div>
+
+            <div class="panel col12">
+              <h3>One reasonable “fixed” version</h3>
+              <div class="code">
+                <div class="codebar"><span>Proposed keys</span><button class="btn" data-copy="fixed">Copy</button></div>
+                <pre id="fixed">prod:auth:session:uid:123 (TTL=3600)
+prod:users:user:uid:123:emailHash (hash of email, NOT raw)
+prod:billing:invoice:inv:9472:v2 (HASH)
+prod:rate:limiter:{user-123}:api:minute (TTL=60)
+prod:orders:order:oid:8891:v1 (HASH)
+</pre>
+              </div>
+              <div class="hint">There are many valid answers — the goal is consistency, safety, and bounded operations.</div>
+            </div>
+          </div>
+        `
+      },
+
+      {
+        id: "checklist",
+        group: "Wrap-up",
+        title: "Production checklist",
+        meta: "Copy/paste",
+        body: `
+          <div class="title">
+            <div>
+              <h2>Production checklist</h2>
+              <div class="subtitle">Use this as a PR review list for Redis-related changes.</div>
+            </div>
+            <div class="pillrow"><span class="tag">checklist</span><span class="tag">review</span></div>
+          </div>
+
+          <div class="grid">
+            <div class="panel col6">
+              <h3>Key naming</h3>
+              <ul>
+                <li>Prefix includes env + service + domain.</li>
+                <li>No PII or secrets in key names.</li>
+                <li>Version encoded where structure/meaning can change.</li>
+                <li>Keys are short and delimiter-consistent.</li>
+              </ul>
+
+              <h3 style="margin-top:12px">Data model</h3>
+              <ul>
+                <li>Type chosen to match access pattern (hash/set/zset/stream).</li>
+                <li>Collections have explicit size/time bounds.</li>
+                <li>Payload size is controlled; avoid huge blobs.</li>
+              </ul>
+            </div>
+
+            <div class="panel col6">
+              <h3>TTL and reliability</h3>
+              <ul>
+                <li>Every cache/ephemeral key has TTL.</li>
+                <li>TTLs are jittered for high-cardinality keys.</li>
+                <li>Stampede protection is implemented for hot keys.</li>
+                <li>Eviction policy is compatible with the workload.</li>
+              </ul>
+
+              <h3 style="margin-top:12px">Ops & safety</h3>
+              <ul>
+                <li>No KEYS usage in production paths.</li>
+                <li>Deletes are incremental (SCAN + UNLINK).</li>
+                <li>Metrics emitted: latency, hit ratio, errors, memory sampling.</li>
+                <li>ACLs/permissions are least-privilege.</li>
+              </ul>
+            </div>
+
+            <div class="panel col12">
+              <h3>Downloadable checklist</h3>
+              <p class="muted">Click to copy a markdown checklist you can paste into your repo.</p>
+              <div class="code">
+                <div class="codebar"><span>redis-review-checklist.md</span><button class="btn" data-copy="mdChecklist">Copy</button></div>
+                <pre id="mdChecklist"># Redis Review Checklist
+
+## Key naming
+- [ ] Prefix includes env + service + domain
+- [ ] No PII/secrets in key names
+- [ ] Stable IDs; avoid mutable identifiers
+- [ ] Version keys if meaning/shape changes
+
+## Data modeling
+- [ ] Type matches access pattern (string/hash/set/zset/stream)
+- [ ] Collections are bounded (trim policy)
+- [ ] Payload sizes are controlled
+
+## TTL & reliability
+- [ ] Caches/ephemeral keys have TTL
+- [ ] TTL jitter for stampede prevention
+- [ ] Hot keys protected (lock or soft TTL)
+- [ ] Eviction policy reviewed
+
+## Performance
+- [ ] Common request path uses ~1–3 commands
+- [ ] Pipelining for batches
+- [ ] No blocking ops (KEYS, huge SMEMBERS/LRANGE)
+
+## Ops & safety
+- [ ] Safe delete path (SCAN + UNLINK)
+- [ ] Observability: latency, hit ratio, errors, memory sampling
+- [ ] ACL least privilege
+</pre>
+              </div>
+            </div>
+          </div>
+        `
+      },
+
+      {
+        id: "next-steps",
+        group: "Wrap-up",
+        title: "Next steps: apply this to your system",
+        meta: "Action plan",
+        body: `
+          <div class="title">
+            <div>
+              <h2>Next steps</h2>
+              <div class="subtitle">Turn principles into a team standard in a week.</div>
+            </div>
+            <div class="pillrow"><span class="tag">plan</span><span class="tag">team</span></div>
+          </div>
+
+          <div class="grid">
+            <div class="panel col6">
+              <h3>Day 1–2: inventory</h3>
+              <ul>
+                <li>List top-level prefixes currently in use.</li>
+                <li>Sample keys per prefix; record TTL distribution and sizes.</li>
+                <li>Identify unbounded sets/zsets/lists and huge values.</li>
+              </ul>
+            </div>
+
+            <div class="panel col6">
+              <h3>Day 3–5: standards</h3>
+              <ul>
+                <li>Adopt one naming convention + examples.</li>
+                <li>Create a key registry (owner, purpose, TTL, type, bounds).</li>
+                <li>Define “no KEYS” and “safe deletes” runbook.</li>
+              </ul>
+            </div>
+
+            <div class="panel col12">
+              <h3>Day 6–7: enforce</h3>
+              <ul>
+                <li>Add PR checklist (from previous slide).</li>
+                <li>Add linters / helper libraries to centralize key building.</li>
+                <li>Create a migration plan for the worst offending keys.</li>
+              </ul>
+              <div class="callout"><span class="dot ok"></span>
+                <div>
+                  If you want, paste a few of your real keys and workloads, and I’ll propose a concrete schema + naming map.
+                </div>
+              </div>
+            </div>
+          </div>
+        `
+      }
+    ];
+
+    // ------------------------------
+    // State
+    // ------------------------------
+    let filtered = [...slides];
+    let index = 0;
+    let outlineOpen = true;
+
+    // ------------------------------
+    // Helpers
+    // ------------------------------
+    const $ = (sel, el=document) => el.querySelector(sel);
+    const $$ = (sel, el=document) => [...el.querySelectorAll(sel)];
+
+    function toast(msg){
+      const t = $('#toast');
+      t.textContent = msg;
+      t.style.display = 'block';
+      clearTimeout(toast._timer);
+      toast._timer = setTimeout(()=> t.style.display='none', 1600);
+    }
+
+    function setHash(id){
+      const url = new URL(location.href);
+      url.hash = id ? '#' + id : '';
+      history.replaceState(null, '', url);
+    }
+
+    function currentSlide(){ return filtered[index]; }
+
+    function updateProgress(){
+      const pct = filtered.length ? ((index+1)/filtered.length)*100 : 0;
+      $('#bar').style.width = pct + '%';
+      $('#count').textContent = `${index+1}/${filtered.length}`;
+    }
+
+    function updateCrumbs(){
+      const s = currentSlide();
+      $('#crumbs').textContent = `${s.group} • ${s.title}`;
+    }
+
+    function renderTOC(){
+      const toc = $('#toc');
+      toc.innerHTML = '';
+
+      const groups = new Map();
+      filtered.forEach(s => {
+        if(!groups.has(s.group)) groups.set(s.group, []);
+        groups.get(s.group).push(s);
+      });
+
+      for(const [g, items] of groups){
+        const wrap = document.createElement('div');
+        wrap.className = 'group';
+
+        const gt = document.createElement('div');
+        gt.className = 'gtitle';
+        gt.textContent = g;
+        wrap.appendChild(gt);
+
+        items.forEach(s => {
+          const b = document.createElement('button');
+          b.type = 'button';
+          b.dataset.id = s.id;
+          b.innerHTML = `<span>${s.title}</span><span class="meta">${s.meta}</span>`;
+          b.addEventListener('click', ()=> goToId(s.id));
+          wrap.appendChild(b);
+        });
+
+        toc.appendChild(wrap);
+      }
+
+      syncTOCHighlight();
+    }
+
+    function syncTOCHighlight(){
+      const id = currentSlide()?.id;
+      $$('#toc button').forEach(btn => {
+        btn.setAttribute('aria-current', btn.dataset.id === id ? 'true' : 'false');
+      });
+    }
+
+    function bindCopyButtons(){
+      $$('#slide [data-copy]').forEach(btn => {
+        btn.addEventListener('click', async () => {
+          const targetId = btn.getAttribute('data-copy');
+          const text = $('#' + CSS.escape(targetId))?.textContent ?? '';
+          try{
+            await navigator.clipboard.writeText(text);
+            toast('Copied to clipboard');
+          } catch(e){
+            // fallback
+            const ta = document.createElement('textarea');
+            ta.value = text;
+            document.body.appendChild(ta);
+            ta.select();
+            document.execCommand('copy');
+            ta.remove();
+            toast('Copied');
+          }
+        });
+      });
+    }
+
+    function bindExercise(){
+      const gradeBtn = $('#grade');
+      if(!gradeBtn) return;
+      gradeBtn.addEventListener('click', () => {
+        const a1 = document.querySelector('input[name="q1"]:checked')?.value;
+        const a2 = document.querySelector('input[name="q2"]:checked')?.value;
+        const a3 = document.querySelector('input[name="q3"]:checked')?.value;
+
+        let score = 0;
+        if(a1 === 'b') score++;
+        if(a2 === 'b') score++;
+        if(a3 === 'b') score++;
+
+        const box = $('#result');
+        box.style.display = 'block';
+
+        const msgs = [
+          {s:0, t:'Let’s recalibrate: focus on <b>PII in keys</b>, consistent prefixes, and hashes for entity state.'},
+          {s:1, t:'Good start. Review key format and TTL strategy, especially jitter & stampede protection.'},
+          {s:2, t:'Nice! You’re applying the conventions well. Next: think about bounded indexes and safe deletes.'},
+          {s:3, t:'Excellent. You’ve internalized the main practices—now enforce them via helper libs and PR checks.'},
+        ];
+        box.innerHTML = `<b>Score: ${score}/3</b><div class="hint">${msgs.find(m=>m.s===score).t}</div>`;
+      });
+    }
+
+    function renderSlide(){
+      const s = currentSlide();
+      if(!s){
+        $('#slide').innerHTML = '<div class="callout"><span class="dot bad"></span><div>No slides match your search.</div></div>';
+        $('#crumbs').textContent = '';
+        $('#count').textContent = '0/0';
+        $('#bar').style.width = '0%';
+        return;
+      }
+
+      $('#slide').innerHTML = s.body;
+      setHash(s.id);
+      updateProgress();
+      updateCrumbs();
+      syncTOCHighlight();
+      bindCopyButtons();
+      bindExercise();
+      // focus for accessibility / keyboard (but never steal focus from search)
+      const active = document.activeElement;
+      if(!(active && active.id === 'search')){
+        $('#slide').focus({preventScroll:true});
+      }
+    }
+
+    function clampIndex(){
+      index = Math.max(0, Math.min(index, filtered.length-1));
+    }
+
+    function goTo(i){
+      index = i;
+      clampIndex();
+      renderSlide();
+    }
+
+    function goToId(id){
+      const i = filtered.findIndex(s => s.id === id);
+      if(i >= 0) goTo(i);
+      else toast('Slide not found in current filter');
+    }
+
+    function next(){ if(index < filtered.length-1) goTo(index+1); else toast('End'); }
+    function prev(){ if(index > 0) goTo(index-1); else toast('Start'); }
+
+    function applySearch(q){
+      const query = (q || '').trim().toLowerCase();
+      if(!query){
+        filtered = [...slides];
+      } else {
+        filtered = slides.filter(s =>
+          (s.title + ' ' + s.group + ' ' + s.meta + ' ' + s.body.replace(/<[^>]+>/g,' '))
+            .toLowerCase()
+            .includes(query)
+        );
+      }
+      index = 0;
+      renderTOC();
+      renderSlide();
+    }
+
+    function toggleOutline(){
+      outlineOpen = !outlineOpen;
+      $('#toc').style.display = outlineOpen ? 'block' : 'none';
+      toast(outlineOpen ? 'Outline: on' : 'Outline: off');
+    }
+
+    async function copyDeepLink(){
+      const id = currentSlide()?.id;
+      const url = new URL(location.href);
+      url.hash = id ? '#' + id : '';
+      try{
+        await navigator.clipboard.writeText(url.toString());
+        toast('Link copied');
+      } catch(e){
+        toast('Copy not available');
+      }
+    }
+
+    // ------------------------------
+    // Init
+    // ------------------------------
+    function initFromHash(){
+      const hash = (location.hash || '').replace('#','').trim();
+      if(!hash) return;
+      const i = slides.findIndex(s => s.id === hash);
+      if(i >= 0){
+        filtered = [...slides];
+        index = i;
+      }
+    }
+
+    initFromHash();
+    renderTOC();
+    renderSlide();
+
+    // controls
+    $('#next').addEventListener('click', next);
+    $('#prev').addEventListener('click', prev);
+    $('#outline').addEventListener('click', toggleOutline);
+    $('#print').addEventListener('click', ()=> window.print());
+    $('#copyLink').addEventListener('click', copyDeepLink);
+
+    // search
+    $('#search').addEventListener('input', (e)=> applySearch(e.target.value));
+
+    // keyboard shortcuts
+    window.addEventListener('keydown', (e) => {
+      // ignore if typing in input
+      const tag = (e.target && e.target.tagName) ? e.target.tagName.toLowerCase() : '';
+      const typing = tag === 'input' || tag === 'textarea';
+
+      if(e.key === '/' && !typing){
+        e.preventDefault();
+        $('#search').focus();
+        return;
+      }
+      if(e.key.toLowerCase() === 'p' && !typing){
+        e.preventDefault();
+        window.print();
+        return;
+      }
+      if(e.key === 'ArrowRight' && !typing){
+        e.preventDefault();
+        next();
+      }
+      if(e.key === 'ArrowLeft' && !typing){
+        e.preventDefault();
+        prev();
+      }
+      if(e.key.toLowerCase() === 'o' && !typing){
+        e.preventDefault();
+        toggleOutline();
+      }
+    });
+
+    // handle hash navigation
+    window.addEventListener('hashchange', () => {
+      const id = (location.hash || '').replace('#','');
+      if(!id) return;
+      // try to navigate within current filter; if not present, reset filter
+      const inFiltered = filtered.findIndex(s => s.id === id);
+      if(inFiltered >= 0){
+        index = inFiltered;
+        renderSlide();
+      } else {
+        $('#search').value = '';
+        filtered = [...slides];
+        renderTOC();
+        const i = filtered.findIndex(s => s.id === id);
+        if(i >= 0){ index = i; renderSlide(); }
+      }
+    });
+  </script>
+</body>
+</html>
