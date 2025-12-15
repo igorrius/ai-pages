@@ -1,0 +1,1328 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ланцюги Маркова - Інтерактивне Навчання</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            color: #333;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            overflow: hidden;
+        }
+
+        header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        .subtitle {
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+
+        .content {
+            padding: 30px;
+        }
+
+        .section {
+            margin-bottom: 40px;
+            padding: 25px;
+            background: #f8f9fa;
+            border-radius: 15px;
+            border-left: 5px solid #667eea;
+        }
+
+        .section h2 {
+            color: #667eea;
+            margin-bottom: 15px;
+            font-size: 1.8em;
+        }
+
+        .theory-box {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            margin: 15px 0;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .canvas-container {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        canvas {
+            border: 2px solid #667eea;
+            border-radius: 10px;
+            cursor: crosshair;
+            display: block;
+            margin: 0 auto;
+        }
+
+        .controls {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin: 20px 0;
+        }
+
+        button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-size: 1em;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            font-weight: 600;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        .input-group {
+            margin: 15px 0;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 600;
+            color: #667eea;
+        }
+
+        input[type="number"], select {
+            width: 100%;
+            padding: 10px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 1em;
+            transition: border-color 0.3s;
+        }
+
+        input[type="number"]:focus, select:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .matrix-container {
+            overflow-x: auto;
+            margin: 20px 0;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background: white;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        th, td {
+            padding: 12px;
+            text-align: center;
+            border: 1px solid #e0e0e0;
+        }
+
+        th {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            font-weight: 600;
+        }
+
+        td input {
+            width: 60px;
+            padding: 5px;
+            text-align: center;
+            border: 1px solid #e0e0e0;
+            border-radius: 4px;
+        }
+
+        .simulation-output {
+            background: #f0f4ff;
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+            min-height: 100px;
+            font-family: 'Courier New', monospace;
+            white-space: pre-wrap;
+        }
+
+        .state-indicator {
+            display: inline-block;
+            padding: 8px 16px;
+            margin: 5px;
+            border-radius: 20px;
+            font-weight: 600;
+            animation: pulse 0.5s;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
+
+        .example-box {
+            background: linear-gradient(135deg, #ffeaa7 0%, #fdcb6e 100%);
+            padding: 20px;
+            border-radius: 10px;
+            margin: 15px 0;
+            border-left: 5px solid #f39c12;
+        }
+
+        .example-box h3 {
+            color: #d35400;
+            margin-bottom: 10px;
+        }
+
+        .info-badge {
+            display: inline-block;
+            background: #667eea;
+            color: white;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 0.9em;
+            margin: 5px;
+        }
+
+        .formula {
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 15px 0;
+            text-align: center;
+            font-family: 'Georgia', serif;
+            font-size: 1.2em;
+            border: 2px dashed #667eea;
+        }
+
+        .tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .tab {
+            padding: 10px 20px;
+            background: #e0e0e0;
+            border: none;
+            border-radius: 8px 8px 0 0;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+
+        .tab.active {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 1.8em;
+            }
+
+            .controls {
+                grid-template-columns: 1fr;
+            }
+
+            canvas {
+                width: 100%;
+                height: auto;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🔗 Ланцюги Маркова</h1>
+            <p class="subtitle">Інтерактивне навчання та візуалізація</p>
+        </header>
+
+        <div class="content">
+            <!-- Теоретична частина -->
+            <div class="section">
+                <h2>📚 Теорія</h2>
+                <div class="theory-box">
+                    <h3>Що таке Ланцюг Маркова?</h3>
+                    <p><strong>Ланцюг Маркова</strong> — це стохастичний процес, який задовольняє <strong>марківську властивість</strong>: майбутній стан залежить лише від поточного стану і не залежить від минулих станів.</p>
+                    
+                    <div class="formula">
+                        P(X<sub>n+1</sub> = j | X<sub>n</sub> = i, X<sub>n-1</sub> = i<sub>n-1</sub>, ..., X<sub>0</sub> = i<sub>0</sub>) = P(X<sub>n+1</sub> = j | X<sub>n</sub> = i)
+                    </div>
+
+                    <h4>Ключові концепції:</h4>
+                    <ul style="margin: 15px 0; line-height: 1.8;">
+                        <li><span class="info-badge">Стани</span> — можливі положення системи</li>
+                        <li><span class="info-badge">Переходи</span> — зміна станів з певною ймовірністю</li>
+                        <li><span class="info-badge">Матриця переходів</span> — таблиця ймовірностей переходів між станами</li>
+                        <li><span class="info-badge">Марківська властивість</span> — майбутнє залежить тільки від теперішнього</li>
+                    </ul>
+                </div>
+
+                <div class="example-box">
+                    <h3>🌤️ Приклад: Погода</h3>
+                    <p>Уявімо прогноз погоди з трьома станами: Сонячно, Хмарно, Дощ.</p>
+                    <p>Якщо сьогодні сонячно, завтра може бути:</p>
+                    <ul style="margin: 10px 0 10px 20px;">
+                        <li>Сонячно з ймовірністю 70%</li>
+                        <li>Хмарно з ймовірністю 20%</li>
+                        <li>Дощ з ймовірністю 10%</li>
+                    </ul>
+                    <p>Це класичний приклад ланцюга Маркова!</p>
+                </div>
+            </div>
+
+            <!-- Інтерактивна частина -->
+            <div class="section">
+                <h2>🎮 Інтерактивна симуляція</h2>
+                
+                <div class="tabs">
+                    <button class="tab active" onclick="switchTab('visual')">Візуальна модель</button>
+                    <button class="tab" onclick="switchTab('weather')">Приклад: Погода</button>
+                    <button class="tab" onclick="switchTab('custom')">Власна модель</button>
+                </div>
+
+                <!-- Візуальна модель -->
+                <div id="visual" class="tab-content active">
+                    <div class="canvas-container">
+                        <canvas id="markovCanvas" width="800" height="500"></canvas>
+                        <p style="text-align: center; margin-top: 10px; color: #666;">
+                            Клікніть на полотні, щоб додати стан. Виберіть два стани для створення переходу.
+                        </p>
+                    </div>
+
+                    <div class="controls">
+                        <button onclick="clearCanvas()">🗑️ Очистити</button>
+                        <button onclick="simulateSteps()">▶️ Симулювати</button>
+                        <button onclick="addRandomStates()">🎲 Додати випадкові стани</button>
+                    </div>
+
+                    <div class="input-group">
+                        <label>Кількість кроків симуляції:</label>
+                        <input type="number" id="simSteps" value="10" min="1" max="100">
+                    </div>
+
+                    <div class="simulation-output" id="visualOutput">
+                        Результати симуляції з'являться тут...
+                    </div>
+                </div>
+
+                <!-- Приклад погоди -->
+                <div id="weather" class="tab-content">
+                    <div class="theory-box">
+                        <h3>Модель погоди</h3>
+                        <p>Три стани: Сонячно ☀️, Хмарно ☁️, Дощ 🌧️</p>
+                    </div>
+
+                    <div class="controls">
+                        <div class="input-group">
+                            <label>Початковий стан:</label>
+                            <select id="weatherStart">
+                                <option value="0">☀️ Сонячно</option>
+                                <option value="1">☁️ Хмарно</option>
+                                <option value="2">🌧️ Дощ</option>
+                            </select>
+                        </div>
+                        <div class="input-group">
+                            <label>Кількість днів:</label>
+                            <input type="number" id="weatherDays" value="7" min="1" max="30">
+                        </div>
+                    </div>
+
+                    <button onclick="simulateWeather()" style="width: 100%;">🌤️ Передбачити погоду</button>
+
+                    <div class="simulation-output" id="weatherOutput">
+                        Прогноз погоди з'явиться тут...
+                    </div>
+
+                    <div class="matrix-container">
+                        <h4>Матриця переходів (можна редагувати):</h4>
+                        <table id="weatherMatrix">
+                            <thead>
+                                <tr>
+                                    <th></th>
+                                    <th>☀️ Сонячно</th>
+                                    <th>☁️ Хмарно</th>
+                                    <th>🌧️ Дощ</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <th>☀️ Сонячно</th>
+                                    <td><input type="number" step="0.1" value="0.7" min="0" max="1" onchange="normalizeRow(0)"></td>
+                                    <td><input type="number" step="0.1" value="0.2" min="0" max="1" onchange="normalizeRow(0)"></td>
+                                    <td><input type="number" step="0.1" value="0.1" min="0" max="1" onchange="normalizeRow(0)"></td>
+                                </tr>
+                                <tr>
+                                    <th>☁️ Хмарно</th>
+                                    <td><input type="number" step="0.1" value="0.3" min="0" max="1" onchange="normalizeRow(1)"></td>
+                                    <td><input type="number" step="0.1" value="0.4" min="0" max="1" onchange="normalizeRow(1)"></td>
+                                    <td><input type="number" step="0.1" value="0.3" min="0" max="1" onchange="normalizeRow(1)"></td>
+                                </tr>
+                                <tr>
+                                    <th>🌧️ Дощ</th>
+                                    <td><input type="number" step="0.1" value="0.2" min="0" max="1" onchange="normalizeRow(2)"></td>
+                                    <td><input type="number" step="0.1" value="0.3" min="0" max="1" onchange="normalizeRow(2)"></td>
+                                    <td><input type="number" step="0.1" value="0.5" min="0" max="1" onchange="normalizeRow(2)"></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Власна модель -->
+                <div id="custom" class="tab-content">
+                    <div class="theory-box">
+                        <h3>Створіть свою модель</h3>
+                        <p>Визначте кількість станів та матрицю переходів для вашої власної моделі</p>
+                    </div>
+
+                    <div class="input-group">
+                        <label>Кількість станів:</label>
+                        <input type="number" id="customStates" value="3" min="2" max="6" onchange="generateCustomMatrix()">
+                    </div>
+
+                    <button onclick="generateCustomMatrix()" style="width: 100%; margin: 10px 0;">🔄 Згенерувати матрицю</button>
+
+                    <div class="matrix-container" id="customMatrixContainer">
+                        <!-- Матриця генерується динамічно -->
+                    </div>
+
+                    <div class="controls">
+                        <div class="input-group">
+                            <label>Початковий стан:</label>
+                            <select id="customStart">
+                                <!-- Опції генеруються динамічно -->
+                            </select>
+                        </div>
+                        <div class="input-group">
+                            <label>Кількість кроків:</label>
+                            <input type="number" id="customSteps" value="10" min="1" max="50">
+                        </div>
+                    </div>
+
+                    <button onclick="simulateCustom()" style="width: 100%;">▶️ Запустити симуляцію</button>
+
+                    <div class="simulation-output" id="customOutput">
+                        Результати симуляції з'являться тут...
+                    </div>
+                </div>
+            </div>
+
+            <!-- Зв'язок з Монте-Карло -->
+            <div class="section">
+                <h2>🎲 Зв'язок з методом Монте-Карло</h2>
+                <div class="theory-box">
+                    <h3>Як пов'язані ланцюги Маркова та метод Монте-Карло?</h3>
+                    <p><strong>Метод Монте-Карло</strong> — це широкий клас обчислювальних алгоритмів, які використовують випадкові вибірки для отримання числових результатів.</p>
+                    
+                    <div class="formula">
+                        Ланцюги Маркова + Метод Монте-Карло = MCMC (Markov Chain Monte Carlo)
+                    </div>
+
+                    <h4>Спільні риси:</h4>
+                    <ul style="margin: 15px 0; line-height: 1.8;">
+                        <li>🎲 <strong>Стохастичність</strong> — обидва методи базуються на випадкових процесах</li>
+                        <li>🔄 <strong>Ітеративність</strong> — використовують повторювані кроки</li>
+                        <li>📊 <strong>Апроксимація</strong> — дають наближені результати через симуляцію</li>
+                        <li>⚡ <strong>Масштабованість</strong> — ефективні для складних систем</li>
+                    </ul>
+
+                    <h4>MCMC (Markov Chain Monte Carlo):</h4>
+                    <p>Це клас алгоритмів, що поєднує обидва методи для:</p>
+                    <ul style="margin: 15px 0; line-height: 1.8;">
+                        <li>Вибірки зі складних розподілів ймовірностей</li>
+                        <li>Байєсівського статистичного аналізу</li>
+                        <li>Машинного навчання та нейронних мереж</li>
+                        <li>Фізичного моделювання (алгоритм Метрополіса)</li>
+                    </ul>
+                </div>
+
+                <div class="example-box">
+                    <h3>🎯 Приклад: Обчислення π</h3>
+                    <p>Класичний приклад методу Монте-Карло — обчислення числа π через випадкові точки у квадраті з вписаним колом.</p>
+                </div>
+            </div>
+
+            <!-- Інтерактивний Монте-Карло -->
+            <div class="section">
+                <h2>🎯 Інтерактивні симуляції Монте-Карло</h2>
+                
+                <div class="tabs">
+                    <button class="tab active" onclick="switchMCTab('pi')">Обчислення π</button>
+                    <button class="tab" onclick="switchMCTab('integration')">Інтеграція</button>
+                    <button class="tab" onclick="switchMCTab('mcmc')">MCMC симуляція</button>
+                </div>
+
+                <!-- Обчислення Pi -->
+                <div id="pi" class="tab-content active">
+                    <div class="theory-box">
+                        <h3>Метод Монте-Карло для обчислення π</h3>
+                        <p>Кидаємо випадкові точки в квадрат 1×1. Якщо точка потрапляє в коло радіусом 1, рахуємо її.</p>
+                        <div class="formula">
+                            π ≈ 4 × (кількість точок в колі) / (загальна кількість точок)
+                        </div>
+                    </div>
+
+                    <div class="canvas-container">
+                        <canvas id="piCanvas" width="400" height="400"></canvas>
+                    </div>
+
+                    <div class="controls">
+                        <div class="input-group">
+                            <label>Кількість точок:</label>
+                            <input type="number" id="piPoints" value="1000" min="100" max="50000" step="100">
+                        </div>
+                        <div class="input-group">
+                            <label>Швидкість анімації:</label>
+                            <input type="range" id="piSpeed" min="1" max="100" value="50">
+                        </div>
+                    </div>
+
+                    <div class="controls">
+                        <button onclick="startPiSimulation()">▶️ Старт</button>
+                        <button onclick="stopPiSimulation()">⏸️ Пауза</button>
+                        <button onclick="resetPiSimulation()">🔄 Скинути</button>
+                    </div>
+
+                    <div class="simulation-output" id="piOutput">
+                        Натисніть "Старт" для початку симуляції...
+                    </div>
+                </div>
+
+                <!-- Інтеграція -->
+                <div id="integration" class="tab-content">
+                    <div class="theory-box">
+                        <h3>Обчислення інтеграла методом Монте-Карло</h3>
+                        <p>Обчислюємо площу під кривою f(x) = x² на інтервалі [0, 1]</p>
+                        <div class="formula">
+                            ∫₀¹ x² dx = 1/3 ≈ 0.333...
+                        </div>
+                    </div>
+
+                    <div class="canvas-container">
+                        <canvas id="integrationCanvas" width="500" height="400"></canvas>
+                    </div>
+
+                    <div class="controls">
+                        <div class="input-group">
+                            <label>Кількість точок:</label>
+                            <input type="number" id="integrationPoints" value="2000" min="100" max="10000" step="100">
+                        </div>
+                    </div>
+
+                    <button onclick="runIntegration()" style="width: 100%;">▶️ Запустити симуляцію</button>
+
+                    <div class="simulation-output" id="integrationOutput">
+                        Результати з'являться тут...
+                    </div>
+                </div>
+
+                <!-- MCMC -->
+                <div id="mcmc" class="tab-content">
+                    <div class="theory-box">
+                        <h3>MCMC: Вибірка з розподілу</h3>
+                        <p>Використовуємо ланцюг Маркова для генерації вибірки з нормального розподілу (алгоритм Метрополіса-Гастінгса)</p>
+                    </div>
+
+                    <div class="canvas-container">
+                        <canvas id="mcmcCanvas" width="600" height="400"></canvas>
+                    </div>
+
+                    <div class="controls">
+                        <div class="input-group">
+                            <label>Кількість кроків:</label>
+                            <input type="number" id="mcmcSteps" value="5000" min="100" max="20000" step="100">
+                        </div>
+                        <div class="input-group">
+                            <label>Середнє значення (μ):</label>
+                            <input type="number" id="mcmcMean" value="0" step="0.5">
+                        </div>
+                        <div class="input-group">
+                            <label>Стандартне відхилення (σ):</label>
+                            <input type="number" id="mcmcStd" value="1" min="0.1" step="0.1">
+                        </div>
+                    </div>
+
+                    <button onclick="runMCMC()" style="width: 100%;">▶️ Запустити MCMC</button>
+
+                    <div class="simulation-output" id="mcmcOutput">
+                        Результати з'являться тут...
+                    </div>
+                </div>
+            </div>
+
+            <!-- Додаткова інформація -->
+            <div class="section">
+                <h2>💡 Застосування</h2>
+                <div class="theory-box">
+                    <h3>Де використовуються ланцюги Маркова?</h3>
+                    <ul style="line-height: 2;">
+                        <li>📊 <strong>Прогнозування</strong> — погода, фінансові ринки</li>
+                        <li>🎮 <strong>Ігри</strong> — моделювання поведінки NPC</li>
+                        <li>🔤 <strong>Обробка мови</strong> — генерація тексту, автодоповнення</li>
+                        <li>🧬 <strong>Біоінформатика</strong> — аналіз ДНК послідовностей</li>
+                        <li>🌐 <strong>Інтернет</strong> — алгоритм PageRank від Google</li>
+                        <li>📱 <strong>Телекомунікації</strong> — моделювання мережевого трафіку</li>
+                        <li>🏥 <strong>Медицина</strong> — прогнозування перебігу хвороб</li>
+                    </ul>
+                </div>
+
+                <div class="theory-box" style="margin-top: 20px;">
+                    <h3>Застосування методу Монте-Карло та MCMC:</h3>
+                    <ul style="line-height: 2;">
+                        <li>🎲 <strong>Фінанси</strong> — оцінка ризиків, ціноутворення опціонів</li>
+                        <li>🔬 <strong>Фізика</strong> — моделювання молекулярної динаміки</li>
+                        <li>🤖 <strong>Машинне навчання</strong> — навчання моделей, байєсівська оптимізація</li>
+                        <li>📈 <strong>Статистика</strong> — оцінка параметрів, перевірка гіпотез</li>
+                        <li>🎯 <strong>Оптимізація</strong> — пошук глобального мінімуму</li>
+                        <li>🌍 <strong>Кліматологія</strong> — прогнозування зміни клімату</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Глобальні змінні
+        const canvas = document.getElementById('markovCanvas');
+        const ctx = canvas.getContext('2d');
+        let states = [];
+        let transitions = [];
+        let selectedState = null;
+        let hoveredState = null;
+
+        // Клас для стану
+        class State {
+            constructor(x, y, id) {
+                this.x = x;
+                this.y = y;
+                this.id = id;
+                this.radius = 30;
+                this.label = `S${id}`;
+            }
+
+            draw(isSelected = false, isHovered = false) {
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+                
+                if (isSelected) {
+                    ctx.fillStyle = '#f39c12';
+                } else if (isHovered) {
+                    ctx.fillStyle = '#3498db';
+                } else {
+                    ctx.fillStyle = '#667eea';
+                }
+                
+                ctx.fill();
+                ctx.strokeStyle = 'white';
+                ctx.lineWidth = 3;
+                ctx.stroke();
+
+                ctx.fillStyle = 'white';
+                ctx.font = 'bold 16px Arial';
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.fillText(this.label, this.x, this.y);
+            }
+
+            contains(x, y) {
+                const dx = x - this.x;
+                const dy = y - this.y;
+                return dx * dx + dy * dy <= this.radius * this.radius;
+            }
+        }
+
+        // Клас для переходу
+        class Transition {
+            constructor(from, to, probability) {
+                this.from = from;
+                this.to = to;
+                this.probability = probability || 0.5;
+            }
+
+            draw() {
+                const fromState = states[this.from];
+                const toState = states[this.to];
+
+                ctx.beginPath();
+                ctx.strokeStyle = '#764ba2';
+                ctx.lineWidth = 2;
+
+                if (this.from === this.to) {
+                    // Петля
+                    const loopRadius = 40;
+                    ctx.arc(fromState.x, fromState.y - fromState.radius - loopRadius, loopRadius, 0, Math.PI * 2);
+                } else {
+                    // Стрілка
+                    const angle = Math.atan2(toState.y - fromState.y, toState.x - fromState.x);
+                    const startX = fromState.x + Math.cos(angle) * fromState.radius;
+                    const startY = fromState.y + Math.sin(angle) * fromState.radius;
+                    const endX = toState.x - Math.cos(angle) * toState.radius;
+                    const endY = toState.y - Math.sin(angle) * toState.radius;
+
+                    ctx.moveTo(startX, startY);
+                    ctx.lineTo(endX, endY);
+
+                    // Стрілка
+                    const arrowSize = 10;
+                    ctx.lineTo(
+                        endX - arrowSize * Math.cos(angle - Math.PI / 6),
+                        endY - arrowSize * Math.sin(angle - Math.PI / 6)
+                    );
+                    ctx.moveTo(endX, endY);
+                    ctx.lineTo(
+                        endX - arrowSize * Math.cos(angle + Math.PI / 6),
+                        endY - arrowSize * Math.sin(angle + Math.PI / 6)
+                    );
+                }
+
+                ctx.stroke();
+
+                // Ймовірність
+                const midX = (fromState.x + toState.x) / 2;
+                const midY = (fromState.y + toState.y) / 2 - 15;
+                ctx.fillStyle = '#2c3e50';
+                ctx.font = 'bold 14px Arial';
+                ctx.textAlign = 'center';
+                ctx.fillText(this.probability.toFixed(2), midX, midY);
+            }
+        }
+
+        // Функції малювання
+        function drawCanvas() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            // Малюємо переходи
+            transitions.forEach(t => t.draw());
+
+            // Малюємо стани
+            states.forEach((state, index) => {
+                const isSelected = selectedState === index;
+                const isHovered = hoveredState === index;
+                state.draw(isSelected, isHovered);
+            });
+        }
+
+        // Події миші
+        canvas.addEventListener('click', (e) => {
+            const rect = canvas.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const y = e.clientY - rect.top;
+
+            let clickedState = -1;
+            for (let i = 0; i < states.length; i++) {
+                if (states[i].contains(x, y)) {
+                    clickedState = i;
+                    break;
+                }
+            }
+
+            if (clickedState !== -1) {
+                if (selectedState === null) {
+                    selectedState = clickedState;
+                } else if (selectedState === clickedState) {
+                    selectedState = null;
+                } else {
+                    // Створюємо перехід
+                    const existingTransition = transitions.find(
+                        t => t.from === selectedState && t.to === clickedState
+                    );
+                    
+                    if (!existingTransition) {
+                        const prob = Math.random() * 0.5 + 0.3;
+                        transitions.push(new Transition(selectedState, clickedState, prob));
+                    }
+                    selectedState = null;
+                }
+            } else {
+                // Додаємо новий стан
+                states.push(new State(x, y, states.length));
+                selectedState = null;
+            }
+
+            drawCanvas();
+        });
+
+        canvas.addEventListener('mousemove', (e) => {
+            const rect = canvas.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const y = e.clientY - rect.top;
+
+            let newHovered = null;
+            for (let i = 0; i < states.length; i++) {
+                if (states[i].contains(x, y)) {
+                    newHovered = i;
+                    break;
+                }
+            }
+
+            if (newHovered !== hoveredState) {
+                hoveredState = newHovered;
+                drawCanvas();
+            }
+        });
+
+        // Функції управління
+        function clearCanvas() {
+            states = [];
+            transitions = [];
+            selectedState = null;
+            hoveredState = null;
+            drawCanvas();
+        }
+
+        function addRandomStates() {
+            clearCanvas();
+            const numStates = 4;
+            const centerX = canvas.width / 2;
+            const centerY = canvas.height / 2;
+            const radius = 150;
+
+            for (let i = 0; i < numStates; i++) {
+                const angle = (i / numStates) * 2 * Math.PI;
+                const x = centerX + radius * Math.cos(angle);
+                const y = centerY + radius * Math.sin(angle);
+                states.push(new State(x, y, i));
+            }
+
+            // Додаємо випадкові переходи
+            for (let i = 0; i < numStates; i++) {
+                for (let j = 0; j < numStates; j++) {
+                    if (Math.random() > 0.5) {
+                        const prob = Math.random() * 0.5 + 0.2;
+                        transitions.push(new Transition(i, j, prob));
+                    }
+                }
+            }
+
+            drawCanvas();
+        }
+
+        function simulateSteps() {
+            if (states.length === 0) {
+                document.getElementById('visualOutput').textContent = 'Спочатку додайте стани!';
+                return;
+            }
+
+            const steps = parseInt(document.getElementById('simSteps').value);
+            let currentState = 0;
+            let output = `Симуляція на ${steps} кроків:\n\n`;
+            output += `Початок: ${states[currentState].label}\n`;
+
+            for (let i = 0; i < steps; i++) {
+                const possibleTransitions = transitions.filter(t => t.from === currentState);
+                
+                if (possibleTransitions.length === 0) {
+                    output += `\nНемає доступних переходів з ${states[currentState].label}`;
+                    break;
+                }
+
+                const totalProb = possibleTransitions.reduce((sum, t) => sum + t.probability, 0);
+                let random = Math.random() * totalProb;
+                
+                for (const transition of possibleTransitions) {
+                    random -= transition.probability;
+                    if (random <= 0) {
+                        currentState = transition.to;
+                        break;
+                    }
+                }
+
+                output += ` → ${states[currentState].label}`;
+            }
+
+            document.getElementById('visualOutput').textContent = output;
+        }
+
+        // Симуляція погоди
+        function simulateWeather() {
+            const weatherNames = ['☀️ Сонячно', '☁️ Хмарно', '🌧️ Дощ'];
+            const matrix = getWeatherMatrix();
+            let currentState = parseInt(document.getElementById('weatherStart').value);
+            const days = parseInt(document.getElementById('weatherDays').value);
+
+            let output = `Прогноз погоди на ${days} днів:\n\n`;
+            output += `День 1: ${weatherNames[currentState]}\n`;
+
+            for (let i = 2; i <= days; i++) {
+                const probs = matrix[currentState];
+                const random = Math.random();
+                let cumProb = 0;
+
+                for (let j = 0; j < probs.length; j++) {
+                    cumProb += probs[j];
+                    if (random <= cumProb) {
+                        currentState = j;
+                        break;
+                    }
+                }
+
+                output += `День ${i}: ${weatherNames[currentState]}\n`;
+            }
+
+            document.getElementById('weatherOutput').textContent = output;
+        }
+
+        function getWeatherMatrix() {
+            const matrix = [];
+            const table = document.getElementById('weatherMatrix');
+            const rows = table.querySelectorAll('tbody tr');
+
+            rows.forEach(row => {
+                const inputs = row.querySelectorAll('input');
+                const rowProbs = Array.from(inputs).map(input => parseFloat(input.value));
+                matrix.push(rowProbs);
+            });
+
+            return matrix;
+        }
+
+        function normalizeRow(rowIndex) {
+            const table = document.getElementById('weatherMatrix');
+            const row = table.querySelectorAll('tbody tr')[rowIndex];
+            const inputs = row.querySelectorAll('input');
+            
+            const sum = Array.from(inputs).reduce((s, input) => s + parseFloat(input.value), 0);
+            
+            if (sum !== 1 && sum > 0) {
+                inputs.forEach(input => {
+                    input.value = (parseFloat(input.value) / sum).toFixed(2);
+                });
+            }
+        }
+
+        // Власна модель
+        function generateCustomMatrix() {
+            const numStates = parseInt(document.getElementById('customStates').value);
+            const container = document.getElementById('customMatrixContainer');
+            const startSelect = document.getElementById('customStart');
+
+            let html = '<table><thead><tr><th></th>';
+            for (let i = 0; i < numStates; i++) {
+                html += `<th>Стан ${i}</th>`;
+            }
+            html += '</tr></thead><tbody>';
+
+            for (let i = 0; i < numStates; i++) {
+                html += `<tr><th>Стан ${i}</th>`;
+                for (let j = 0; j < numStates; j++) {
+                    const value = (1 / numStates).toFixed(2);
+                    html += `<td><input type="number" step="0.01" value="${value}" min="0" max="1"></td>`;
+                }
+                html += '</tr>';
+            }
+            html += '</tbody></table>';
+            container.innerHTML = html;
+
+            // Оновлюємо select
+            startSelect.innerHTML = '';
+            for (let i = 0; i < numStates; i++) {
+                startSelect.innerHTML += `<option value="${i}">Стан ${i}</option>`;
+            }
+        }
+
+        function simulateCustom() {
+            const numStates = parseInt(document.getElementById('customStates').value);
+            const container = document.getElementById('customMatrixContainer');
+            const table = container.querySelector('table');
+            const rows = table.querySelectorAll('tbody tr');
+            
+            const matrix = [];
+            rows.forEach(row => {
+                const inputs = row.querySelectorAll('input');
+                const rowProbs = Array.from(inputs).map(input => parseFloat(input.value));
+                matrix.push(rowProbs);
+            });
+
+            let currentState = parseInt(document.getElementById('customStart').value);
+            const steps = parseInt(document.getElementById('customSteps').value);
+
+            let output = `Симуляція на ${steps} кроків:\n\n`;
+            output += `Крок 0: Стан ${currentState}\n`;
+
+            for (let i = 1; i <= steps; i++) {
+                const probs = matrix[currentState];
+                const random = Math.random();
+                let cumProb = 0;
+
+                for (let j = 0; j < probs.length; j++) {
+                    cumProb += probs[j];
+                    if (random <= cumProb) {
+                        currentState = j;
+                        break;
+                    }
+                }
+
+                output += `Крок ${i}: Стан ${currentState}\n`;
+            }
+
+            document.getElementById('customOutput').textContent = output;
+        }
+
+        // Перемикання вкладок
+        function switchTab(tabName) {
+            document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+            
+            event.target.classList.add('active');
+            document.getElementById(tabName).classList.add('active');
+        }
+
+        function switchMCTab(tabName) {
+            const parentSection = event.target.closest('.section');
+            parentSection.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active'));
+            parentSection.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+            
+            event.target.classList.add('active');
+            document.getElementById(tabName).classList.add('active');
+        }
+
+        // ========== MONTE CARLO СИМУЛЯЦІЇ ==========
+
+        // Обчислення Pi
+        let piCanvas, piCtx;
+        let piSimulationRunning = false;
+        let piAnimationId = null;
+        let piPointsInside = 0;
+        let piTotalPoints = 0;
+
+        function initPiCanvas() {
+            piCanvas = document.getElementById('piCanvas');
+            if (!piCanvas) return;
+            piCtx = piCanvas.getContext('2d');
+            resetPiSimulation();
+        }
+
+        function resetPiSimulation() {
+            if (!piCtx) return;
+            piPointsInside = 0;
+            piTotalPoints = 0;
+            
+            piCtx.clearRect(0, 0, piCanvas.width, piCanvas.height);
+            
+            // Малюємо квадрат
+            piCtx.strokeStyle = '#667eea';
+            piCtx.lineWidth = 2;
+            piCtx.strokeRect(0, 0, piCanvas.width, piCanvas.height);
+            
+            // Малюємо коло
+            piCtx.beginPath();
+            piCtx.arc(piCanvas.width / 2, piCanvas.height / 2, piCanvas.width / 2, 0, Math.PI * 2);
+            piCtx.strokeStyle = '#764ba2';
+            piCtx.stroke();
+            
+            document.getElementById('piOutput').textContent = 'Натисніть "Старт" для початку симуляції...';
+        }
+
+        function startPiSimulation() {
+            if (piSimulationRunning) return;
+            piSimulationRunning = true;
+            
+            const maxPoints = parseInt(document.getElementById('piPoints').value);
+            const speed = parseInt(document.getElementById('piSpeed').value);
+            const pointsPerFrame = Math.max(1, Math.floor(speed / 10));
+            
+            function animate() {
+                if (!piSimulationRunning || piTotalPoints >= maxPoints) {
+                    piSimulationRunning = false;
+                    return;
+                }
+                
+                for (let i = 0; i < pointsPerFrame && piTotalPoints < maxPoints; i++) {
+                    const x = Math.random() * piCanvas.width;
+                    const y = Math.random() * piCanvas.height;
+                    
+                    const centerX = piCanvas.width / 2;
+                    const centerY = piCanvas.height / 2;
+                    const radius = piCanvas.width / 2;
+                    
+                    const distance = Math.sqrt(Math.pow(x - centerX, 2) + Math.pow(y - centerY, 2));
+                    const isInside = distance <= radius;
+                    
+                    if (isInside) {
+                        piPointsInside++;
+                        piCtx.fillStyle = 'rgba(102, 126, 234, 0.5)';
+                    } else {
+                        piCtx.fillStyle = 'rgba(118, 75, 162, 0.3)';
+                    }
+                    
+                    piCtx.fillRect(x - 1, y - 1, 2, 2);
+                    piTotalPoints++;
+                }
+                
+                const estimatedPi = 4 * piPointsInside / piTotalPoints;
+                const error = Math.abs(estimatedPi - Math.PI);
+                const errorPercent = (error / Math.PI * 100).toFixed(2);
+                
+                document.getElementById('piOutput').textContent = 
+                    `Точок усього: ${piTotalPoints}\n` +
+                    `Точок у колі: ${piPointsInside}\n` +
+                    `Оцінка π: ${estimatedPi.toFixed(6)}\n` +
+                    `Справжнє π: ${Math.PI.toFixed(6)}\n` +
+                    `Похибка: ${error.toFixed(6)} (${errorPercent}%)`;
+                
+                piAnimationId = requestAnimationFrame(animate);
+            }
+            
+            animate();
+        }
+
+        function stopPiSimulation() {
+            piSimulationRunning = false;
+            if (piAnimationId) {
+                cancelAnimationFrame(piAnimationId);
+            }
+        }
+
+        // Інтеграція методом Монте-Карло
+        function runIntegration() {
+            const canvas = document.getElementById('integrationCanvas');
+            const ctx = canvas.getContext('2d');
+            const numPoints = parseInt(document.getElementById('integrationPoints').value);
+            
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            const padding = 40;
+            const graphWidth = canvas.width - 2 * padding;
+            const graphHeight = canvas.height - 2 * padding;
+            
+            // Малюємо осі
+            ctx.strokeStyle = '#333';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.moveTo(padding, canvas.height - padding);
+            ctx.lineTo(canvas.width - padding, canvas.height - padding);
+            ctx.moveTo(padding, canvas.height - padding);
+            ctx.lineTo(padding, padding);
+            ctx.stroke();
+            
+            // Малюємо функцію f(x) = x²
+            ctx.strokeStyle = '#667eea';
+            ctx.lineWidth = 3;
+            ctx.beginPath();
+            for (let i = 0; i <= graphWidth; i++) {
+                const x = i / graphWidth;
+                const y = x * x;
+                const px = padding + i;
+                const py = canvas.height - padding - y * graphHeight;
+                if (i === 0) {
+                    ctx.moveTo(px, py);
+                } else {
+                    ctx.lineTo(px, py);
+                }
+            }
+            ctx.stroke();
+            
+            // Генеруємо випадкові точки
+            let pointsUnder = 0;
+            for (let i = 0; i < numPoints; i++) {
+                const x = Math.random();
+                const y = Math.random();
+                const fx = x * x;
+                
+                const px = padding + x * graphWidth;
+                const py = canvas.height - padding - y * graphHeight;
+                
+                if (y <= fx) {
+                    pointsUnder++;
+                    ctx.fillStyle = 'rgba(102, 126, 234, 0.5)';
+                } else {
+                    ctx.fillStyle = 'rgba(118, 75, 162, 0.3)';
+                }
+                
+                ctx.fillRect(px - 1, py - 1, 2, 2);
+            }
+            
+            const estimatedIntegral = pointsUnder / numPoints;
+            const trueValue = 1/3;
+            const error = Math.abs(estimatedIntegral - trueValue);
+            const errorPercent = (error / trueValue * 100).toFixed(2);
+            
+            // Підписи
+            ctx.fillStyle = '#333';
+            ctx.font = '14px Arial';
+            ctx.fillText('0', padding - 10, canvas.height - padding + 20);
+            ctx.fillText('1', canvas.width - padding, canvas.height - padding + 20);
+            ctx.fillText('f(x) = x²', canvas.width - padding - 60, padding + 20);
+            
+            document.getElementById('integrationOutput').textContent = 
+                `Кількість точок: ${numPoints}\n` +
+                `Точок під кривою: ${pointsUnder}\n` +
+                `Оцінка інтеграла: ${estimatedIntegral.toFixed(6)}\n` +
+                `Справжнє значення: ${trueValue.toFixed(6)}\n` +
+                `Похибка: ${error.toFixed(6)} (${errorPercent}%)`;
+        }
+
+        // MCMC - Метрополіс-Гастінгс
+        function runMCMC() {
+            const canvas = document.getElementById('mcmcCanvas');
+            const ctx = canvas.getContext('2d');
+            const steps = parseInt(document.getElementById('mcmcSteps').value);
+            const targetMean = parseFloat(document.getElementById('mcmcMean').value);
+            const targetStd = parseFloat(document.getElementById('mcmcStd').value);
+            
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            // Функція щільності нормального розподілу
+            function normalPDF(x, mean, std) {
+                return Math.exp(-0.5 * Math.pow((x - mean) / std, 2)) / (std * Math.sqrt(2 * Math.PI));
+            }
+            
+            // Алгоритм Метрополіса-Гастінгса
+            const samples = [];
+            let current = 0;
+            let accepted = 0;
+            
+            for (let i = 0; i < steps; i++) {
+                const proposal = current + (Math.random() - 0.5) * 2;
+                const currentProb = normalPDF(current, targetMean, targetStd);
+                const proposalProb = normalPDF(proposal, targetMean, targetStd);
+                const acceptanceRatio = proposalProb / currentProb;
+                
+                if (Math.random() < acceptanceRatio) {
+                    current = proposal;
+                    accepted++;
+                }
+                
+                samples.push(current);
+            }
+            
+            // Будуємо гістограму
+            const binCount = 50;
+            const minVal = Math.min(...samples);
+            const maxVal = Math.max(...samples);
+            const binWidth = (maxVal - minVal) / binCount;
+            const bins = new Array(binCount).fill(0);
+            
+            samples.forEach(sample => {
+                const binIndex = Math.min(Math.floor((sample - minVal) / binWidth), binCount - 1);
+                bins[binIndex]++;
+            });
+            
+            const maxBin = Math.max(...bins);
+            const padding = 40;
+            const graphWidth = canvas.width - 2 * padding;
+            const graphHeight = canvas.height - 2 * padding;
+            
+            // Малюємо гістограму
+            ctx.fillStyle = 'rgba(102, 126, 234, 0.7)';
+            bins.forEach((count, i) => {
+                const x = padding + (i / binCount) * graphWidth;
+                const height = (count / maxBin) * graphHeight;
+                const y = canvas.height - padding - height;
+                const barWidth = graphWidth / binCount;
+                ctx.fillRect(x, y, barWidth - 1, height);
+            });
+            
+            // Малюємо теоретичну криву
+            ctx.strokeStyle = '#e74c3c';
+            ctx.lineWidth = 3;
+            ctx.beginPath();
+            for (let i = 0; i <= graphWidth; i++) {
+                const x = minVal + (i / graphWidth) * (maxVal - minVal);
+                const y = normalPDF(x, targetMean, targetStd);
+                const px = padding + i;
+                const py = canvas.height - padding - (y / (normalPDF(targetMean, targetMean, targetStd))) * graphHeight * 0.8;
+                if (i === 0) {
+                    ctx.moveTo(px, py);
+                } else {
+                    ctx.lineTo(px, py);
+                }
+            }
+            ctx.stroke();
+            
+            // Осі
+            ctx.strokeStyle = '#333';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.moveTo(padding, canvas.height - padding);
+            ctx.lineTo(canvas.width - padding, canvas.height - padding);
+            ctx.moveTo(padding, canvas.height - padding);
+            ctx.lineTo(padding, padding);
+            ctx.stroke();
+            
+            // Статистика
+            const mean = samples.reduce((a, b) => a + b, 0) / samples.length;
+            const variance = samples.reduce((a, b) => a + Math.pow(b - mean, 2), 0) / samples.length;
+            const std = Math.sqrt(variance);
+            const acceptanceRate = (accepted / steps * 100).toFixed(1);
+            
+            document.getElementById('mcmcOutput').textContent = 
+                `Загальна кількість кроків: ${steps}\n` +
+                `Прийнято пропозицій: ${accepted} (${acceptanceRate}%)\n\n` +
+                `Емпірична статистика:\n` +
+                `  Середнє: ${mean.toFixed(4)}\n` +
+                `  Стандартне відхилення: ${std.toFixed(4)}\n\n` +
+                `Цільові параметри:\n` +
+                `  Середнє (μ): ${targetMean.toFixed(4)}\n` +
+                `  Стандартне відхилення (σ): ${targetStd.toFixed(4)}\n\n` +
+                `🔴 Червона лінія — теоретичний розподіл\n` +
+                `🔵 Синя гістограма — результат MCMC`;
+            
+            // Підписи
+            ctx.fillStyle = '#333';
+            ctx.font = '12px Arial';
+            ctx.fillText(minVal.toFixed(1), padding - 10, canvas.height - padding + 20);
+            ctx.fillText(maxVal.toFixed(1), canvas.width - padding - 20, canvas.height - padding + 20);
+        }
+
+        // Ініціалізація
+        generateCustomMatrix();
+        drawCanvas();
+        
+        // Ініціалізуємо Pi canvas після завантаження DOM
+        setTimeout(() => {
+            initPiCanvas();
+        }, 100);
+    </script>
+</body>
+</html>
