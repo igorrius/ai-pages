@@ -1,148 +1,254 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="uk">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>AI Pages — Індекс</title>
-  <meta name="description" content="Збірка корисних сторінок та інструментів цього репозиторію." />
-  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ccircle cx='50' cy='50' r='45' fill='%231f2937'/%3E%3Ctext x='50' y='58' font-size='44' text-anchor='middle' fill='white' font-family='Arial'%3EAI%3C/text%3E%3C/svg%3E" />
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>AI Pages — Головна</title>
+  <meta name="description" content="Центральний хаб інструментів, калькуляторів та презентацій." />
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ccircle cx='50' cy='50' r='45' fill='%234f46e5'/%3E%3Ctext x='50' y='58' font-size='44' text-anchor='middle' fill='white' font-family='Arial'%3EAI%3C/text%3E%3C/svg%3E" />
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
     body { font-family: 'Inter', sans-serif; }
-    .card:hover { transform: translateY(-2px); }
+    .hero-pattern { background-image: radial-gradient(#e2e8f0 1px, transparent 1px); background-size: 20px 20px; }
   </style>
 </head>
-<body class="min-h-screen bg-gray-100 text-gray-800">
-  <header class="bg-white/80 backdrop-blur sticky top-0 border-b border-gray-200">
-    <div class="max-w-5xl mx-auto px-4 py-4 flex items-center justify-between">
-      <h1 class="text-xl sm:text-2xl font-bold">AI Pages</h1>
-      <span id="updated" class="text-sm text-gray-500"></span>
+<body class="min-h-screen bg-slate-50 text-slate-900 flex flex-col">
+
+  <!-- Header -->
+  <header class="bg-white/90 backdrop-blur sticky top-0 border-b border-slate-200 z-50">
+    <div class="max-w-6xl mx-auto px-4 py-4 flex items-center justify-between">
+      <div class="flex items-center gap-3">
+        <div class="w-8 h-8 rounded-lg bg-indigo-600 flex items-center justify-center text-white font-bold">AI</div>
+        <h1 class="text-xl font-bold tracking-tight text-slate-800">Pages</h1>
+      </div>
+      <div class="text-sm text-slate-500 hidden sm:block">
+        Оновлено: <span id="updated-date" class="font-medium text-slate-700"></span>
+      </div>
     </div>
   </header>
 
-  <main class="max-w-5xl mx-auto px-4 py-8">
-    <section class="mb-6">
-      <p class="text-gray-600">Вітання! Нижче — корисні сторінки з цього репозиторію. Оберіть інструмент або матеріал.</p>
-    </section>
-
-    <!-- Розділи -->
-    <section class="space-y-8">
-      <!-- Розділ: Фінанси / Money -->
-      <div>
-        <div class="flex items-baseline justify-between mb-3">
-          <h2 class="text-lg sm:text-xl font-semibold">Фінанси</h2>
-          <a class="text-sm text-indigo-600 hover:text-indigo-800" href="./web/">/web</a>
-        </div>
-        <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          <a class="card block rounded-xl border border-gray-200 bg-white p-5 shadow-sm transition hover:shadow-md" href="./web/money/invest-calc.html">
-            <div class="flex items-start justify-between">
-              <div>
-                <h3 class="font-semibold">Інвестиційний калькулятор</h3>
-                <p class="mt-1 text-sm text-gray-600">Розрахунок складних відсотків та регулярних поповнень, графік зростання.</p>
-              </div>
-              <span class="ml-3 inline-flex items-center rounded-full bg-green-50 px-2.5 py-0.5 text-xs font-medium text-green-700">інструмент</span>
-            </div>
-          </a>
-          <a class="card block rounded-xl border border-gray-200 bg-white p-5 shadow-sm transition hover:shadow-md" href="./web/money/spread-calculator.html">
-            <div class="flex items-start justify-between">
-              <div>
-                <h3 class="font-semibold">Калькулятор спреду</h3>
-                <p class="mt-1 text-sm text-gray-600">Розрахунок спреду між Ask та Bid цінами, відсоток та базисні пункти.</p>
-              </div>
-              <span class="ml-3 inline-flex items-center rounded-full bg-green-50 px-2.5 py-0.5 text-xs font-medium text-green-700">інструмент</span>
-            </div>
-          </a>
-        </div>
-      </div>
-
-      <!-- Розділ: Математика / Навчання -->
-      <div>
-        <div class="flex items-baseline justify-between mb-3">
-          <h2 class="text-lg sm:text-xl font-semibold">Навчання • Математика</h2>
-        </div>
-        <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          <a class="card block rounded-xl border border-gray-200 bg-white p-5 shadow-sm transition hover:shadow-md" href="./web/%D0%BC%D0%BD%D0%BE%D0%B6%D0%B5%D0%BD%D0%BD%D1%8F-%D1%81%D1%82%D0%BE%D0%B2%D0%B1%D1%87%D0%B8%D0%BA.html">
-            <div class="flex items-start justify-between">
-              <div>
-                <h3 class="font-semibold">Тренажер множення в стовпчик</h3>
-                <p class="mt-1 text-sm text-gray-600">Покрокова візуалізація множення великих чисел.</p>
-              </div>
-              <span class="ml-3 inline-flex items-center rounded-full bg-blue-50 px-2.5 py-0.5 text-xs font-medium text-blue-700">навчання</span>
-            </div>
-          </a>
-        </div>
-      </div>
-
-      <!-- Розділ: Інформаційні технології / IT -->
-      <div>
-        <div class="flex items-baseline justify-between mb-3">
-          <h2 class="text-lg sm:text-xl font-semibold">Information Technology</h2>
-          <a class="text-sm text-indigo-600 hover:text-indigo-800" href="./web/it/">/web/it</a>
-        </div>
-        <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          <a class="card block rounded-xl border border-gray-200 bg-white p-5 shadow-sm transition hover:shadow-md" href="./web/it/redis_storage_design_best_practices_interactive_html_presentation.html">
-            <div class="flex items-start justify-between">
-              <div>
-                <h3 class="font-semibold">Redis Storage Design — Best Practices</h3>
-                <p class="mt-1 text-sm text-gray-600">Interactive presentation about Redis key design, clustering, TTL, and operational best practices.</p>
-              </div>
-              <span class="ml-3 inline-flex items-center rounded-full bg-yellow-50 px-2.5 py-0.5 text-xs font-medium text-yellow-700">presentation</span>
-            </div>
-          </a>
-          <a class="card block rounded-xl border border-gray-200 bg-white p-5 shadow-sm transition hover:shadow-md" href="./web/it/radix-tree-presentation.html">
-            <div class="flex items-start justify-between">
-              <div>
-                <h3 class="font-semibold">Radix Tree — Interactive Presentation</h3>
-                <p class="mt-1 text-sm text-gray-600">Interactive presentation with visual demos and code examples explaining Radix Trees.</p>
-              </div>
-              <span class="ml-3 inline-flex items-center rounded-full bg-yellow-50 px-2.5 py-0.5 text-xs font-medium text-yellow-700">presentation</span>
-            </div>
-          </a>
-        </div>
-      </div>
-
-      <!-- Розділ: Транспорт / Автомобілі -->
-      <div>
-        <div class="flex items-baseline justify-between mb-3">
-          <h2 class="text-lg sm:text-xl font-semibold">Транспорт • Автомобілі</h2>
-        </div>
-        <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          <a class="card block rounded-xl border border-gray-200 bg-white p-5 shadow-sm transition hover:shadow-md" href="./web/vehicle/acura_rdx_guide.html">
-            <div class="flex items-start justify-between">
-              <div>
-                <h3 class="font-semibold">Acura RDX 2024 A-Spec Advance</h3>
-                <p class="mt-1 text-sm text-gray-600">Посібник користувача: системи керування, режими водіння, AcuraWatch та багато іншого.</p>
-              </div>
-              <span class="ml-3 inline-flex items-center rounded-full bg-purple-50 px-2.5 py-0.5 text-xs font-medium text-purple-700">довідка</span>
-            </div>
-          </a>
+  <main class="flex-grow">
+    
+    <!-- Hero Section -->
+    <section class="relative border-b border-slate-200 bg-white overflow-hidden">
+      <div class="absolute inset-0 hero-pattern opacity-50"></div>
+      <div class="max-w-6xl mx-auto px-4 py-16 relative z-10 text-center sm:text-left">
+        <h2 class="text-4xl font-extrabold text-slate-900 tracking-tight mb-4">
+          Корисні інструменти <br class="hidden sm:block" />
+          <span class="text-indigo-600">в одному місці.</span>
+        </h2>
+        <p class="text-lg text-slate-600 max-w-2xl mb-8">
+          Збірка інтерактивних калькуляторів, навчальних матеріалів та технічних презентацій. Оберіть категорію нижче.
+        </p>
+        
+        <!-- Search -->
+        <div class="relative max-w-md w-full">
+          <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+            <svg class="h-5 w-5 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+            </svg>
+          </div>
+          <input type="text" id="search" placeholder="Швидкий пошук інструментів..." 
+            class="block w-full pl-10 pr-3 py-3 border border-slate-300 rounded-xl leading-5 bg-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm shadow-sm transition"
+          >
         </div>
       </div>
     </section>
 
-    <!-- Дрібниці -->
-    <section class="mt-10 text-sm text-gray-500">
-      <p>Порада: додайте нові сторінки у відповідні підпапки та оновіть цей індекс для швидкого доступу.</p>
+    <!-- Categories Grid -->
+    <section class="max-w-6xl mx-auto px-4 py-12">
+      <h3 class="text-sm font-bold text-slate-400 uppercase tracking-wider mb-6">Категорії</h3>
+      
+      <div class="grid gap-6 sm:grid-cols-2 lg:grid-cols-4 mb-16">
+        
+        <!-- Money -->
+        <a href="./web/money/index.html" class="group bg-white p-6 rounded-2xl border border-slate-200 shadow-sm hover:shadow-lg hover:-translate-y-1 transition-all duration-300">
+          <div class="w-12 h-12 bg-green-100 rounded-xl flex items-center justify-center text-2xl mb-4 group-hover:scale-110 transition-transform">💰</div>
+          <h4 class="text-lg font-bold text-slate-900 mb-1">Фінанси</h4>
+          <p class="text-sm text-slate-500">Інвестиції, спреди, розрахунки.</p>
+        </a>
+
+        <!-- Math -->
+        <a href="./web/math/index.html" class="group bg-white p-6 rounded-2xl border border-slate-200 shadow-sm hover:shadow-lg hover:-translate-y-1 transition-all duration-300">
+          <div class="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center text-2xl mb-4 group-hover:scale-110 transition-transform">📐</div>
+          <h4 class="text-lg font-bold text-slate-900 mb-1">Математика</h4>
+          <p class="text-sm text-slate-500">Навчання, графіки, моделі.</p>
+        </a>
+
+        <!-- IT -->
+        <a href="./web/it/index.html" class="group bg-white p-6 rounded-2xl border border-slate-200 shadow-sm hover:shadow-lg hover:-translate-y-1 transition-all duration-300">
+          <div class="w-12 h-12 bg-yellow-100 rounded-xl flex items-center justify-center text-2xl mb-4 group-hover:scale-110 transition-transform">💻</div>
+          <h4 class="text-lg font-bold text-slate-900 mb-1">IT & Tech</h4>
+          <p class="text-sm text-slate-500">Презентації, структури даних.</p>
+        </a>
+
+        <!-- Vehicle -->
+        <a href="./web/vehicle/index.html" class="group bg-white p-6 rounded-2xl border border-slate-200 shadow-sm hover:shadow-lg hover:-translate-y-1 transition-all duration-300">
+          <div class="w-12 h-12 bg-purple-100 rounded-xl flex items-center justify-center text-2xl mb-4 group-hover:scale-110 transition-transform">🚗</div>
+          <h4 class="text-lg font-bold text-slate-900 mb-1">Транспорт</h4>
+          <p class="text-sm text-slate-500">Інструкції, довідники.</p>
+        </a>
+
+      </div>
+
+      <!-- All Tools List (Searchable) -->
+      <div id="tools-section">
+        <h3 class="text-sm font-bold text-slate-400 uppercase tracking-wider mb-6 flex items-center justify-between">
+          <span>Всі інструменти</span>
+          <span class="text-xs font-normal normal-case bg-slate-100 px-2 py-1 rounded text-slate-500" id="tools-count">0 знайдено</span>
+        </h3>
+
+        <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3" id="tools-grid">
+          <!-- Items will be searchable -->
+          
+          <!-- Finance Items -->
+          <a href="./web/money/invest-calc.html" class="tool-card group block bg-white border border-slate-200 rounded-xl p-4 hover:border-indigo-500 transition-colors" data-keywords="finance гроші інвестиції калькулятор">
+            <div class="flex items-start justify-between">
+              <div class="flex items-center gap-3">
+                <span class="text-xl bg-slate-50 p-2 rounded-lg">📈</span>
+                <div>
+                  <h5 class="font-semibold text-slate-800 group-hover:text-indigo-600">Інвестиційний калькулятор</h5>
+                  <p class="text-xs text-slate-500 mt-0.5">Фінанси</p>
+                </div>
+              </div>
+            </div>
+          </a>
+
+          <a href="./web/money/spread-calculator.html" class="tool-card group block bg-white border border-slate-200 rounded-xl p-4 hover:border-indigo-500 transition-colors" data-keywords="finance гроші спред трейдинг">
+            <div class="flex items-start justify-between">
+              <div class="flex items-center gap-3">
+                <span class="text-xl bg-slate-50 p-2 rounded-lg">💱</span>
+                <div>
+                  <h5 class="font-semibold text-slate-800 group-hover:text-indigo-600">Калькулятор спреду</h5>
+                  <p class="text-xs text-slate-500 mt-0.5">Фінанси</p>
+                </div>
+              </div>
+            </div>
+          </a>
+
+          <!-- Math Items -->
+          <a href="./web/%D0%BC%D0%BD%D0%BE%D0%B6%D0%B5%D0%BD%D0%BD%D1%8F-%D1%81%D1%82%D0%BE%D0%B2%D0%B1%D1%87%D0%B8%D0%BA.html" class="tool-card group block bg-white border border-slate-200 rounded-xl p-4 hover:border-indigo-500 transition-colors" data-keywords="math математика школа множення">
+            <div class="flex items-start justify-between">
+              <div class="flex items-center gap-3">
+                <span class="text-xl bg-slate-50 p-2 rounded-lg">✖️</span>
+                <div>
+                  <h5 class="font-semibold text-slate-800 group-hover:text-indigo-600">Множення в стовпчик</h5>
+                  <p class="text-xs text-slate-500 mt-0.5">Математика</p>
+                </div>
+              </div>
+            </div>
+          </a>
+
+          <a href="./web/math/markov_chain_interactive.html" class="tool-card group block bg-white border border-slate-200 rounded-xl p-4 hover:border-indigo-500 transition-colors" data-keywords="math математика марков монте карло">
+            <div class="flex items-start justify-between">
+              <div class="flex items-center gap-3">
+                <span class="text-xl bg-slate-50 p-2 rounded-lg">🔗</span>
+                <div>
+                  <h5 class="font-semibold text-slate-800 group-hover:text-indigo-600">Ланцюги Маркова</h5>
+                  <p class="text-xs text-slate-500 mt-0.5">Математика</p>
+                </div>
+              </div>
+            </div>
+          </a>
+
+          <!-- IT Items -->
+          <a href="./web/it/redis_storage_design_best_practices_interactive_html_presentation.html" class="tool-card group block bg-white border border-slate-200 rounded-xl p-4 hover:border-indigo-500 transition-colors" data-keywords="it redis database presentation">
+            <div class="flex items-start justify-between">
+              <div class="flex items-center gap-3">
+                <span class="text-xl bg-slate-50 p-2 rounded-lg">🗄️</span>
+                <div>
+                  <h5 class="font-semibold text-slate-800 group-hover:text-indigo-600">Redis Storage Design</h5>
+                  <p class="text-xs text-slate-500 mt-0.5">IT & Tech</p>
+                </div>
+              </div>
+            </div>
+          </a>
+
+          <a href="./web/it/radix-tree-presentation.html" class="tool-card group block bg-white border border-slate-200 rounded-xl p-4 hover:border-indigo-500 transition-colors" data-keywords="it algorithm tree presentation">
+            <div class="flex items-start justify-between">
+              <div class="flex items-center gap-3">
+                <span class="text-xl bg-slate-50 p-2 rounded-lg">🌳</span>
+                <div>
+                  <h5 class="font-semibold text-slate-800 group-hover:text-indigo-600">Radix Tree Interactive</h5>
+                  <p class="text-xs text-slate-500 mt-0.5">IT & Tech</p>
+                </div>
+              </div>
+            </div>
+          </a>
+
+          <!-- Vehicle Items -->
+          <a href="./web/vehicle/acura_rdx_guide.html" class="tool-card group block bg-white border border-slate-200 rounded-xl p-4 hover:border-indigo-500 transition-colors" data-keywords="auto vehicle car acura manual">
+            <div class="flex items-start justify-between">
+              <div class="flex items-center gap-3">
+                <span class="text-xl bg-slate-50 p-2 rounded-lg">🚗</span>
+                <div>
+                  <h5 class="font-semibold text-slate-800 group-hover:text-indigo-600">Acura RDX Guide</h5>
+                  <p class="text-xs text-slate-500 mt-0.5">Транспорт</p>
+                </div>
+              </div>
+            </div>
+          </a>
+
+        </div>
+        
+        <!-- No results message -->
+        <div id="no-results" class="hidden text-center py-12 text-slate-400">
+          <p>Нічого не знайдено за вашим запитом.</p>
+        </div>
+
+      </div>
     </section>
+
   </main>
 
-  <footer class="mt-12 border-t border-gray-200">
-    <div class="max-w-5xl mx-auto px-4 py-6 text-sm text-gray-500 flex flex-col sm:flex-row sm:items-center sm:justify-between">
+  <footer class="mt-12 bg-white border-t border-slate-200">
+    <div class="max-w-6xl mx-auto px-4 py-8 text-sm text-slate-500 flex flex-col sm:flex-row sm:items-center sm:justify-between">
       <span>© <span id="year"></span> AI Pages</span>
-      <a class="mt-2 sm:mt-0 text-indigo-600 hover:text-indigo-800" href="https://github.com/igorrius" target="_blank" rel="noopener">GitHub</a>
+      <div class="flex gap-4 mt-4 sm:mt-0">
+        <a class="hover:text-indigo-600 transition" href="https://github.com/igorrius" target="_blank" rel="noopener">GitHub</a>
+      </div>
     </div>
   </footer>
 
   <script>
-    // Відображення дати оновлення та року
-    (function() {
-      const updated = document.getElementById('updated');
-      const dt = new Date();
-      const two = (n) => n.toString().padStart(2, '0');
-      updated.textContent = `Оновлено: ${two(dt.getDate())}.${two(dt.getMonth()+1)}.${dt.getFullYear()} ${two(dt.getHours())}:${two(dt.getMinutes())}`;
-      document.getElementById('year').textContent = dt.getFullYear();
-    })();
+    // Dates
+    const now = new Date();
+    const two = (n) => n.toString().padStart(2, '0');
+    document.getElementById('updated-date').textContent = `${two(now.getDate())}.${two(now.getMonth()+1)}.${now.getFullYear()}`;
+    document.getElementById('year').textContent = now.getFullYear();
+
+    // Search Logic
+    const searchInput = document.getElementById('search');
+    const toolCards = document.querySelectorAll('.tool-card');
+    const noResults = document.getElementById('no-results');
+    const toolsCount = document.getElementById('tools-count');
+
+    function filterTools() {
+      const query = searchInput.value.toLowerCase();
+      let visibleCount = 0;
+
+      toolCards.forEach(card => {
+        const text = card.innerText.toLowerCase();
+        const keywords = card.getAttribute('data-keywords') || '';
+        const match = text.includes(query) || keywords.includes(query);
+        
+        if (match) {
+          card.style.display = 'block';
+          visibleCount++;
+        } else {
+          card.style.display = 'none';
+        }
+      });
+
+      noResults.style.display = visibleCount === 0 ? 'block' : 'none';
+      toolsCount.textContent = `${visibleCount} знайдено`;
+    }
+
+    searchInput.addEventListener('input', filterTools);
+    
+    // Init count
+    toolsCount.textContent = `${toolCards.length} знайдено`;
   </script>
 </body>
 </html>

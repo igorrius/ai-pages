@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="uk">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Фінанси — AI Pages</title>
+  <meta name="description" content="Фінансові інструменти та калькулятори." />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>body{font-family:Inter, ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial;}</style>
+</head>
+<body class="min-h-screen bg-slate-50 text-slate-900">
+  <header class="bg-white sticky top-0 border-b border-slate-200 z-10">
+    <div class="max-w-5xl mx-auto px-4 py-4 flex items-center justify-between">
+      <div class="flex items-center gap-2">
+        <a href="../../index.html" class="text-slate-500 hover:text-indigo-600 transition">AI Pages</a>
+        <span class="text-slate-300">/</span>
+        <h1 class="text-lg font-bold text-slate-800">Фінанси 💰</h1>
+      </div>
+    </div>
+  </header>
+
+  <main class="max-w-5xl mx-auto px-4 py-8">
+    <div class="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+      
+      <!-- Card -->
+      <a href="./invest-calc.html" class="group relative block h-full bg-white rounded-xl border border-slate-200 p-6 shadow-sm hover:border-indigo-500 hover:ring-1 hover:ring-indigo-500 transition-all">
+        <div class="flex items-center gap-4 mb-4">
+          <span class="p-3 rounded-lg bg-green-100 text-green-600 text-xl">📈</span>
+          <div>
+            <h3 class="font-bold text-slate-800 group-hover:text-indigo-600 transition">Інвестиційний калькулятор</h3>
+          </div>
+        </div>
+        <p class="text-sm text-slate-600 leading-relaxed">
+          Розрахунок складних відсотків, регулярних поповнень та візуалізація росту капіталу з часом.
+        </p>
+      </a>
+
+      <!-- Card -->
+      <a href="./spread-calculator.html" class="group relative block h-full bg-white rounded-xl border border-slate-200 p-6 shadow-sm hover:border-indigo-500 hover:ring-1 hover:ring-indigo-500 transition-all">
+        <div class="flex items-center gap-4 mb-4">
+          <span class="p-3 rounded-lg bg-green-100 text-green-600 text-xl">💱</span>
+          <div>
+            <h3 class="font-bold text-slate-800 group-hover:text-indigo-600 transition">Калькулятор спреду</h3>
+          </div>
+        </div>
+        <p class="text-sm text-slate-600 leading-relaxed">
+          Швидкий розрахунок спреду між цінами Ask та Bid, визначення відсотка та базисних пунктів.
+        </p>
+      </a>
+
+    </div>
+  </main>
+
+  <footer class="mt-auto py-8 text-center text-sm text-slate-500 border-t border-slate-200 bg-white">
+    <p>© <span id="year"></span> AI Pages</p>
+  </footer>
+  <script>document.getElementById('year').textContent = new Date().getFullYear();</script>
+</body>
+</html>
