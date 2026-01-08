@@ -1,0 +1,394 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DJI Osmo Nano: Повний посібник</title>
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <style>
+        /* Стилі для симулятора та UI */
+        .noise-overlay {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            pointer-events: none;
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.5'/%3E%3C/svg%3E");
+            mix-blend-mode: overlay;
+        }
+        .sim-screen { transition: filter 0.3s ease, brightness 0.3s ease; }
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: #1f2937; }
+        ::-webkit-scrollbar-thumb { background: #4b5563; border-radius: 4px; }
+
+        /* Анімація карток */
+        .hover-card { transition: all 0.2s ease-in-out; }
+        .hover-card:hover { transform: translateY(-2px); border-color: #3b82f6; }
+    </style>
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        dji: { dark: '#0f1115', gray: '#1e2128', accent: '#3b82f6' }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <!-- App Logic -->
+    <script>
+        document.addEventListener('alpine:init', () => {
+            Alpine.data('manualApp', () => ({
+                activeTab: 'start',
+
+                // --- Дані навігації ---
+                navItems: [
+                    { id: 'start', label: 'Перші кроки', icon: 'power' },
+                    { id: 'gestures', label: 'Керування', icon: 'touchpad' },
+                    { id: 'modes', label: 'Режими зйомки', icon: 'video' },
+                    { id: 'stabilization', label: 'Стабілізація', icon: 'activity' },
+                    { id: 'simulator', label: 'PRO Симулятор', icon: 'sliders-horizontal' },
+                    { id: 'faq', label: 'FAQ', icon: 'help-circle' }
+                ],
+
+                // --- Дані для жестів ---
+                gestures: [
+                    { title: 'Свайп Вниз', desc: 'Меню налаштувань', icon: 'arrow-down', detail: 'Доступ до яскравості, блокування екрану, налаштувань.' },
+                    { title: 'Свайп Вгору', desc: 'Налаштування роздільної здатності', icon: 'arrow-up', detail: 'Зміна FPS, 1080p/4K та співвідношення сторін.' },
+                    { title: 'Свайп Вправо', desc: 'Галерея', icon: 'arrow-right', detail: 'Перегляд відзнятих фото та відео.' },
+                    { title: 'Свайп Вліво', desc: 'Параметри PRO', icon: 'arrow-left', detail: 'Налаштування ISO, витримки та балансу білого.' }
+                ],
+
+                // --- Дані режимів ---
+                modes: [
+                    { name: 'Video', icon: 'video', specs: 'До 4K/120fps', desc: 'Стандартний режим. Підтримує RockSteady.' },
+                    { name: 'Slow Motion', icon: 'snail', specs: '1080p/240fps', desc: 'Уповільнення в 8 разів. Потребує багато світла.' },
+                    { name: 'Timelapse', icon: 'clock', specs: '4K', desc: 'Прискорене відео. Використовуйте штатив.' },
+                    { name: 'Hyperlapse', icon: 'fast-forward', specs: '4K', desc: 'Таймлапс у русі. Чудова стабілізація.' }
+                ],
+
+                // --- Логіка Симулятора (Збережена) ---
+                shutter: 25,
+                iso: 400,
+
+                getBlur() { return this.shutter < 50 ? (50 - this.shutter) / 5 : 0; },
+                getBrightness() {
+                    let total = 50 + (this.iso / 100 * 2) - (this.shutter / 2);
+                    return Math.max(20, Math.min(150, total));
+                },
+                getNoiseOpacity() { return this.iso / 10000; },
+                isStable() { return this.shutter >= 100; },
+                isConfigGood() { return this.shutter >= 100 && this.iso <= 1600 && this.getBrightness() > 30; },
+                getRecommendation() {
+                    if (this.shutter < 50) return "Критично! Витримка задовга. RockSteady зробить 'желе'.";
+                    if (this.shutter < 100) return "Ризиковано для активного руху.";
+                    if (this.iso > 1600) return "Багато цифрового шуму.";
+                    if (this.getBrightness() < 30) return "Занадто темно.";
+                    return "Оптимальні налаштування.";
+                },
+
+                // --- FAQ ---
+                faqs: [
+                    { id: 1, open: false, question: 'Як активувати камеру?', answer: 'Завантажте додаток <strong>DJI Mimo</strong> на телефон. Увімкніть камеру, відкрийте додаток і дотримуйтесь інструкцій на екрані для з\'єднання.' },
+                    { id: 2, open: false, question: 'Камера гріється під час зйомки 4K', answer: 'Це нормально для компактних камер. Корпус виступає радіатором. Для довгих записів використовуйте 1080p або знизьте FPS до 30.' },
+                    { id: 3, open: false, question: 'Як скинути файли на телефон?', answer: 'Використовуйте DJI Mimo через Wi-Fi (швидко розряджає батарею) або підключіть камеру кабелем Type-C до телефону (швидше).' }
+                ],
+                toggleFaq(id) { this.faqs.find(f => f.id === id).open = !this.faqs.find(f => f.id === id).open; },
+
+                init() {
+                    setTimeout(() => lucide.createIcons(), 50);
+                    this.$watch('activeTab', () => setTimeout(() => lucide.createIcons(), 50));
+                }
+            }))
+        })
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.13.3/dist/cdn.min.js"></script>
+</head>
+<body class="bg-dji-dark text-gray-200 font-sans antialiased h-screen overflow-hidden flex" x-data="manualApp()">
+
+    <!-- Sidebar -->
+    <aside class="w-20 lg:w-64 bg-dji-gray border-r border-gray-800 flex flex-col hidden md:flex shrink-0">
+        <div class="p-6">
+            <div class="flex items-center gap-3 mb-8">
+                <div class="bg-blue-600 p-2 rounded-lg">
+                    <i data-lucide="camera" class="text-white w-6 h-6"></i>
+                </div>
+                <span class="font-bold text-xl tracking-wide text-white hidden lg:block">NANO GUIDE</span>
+            </div>
+
+            <nav class="space-y-1">
+                <template x-for="item in navItems" :key="item.id">
+                    <button
+                        @click="activeTab = item.id"
+                        :class="activeTab === item.id ? 'bg-blue-600/10 text-blue-400 border-r-2 border-blue-500' : 'text-gray-400 hover:bg-gray-800 hover:text-white'"
+                        class="w-full flex items-center gap-4 p-3 rounded-l-lg transition-all duration-200 group text-sm font-medium">
+                        <i :data-lucide="item.icon" class="w-5 h-5 shrink-0"></i>
+                        <span class="hidden lg:block" x-text="item.label"></span>
+                    </button>
+                </template>
+            </nav>
+        </div>
+
+        <div class="mt-auto p-4 border-t border-gray-800">
+            <div class="bg-gray-800/50 rounded-lg p-3 text-xs text-gray-500 text-center">
+                v1.2.0 | DJI Osmo Nano Concept
+            </div>
+        </div>
+    </aside>
+
+    <!-- Mobile Navigation -->
+    <div class="md:hidden fixed bottom-0 w-full bg-dji-gray border-t border-gray-800 z-50 flex justify-between px-6 py-3 pb-6 overflow-x-auto">
+         <template x-for="item in navItems" :key="item.id">
+            <button @click="activeTab = item.id" :class="activeTab === item.id ? 'text-blue-500' : 'text-gray-500'" class="flex flex-col items-center gap-1 min-w-[60px]">
+                <i :data-lucide="item.icon" class="w-6 h-6"></i>
+                <span class="text-[10px]" x-text="item.label.split(' ')[0]"></span>
+            </button>
+        </template>
+    </div>
+
+    <!-- Main Content -->
+    <main class="flex-1 overflow-y-auto relative bg-[#0f1115]">
+        <div class="p-6 md:p-10 pb-24 max-w-5xl mx-auto">
+
+            <!-- Header -->
+            <header class="mb-8">
+                <h1 class="text-3xl font-bold text-white mb-2" x-text="navItems.find(i => i.id === activeTab).label"></h1>
+                <div class="h-1 w-20 bg-blue-600 rounded-full"></div>
+            </header>
+
+            <!-- TAB: START (Перші кроки) -->
+            <div x-show="activeTab === 'start'" x-transition.opacity class="space-y-6">
+                <!-- Hero Card -->
+                <div class="bg-gradient-to-r from-blue-900/40 to-gray-800 border border-blue-500/20 rounded-2xl p-6 md:p-8 flex flex-col md:flex-row items-center gap-8">
+                    <div class="flex-1 space-y-4">
+                        <h2 class="text-2xl font-bold text-white">Вітаємо у світі Nano</h2>
+                        <p class="text-gray-300">Ця камера створена для того, щоб бути непомітною, але потужною. Перед початком роботи переконайтеся, що ви активували пристрій.</p>
+                        <div class="flex gap-4 pt-2">
+                            <div class="flex items-center gap-2 text-sm text-green-400 bg-green-900/20 px-3 py-1 rounded-full border border-green-900/50">
+                                <i data-lucide="check" class="w-4 h-4"></i> Магнітне кріплення
+                            </div>
+                            <div class="flex items-center gap-2 text-sm text-blue-400 bg-blue-900/20 px-3 py-1 rounded-full border border-blue-900/50">
+                                <i data-lucide="wifi" class="w-4 h-4"></i> DJI Mimo App
+                            </div>
+                        </div>
+                    </div>
+                    <!-- Visual Illustration (SVG) -->
+                    <div class="w-40 h-40 bg-gray-900 rounded-full flex items-center justify-center border-4 border-gray-700 shadow-2xl relative">
+                        <div class="absolute inset-0 border-t-4 border-blue-500 rounded-full animate-spin duration-[3000ms]"></div>
+                        <i data-lucide="power" class="w-16 h-16 text-white"></i>
+                    </div>
+                </div>
+
+                <div class="grid md:grid-cols-3 gap-4">
+                    <div class="bg-gray-800 p-5 rounded-xl border border-gray-700 hover-card">
+                        <i data-lucide="smartphone" class="w-8 h-8 text-blue-400 mb-3"></i>
+                        <h3 class="font-bold text-white mb-2">1. Додаток</h3>
+                        <p class="text-sm text-gray-400">Встановіть DJI Mimo. Без активації через додаток камера дозволить зняти лише 5 разів.</p>
+                    </div>
+                    <div class="bg-gray-800 p-5 rounded-xl border border-gray-700 hover-card">
+                        <i data-lucide="battery-charging" class="w-8 h-8 text-green-400 mb-3"></i>
+                        <h3 class="font-bold text-white mb-2">2. Зарядка</h3>
+                        <p class="text-sm text-gray-400">Повна зарядка займає 35 хв. Кейс заряджає камеру до 3 разів автономно.</p>
+                    </div>
+                    <div class="bg-gray-800 p-5 rounded-xl border border-gray-700 hover-card">
+                        <i data-lucide="sd-card" class="w-8 h-8 text-yellow-400 mb-3"></i>
+                        <h3 class="font-bold text-white mb-2">3. Пам'ять</h3>
+                        <p class="text-sm text-gray-400">Використовуйте карти V30 або швидше. Повільні карти зупинять запис 4K.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- TAB: GESTURES (Керування) -->
+            <div x-show="activeTab === 'gestures'" x-transition.opacity class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <template x-for="gesture in gestures">
+                    <div class="bg-gray-800 rounded-xl p-6 border border-gray-700 flex gap-4 hover:bg-gray-750 transition">
+                        <div class="w-12 h-12 bg-gray-900 rounded-lg flex items-center justify-center shrink-0 border border-gray-600">
+                            <i :data-lucide="gesture.icon" class="w-6 h-6 text-blue-400"></i>
+                        </div>
+                        <div>
+                            <h3 class="font-bold text-lg text-white" x-text="gesture.title"></h3>
+                            <p class="text-gray-400 text-sm font-medium mb-2" x-text="gesture.desc"></p>
+                            <p class="text-gray-500 text-xs leading-relaxed" x-text="gesture.detail"></p>
+                        </div>
+                    </div>
+                </template>
+
+                <div class="md:col-span-2 bg-blue-900/20 border border-blue-500/20 p-4 rounded-xl flex gap-3 items-start">
+                    <i data-lucide="info" class="w-5 h-5 text-blue-400 mt-0.5"></i>
+                    <p class="text-sm text-blue-200"><strong>Порада:</strong> Подвійне торкання екрану двома пальцями перемикає відображення між "тільки зображення" та "зображення з інформацією".</p>
+                </div>
+            </div>
+
+            <!-- TAB: MODES (Режими) -->
+            <div x-show="activeTab === 'modes'" x-transition.opacity class="space-y-6">
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                    <template x-for="mode in modes">
+                        <div class="bg-gray-800 p-5 rounded-xl border border-gray-700 flex flex-col items-center text-center hover-card">
+                            <div class="w-12 h-12 bg-gray-700 rounded-full flex items-center justify-center mb-3 text-white">
+                                <i :data-lucide="mode.icon" class="w-6 h-6"></i>
+                            </div>
+                            <h3 class="font-bold text-white mb-1" x-text="mode.name"></h3>
+                            <span class="text-xs bg-gray-900 text-gray-300 px-2 py-1 rounded mb-2" x-text="mode.specs"></span>
+                            <p class="text-xs text-gray-500" x-text="mode.desc"></p>
+                        </div>
+                    </template>
+                </div>
+
+                <!-- Resolution Guide -->
+                <div class="bg-gray-800 rounded-xl border border-gray-700 overflow-hidden">
+                    <div class="p-4 bg-gray-900 border-b border-gray-700 font-bold text-white flex items-center gap-2">
+                        <i data-lucide="monitor" class="w-4 h-4"></i> Таблиця роздільної здатності
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-sm text-left">
+                            <thead class="text-xs text-gray-400 uppercase bg-gray-800/50">
+                                <tr>
+                                    <th class="px-6 py-3">Формат</th>
+                                    <th class="px-6 py-3">FPS</th>
+                                    <th class="px-6 py-3">Призначення</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-gray-700 text-gray-300">
+                                <tr>
+                                    <td class="px-6 py-3 font-medium">4K (4:3)</td>
+                                    <td class="px-6 py-3">24/30/60</td>
+                                    <td class="px-6 py-3">Максимальне охоплення, ідеально для POV</td>
+                                </tr>
+                                <tr>
+                                    <td class="px-6 py-3 font-medium">4K (16:9)</td>
+                                    <td class="px-6 py-3">24-120</td>
+                                    <td class="px-6 py-3">Кінематографічність, YouTube</td>
+                                </tr>
+                                <tr>
+                                    <td class="px-6 py-3 font-medium">1080p</td>
+                                    <td class="px-6 py-3">до 240</td>
+                                    <td class="px-6 py-3">Слоу-мо, економія місця</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- TAB: STABILIZATION (Стабілізація) -->
+            <div x-show="activeTab === 'stabilization'" x-transition.opacity class="space-y-6">
+
+                <div class="grid md:grid-cols-2 gap-6">
+                    <!-- RockSteady -->
+                    <div class="bg-gray-800 rounded-2xl p-6 border border-gray-700 relative overflow-hidden group">
+                        <div class="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition">
+                            <i data-lucide="activity" class="w-32 h-32 text-white"></i>
+                        </div>
+                        <h3 class="text-xl font-bold text-white mb-2 flex items-center gap-2">
+                            <i data-lucide="zap" class="text-yellow-400 w-5 h-5"></i> RockSteady 3.0
+                        </h3>
+                        <p class="text-gray-400 text-sm mb-4">Класична електронна стабілізація. Зрізає краї кадру (кроп), щоб гасити вібрації.</p>
+                        <ul class="text-sm text-gray-300 space-y-2">
+                            <li class="flex gap-2"><i data-lucide="check" class="w-4 h-4 text-green-500"></i> Для бігу, велосипеда, активного спорту</li>
+                            <li class="flex gap-2"><i data-lucide="check" class="w-4 h-4 text-green-500"></i> Працює до 4K/120fps</li>
+                            <li class="flex gap-2"><i data-lucide="x" class="w-4 h-4 text-red-500"></i> Не працює в темряві (див. Симулятор)</li>
+                        </ul>
+                    </div>
+
+                    <!-- HorizonSteady -->
+                    <div class="bg-gray-800 rounded-2xl p-6 border border-gray-700 relative overflow-hidden group">
+                        <div class="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition">
+                            <i data-lucide="globe" class="w-32 h-32 text-white"></i>
+                        </div>
+                        <h3 class="text-xl font-bold text-white mb-2 flex items-center gap-2">
+                            <i data-lucide="compass" class="text-blue-400 w-5 h-5"></i> HorizonSteady
+                        </h3>
+                        <p class="text-gray-400 text-sm mb-4">Тримає горизонт ідеально рівним, навіть якщо камера перевертається на 360°.</p>
+                        <ul class="text-sm text-gray-300 space-y-2">
+                            <li class="flex gap-2"><i data-lucide="check" class="w-4 h-4 text-green-500"></i> Для авіа, атракціонів, сильної тряски</li>
+                            <li class="flex gap-2"><i data-lucide="alert-circle" class="w-4 h-4 text-yellow-500"></i> Великий кроп зображення</li>
+                            <li class="flex gap-2"><i data-lucide="alert-circle" class="w-4 h-4 text-yellow-500"></i> Максимум 2.7K</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="bg-gray-800/50 p-4 rounded-xl border border-gray-700 text-center">
+                    <p class="text-sm text-gray-400">Щоб побачити, чому стабілізація не працює вночі, перейдіть у вкладку <strong>PRO Симулятор</strong>.</p>
+                </div>
+            </div>
+
+            <!-- TAB: SIMULATOR (Той самий, що й раніше) -->
+            <div x-show="activeTab === 'simulator'" x-transition.opacity class="max-w-4xl mx-auto">
+                <div class="bg-gray-900 rounded-2xl border border-gray-700 overflow-hidden shadow-2xl">
+                    <!-- Simulator Header -->
+                    <div class="bg-gray-800 p-4 flex justify-between items-center border-b border-gray-700">
+                        <h2 class="font-bold flex items-center gap-2 text-white">
+                            <i data-lucide="moon" class="text-purple-400 w-5 h-5"></i>
+                            Лабораторія нічної зйомки
+                        </h2>
+                        <div class="text-xs font-mono text-gray-400">v3.0 RockSteady Test</div>
+                    </div>
+
+                    <!-- Viewport -->
+                    <div class="relative h-64 md:h-80 w-full bg-black overflow-hidden flex items-center justify-center">
+                        <div class="sim-screen w-full h-full bg-cover bg-center absolute top-0 left-0 transform scale-105"
+                             :style="`background: linear-gradient(to bottom, #0f172a 0%, #1e1b4b 100%); filter: blur(${getBlur()}px) brightness(${getBrightness()}%);`">
+                             <div class="absolute bottom-10 w-full flex justify-center gap-8">
+                                 <div class="w-2 h-32 bg-yellow-500/50 blur-md"></div>
+                                 <div class="w-2 h-32 bg-red-500/50 blur-md"></div>
+                             </div>
+                             <div class="absolute inset-0 flex items-center justify-center"><h1 class="text-6xl font-black text-white/10 select-none">NANO</h1></div>
+                        </div>
+                        <div class="noise-overlay" :style="`opacity: ${getNoiseOpacity()}`"></div>
+                        <div class="absolute inset-0 pointer-events-none p-4 flex flex-col justify-between">
+                            <div class="flex justify-between text-xs font-mono text-white/90 bg-black/20 p-2 rounded">
+                                <span>ISO: <span x-text="iso"></span></span>
+                                <span>1/<span x-text="shutter"></span> sec</span>
+                            </div>
+                            <div class="text-center">
+                                <span x-show="isStable()" class="text-green-400 text-xs font-bold bg-black/60 px-2 py-1 rounded border border-green-500/50">EIS ACTIVE</span>
+                                <span x-show="!isStable()" class="text-red-400 text-xs font-bold bg-black/60 px-2 py-1 rounded border border-red-500/50 animate-pulse">JITTER / BLUR</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Controls -->
+                    <div class="p-6 bg-gray-800 grid md:grid-cols-2 gap-8">
+                        <div>
+                            <div class="flex justify-between mb-2 text-sm text-gray-300"><span>Витримка</span><span class="text-blue-400 font-bold" x-text="'1/' + shutter"></span></div>
+                            <input type="range" min="10" max="400" step="10" x-model.number="shutter" class="w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer accent-blue-500">
+                        </div>
+                        <div>
+                            <div class="flex justify-between mb-2 text-sm text-gray-300"><span>ISO</span><span class="text-orange-400 font-bold" x-text="iso"></span></div>
+                            <input type="range" min="100" max="6400" step="100" x-model.number="iso" class="w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer accent-orange-500">
+                        </div>
+                    </div>
+                    <div class="bg-gray-900 p-4 border-t border-gray-700 flex items-center gap-3">
+                        <i :data-lucide="isConfigGood() ? 'check-circle' : 'alert-triangle'" :class="isConfigGood() ? 'text-green-500' : 'text-yellow-500'" class="w-5 h-5"></i>
+                        <p class="text-xs text-gray-400" x-text="getRecommendation()"></p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- TAB: FAQ -->
+            <div x-show="activeTab === 'faq'" x-transition.opacity class="space-y-4">
+                <template x-for="faq in faqs" :key="faq.id">
+                    <div class="bg-gray-800 rounded-xl overflow-hidden border border-gray-700">
+                        <button @click="toggleFaq(faq.id)" class="w-full flex justify-between items-center p-4 hover:bg-gray-750 transition text-left">
+                            <span class="font-medium text-gray-200" x-text="faq.question"></span>
+                            <i :data-lucide="faq.open ? 'chevron-up' : 'chevron-down'" class="text-gray-500 transition-transform"></i>
+                        </button>
+                        <div x-show="faq.open" x-collapse class="p-4 pt-0 text-gray-400 text-sm bg-gray-800/50 border-t border-gray-700/50 leading-relaxed">
+                            <p x-html="faq.answer"></p>
+                        </div>
+                    </div>
+                </template>
+            </div>
+
+        </div>
+    </main>
+
+</body>
+</html>
