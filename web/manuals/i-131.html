@@ -1,0 +1,554 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Посібник пацієнта: Радіойодтерапія (РЙТ)</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400..900;1,400..900&family=Plus+Jakarta+Sans:ital,wght@0,200..800;1,200..800&display=swap');
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background-color: #fcfbf9;
+            color: #2c2a29;
+        }
+        h1, h2, h3, h4 {
+            font-family: 'Playfair Display', serif;
+        }
+        .pencil-stroke {
+            stroke-dasharray: 1000;
+            stroke-dashoffset: 1000;
+            animation: draw 2s ease-out forwards;
+        }
+        @keyframes draw {
+            to {
+                stroke-dashoffset: 0;
+            }
+        }
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f1ede4;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #c2baa6;
+            border-radius: 3px;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col justify-between selection:bg-amber-100 selection:text-amber-900">
+    <header class="sticky top-0 z-50 bg-[#fcfbf9]/95 backdrop-blur-sm border-b border-stone-200 py-4 px-6">
+        <div class="max-w-6xl mx-auto flex flex-col sm:flex-row justify-between items-center gap-4">
+            <div class="flex items-center gap-3">
+                <svg width="40" height="40" viewBox="0 0 100 100" class="text-stone-700">
+                    <circle cx="50" cy="50" r="35" fill="none" stroke="currentColor" stroke-width="1.5" stroke-dasharray="5,5" />
+                    <circle cx="50" cy="50" r="10" fill="none" stroke="currentColor" stroke-width="2" />
+                    <path d="M 20,50 Q 50,20 80,50 Q 50,80 20,50" fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round" />
+                    <path d="M 50,20 Q 80,50 50,80 Q 20,50 50,20" fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round" />
+                    <circle cx="50" cy="20" r="3" fill="currentColor" />
+                    <circle cx="80" cy="50" r="3" fill="currentColor" />
+                </svg>
+                <div>
+                    <span class="text-xs uppercase tracking-widest text-stone-500 block font-semibold">Посібник для пацієнта</span>
+                    <h1 class="text-xl font-bold text-stone-800">Радіойодтерапія (I-131)</h1>
+                </div>
+            </div>
+            <nav class="flex gap-2 text-sm overflow-x-auto max-w-full pb-1 sm:pb-0">
+                <button onclick="switchTab('tab-principles')" id="btn-tab-principles" class="tab-btn px-4 py-2 rounded-lg bg-stone-100 font-medium text-stone-800 transition">Принцип дії</button>
+                <button onclick="switchTab('tab-prep')" id="btn-tab-prep" class="tab-btn px-4 py-2 rounded-lg text-stone-600 hover:text-stone-900 hover:bg-stone-50 transition">Підготовка та Дієта</button>
+                <button onclick="switchTab('tab-after')" id="btn-tab-after" class="tab-btn px-4 py-2 rounded-lg text-stone-600 hover:text-stone-900 hover:bg-stone-50 transition">Після процедури</button>
+                <button onclick="switchTab('tab-planner')" id="btn-tab-planner" class="tab-btn px-4 py-2 rounded-lg text-stone-600 hover:text-stone-900 hover:bg-stone-50 transition">Календар &amp; Чек-лист</button>
+            </nav>
+        </div>
+    </header>
+
+    <main class="flex-grow max-w-6xl w-full mx-auto px-4 py-8">
+        <section id="tab-principles" class="tab-content block space-y-12">
+            <div class="grid grid-cols-1 md:grid-cols-12 gap-8 items-center">
+                <div class="md:col-span-7 space-y-6">
+                    <span class="text-xs font-bold uppercase tracking-wider text-amber-700 bg-amber-50 px-3 py-1 rounded-full">Розділ 1</span>
+                    <h2 class="text-3xl md:text-4xl font-semibold text-stone-900 leading-tight">Як працює радіоактивний йод?</h2>
+                    <p class="text-lg text-stone-600 leading-relaxed">
+                        Радіойодотерапія (РЙТ) — це високоточний метод цільового (таргетного) лікування патологій щитоподібної залози, зокрема високодиференційованого раку та тиреотоксикозу. Метод базується на унікальній природній здатності клітин щитоподібної залози вибірково накопичувати йод.
+                    </p>
+                    <div class="border-l-4 border-stone-300 pl-4 py-1 italic text-stone-600">
+                        «Для нашого організму радіоактивний йод хімічно абсолютно ідентичний звичайному йоду з їжі. Проте для патологічних клітин він стає руйнівною силою.»
+                    </div>
+                </div>
+                <div class="md:col-span-5 flex justify-center py-6">
+                    <div class="relative bg-stone-50 p-6 rounded-2xl border border-stone-100 max-w-xs w-full shadow-sm">
+                        <svg viewBox="0 0 200 200" class="w-full h-auto text-stone-600">
+                            <path d="M 60,70 C 40,70 30,100 40,130 C 50,150 70,155 85,140 C 90,135 95,120 100,120 C 105,120 110,135 115,140 C 130,155 150,150 160,130 C 170,100 160,70 140,70 C 125,70 115,85 100,85 C 85,85 75,70 60,70 Z" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="pencil-stroke" />
+                            <path d="M 90,50 L 90,160 M 110,50 L 110,160" fill="none" stroke="#ccc" stroke-width="1" stroke-dasharray="3,3" />
+                            <path d="M 90,65 L 110,65 M 90,80 L 110,80 M 90,95 L 110,95 M 90,110 L 110,110 M 90,125 L 110,125 M 90,140 L 110,140" fill="none" stroke="#ccc" stroke-width="1" />
+                            <g class="text-amber-500">
+                                <circle cx="65" cy="110" r="4" fill="currentColor" />
+                                <circle cx="135" cy="110" r="4" fill="currentColor" />
+                                <circle cx="90" cy="120" r="2.5" fill="currentColor" />
+                                <path d="M 65,95 L 65,100 M 135,95 L 135,100 M 50,110 L 55,110 M 145,110 L 150,110" stroke="currentColor" stroke-width="1" stroke-linecap="round" />
+                            </g>
+                        </svg>
+                        <p class="text-center text-xs text-stone-500 mt-4 font-mono">[Ілюстрація: Щитоподібна залоза та вибіркове накопичення I-131]</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8 pt-8 border-t border-stone-200">
+                <div class="space-y-3">
+                    <div class="w-12 h-12 rounded-full bg-stone-100 flex items-center justify-center text-stone-700">
+                        <i data-lucide="target" class="w-6 h-6"></i>
+                    </div>
+                    <h3 class="text-xl font-bold text-stone-900">1. Вибіркове захоплення</h3>
+                    <p class="text-stone-600 text-sm leading-relaxed">
+                        Після введення препарату (у вигляді капсули або рідини), радіоактивний ізотоп йоду-131 потрапляє в кров та активно поглинається виключно тиреоїдними клітинами.
+                    </p>
+                </div>
+                <div class="space-y-3">
+                    <div class="w-12 h-12 rounded-full bg-stone-100 flex items-center justify-center text-stone-700">
+                        <i data-lucide="zap" class="w-6 h-6"></i>
+                    </div>
+                    <h3 class="text-xl font-bold text-stone-900">2. Локальне руйнування</h3>
+                    <p class="text-stone-600 text-sm leading-relaxed">
+                        I-131 випромінює бета-частинки, які поширюються в тканинах залози лише на 1–2 мм. Це забезпечує точкове випалювання залишків пухлини або гіперактивної тканини без ушкодження інших органів.
+                    </p>
+                </div>
+                <div class="space-y-3">
+                    <div class="w-12 h-12 rounded-full bg-stone-100 flex items-center justify-center text-stone-700">
+                        <i data-lucide="shield-check" class="w-6 h-6"></i>
+                    </div>
+                    <h3 class="text-xl font-bold text-stone-900">3. Безпечне виведення</h3>
+                    <p class="text-stone-600 text-sm leading-relaxed">
+                        Частина йоду, яка не була поглинута клітинами щитоподібної залози, швидко виводиться з організму природним шляхом (переважно через нирки з сечею) протягом перших кількох днів.
+                    </p>
+                </div>
+            </div>
+
+            <div class="bg-amber-50/50 rounded-2xl p-6 md:p-8 border border-amber-100 grid grid-cols-1 md:grid-cols-12 gap-6 items-center">
+                <div class="md:col-span-8 space-y-3">
+                    <h3 class="text-2xl font-bold text-amber-900">Золоте правило успішної терапії</h3>
+                    <p class="text-stone-700 text-base leading-relaxed">
+                        Щоб клітини щитоподібної залози максимально ефективно захопили радіоактивний йод, вони повинні перебувати у стані <strong>«йодного голоду»</strong>. Якщо перед терапією ви будете споживати звичайну кількість йоду з їжею, клітини наситяться ним і просто «закриють двері» для лікувального радіоактивного йоду. Весь терапевтичний ефект буде зведений нанівець.
+                    </p>
+                </div>
+                <div class="md:col-span-4 flex justify-center">
+                    <button onclick="switchTab('tab-prep')" class="bg-stone-900 hover:bg-stone-800 text-white font-medium px-6 py-3 rounded-xl transition duration-200 flex items-center gap-2">
+                        Перейти до підготовки <i data-lucide="arrow-right" class="w-4 h-4"></i>
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <section id="tab-prep" class="tab-content hidden space-y-12">
+            <div class="grid grid-cols-1 md:grid-cols-12 gap-8 items-start">
+                <div class="md:col-span-7 space-y-6">
+                    <span class="text-xs font-bold uppercase tracking-wider text-amber-700 bg-amber-50 px-3 py-1 rounded-full">Розділ 2</span>
+                    <h2 class="text-3xl md:text-4xl font-semibold text-stone-900 leading-tight">Етап підготовки: Йодний голод</h2>
+                    <p class="text-stone-600 text-base leading-relaxed">
+                        Підготовка триває рівно <strong>14 днів</strong> до запланованої дати процедури. Вона базується на суворому дотриманні <strong>низькойодової дієти (НЙД)</strong>, а також на скасуванні деяких медикаментів за погодженням з ендокринологом.
+                    </p>
+                    <div class="space-y-4">
+                        <h4 class="text-lg font-bold text-stone-800">Ключові медичні рекомендації:</h4>
+                        <ul class="space-y-3 text-stone-600 text-sm">
+                            <li class="flex items-start gap-2">
+                                <span class="text-amber-600 font-bold mt-0.5">•</span>
+                                <span><strong>Скасування гормонів (L-тироксин/Еутирокс):</strong> Зазвичай припиняється за 4 тижні (28 днів) до терапії, щоб підняти рівень ТТГ (TSH) &gt; 30 мМО/л. <em>АБО</em> використовуються ін'єкції Тирогену (Thyrogen) за схемою без скасування гормонів.</span>
+                            </li>
+                            <li class="flex items-start gap-2">
+                                <span class="text-amber-600 font-bold mt-0.5">•</span>
+                                <span><strong>Уникайте йодовмісних ліків:</strong> Спреї для горла (Люголь, Йокс), йодні сітки на шкіру, вітамінні комплекси з йодом, а також аміодарон (Кордарон) мають бути повністю виключені.</span>
+                            </li>
+                            <li class="flex items-start gap-2">
+                                <span class="text-amber-600 font-bold mt-0.5">•</span>
+                                <span><strong>Контрастні речовини:</strong> Якщо вам робили КТ із контрастом, процедуру РЙТ можна проводити не раніше ніж через 2–3 місяці.</span>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="md:col-span-5 bg-stone-50 border border-stone-200 p-6 rounded-2xl space-y-4">
+                    <div class="flex justify-center">
+                        <svg viewBox="0 0 200 150" class="w-48 h-auto text-stone-600">
+                            <circle cx="100" cy="75" r="45" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="pencil-stroke" />
+                            <circle cx="100" cy="75" r="35" fill="none" stroke="#ccc" stroke-width="1" />
+                            <path d="M 40,40 L 40,70 M 35,40 L 35,55 M 45,40 L 45,55 M 40,70 L 40,110" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" />
+                            <path d="M 160,40 L 160,75 M 155,40 L 155,110 M 155,40 C 160,40 160,60 155,75" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" />
+                            <path d="M 95,70 L 105,80 M 105,70 L 95,80" stroke="#b91c1c" stroke-width="2" />
+                        </svg>
+                    </div>
+                    <h3 class="text-lg font-bold text-stone-900 text-center">Дієта з вмістом йоду &lt; 50 мкг на добу</h3>
+                    <p class="text-stone-600 text-xs text-center leading-relaxed">
+                        Ваша мета — максимально обмежити надходження харчового йоду. Стандартне добове споживання у здорової людини становить 150-200 мкг. Низькойодова дієта вимагає знизити цей рівень нижче 50 мкг.
+                    </p>
+                </div>
+            </div>
+
+            <div class="space-y-6 pt-6 border-t border-stone-200">
+                <h3 class="text-2xl font-bold text-stone-900">Детальний гайд по харчуванню перед терапією</h3>
+                <div class="bg-stone-50 p-4 rounded-xl border border-stone-200 flex flex-col sm:flex-row gap-4 justify-between items-center">
+                    <span class="text-sm font-semibold text-stone-700">Швидка перевірка інгредієнтів:</span>
+                    <div class="relative w-full sm:w-72">
+                        <input type="text" id="foodSearchInput" onkeyup="filterFoods()" placeholder="Введіть назву продукту..." class="w-full pl-10 pr-4 py-2 text-sm bg-white border border-stone-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500">
+                        <i data-lucide="search" class="w-4 h-4 text-stone-400 absolute left-3 top-3"></i>
+                    </div>
+                </div>
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6" id="foodsContainer">
+                    <div class="bg-red-50/50 border border-red-200 rounded-2xl p-6 space-y-4 food-card" data-food-tags="сіль морепродукти риба капуста водорості жовток молоко сир соя квасоля шоколад шпинат щавель рукола">
+                        <div class="flex items-center gap-2 text-red-800">
+                            <i data-lucide="x-circle" class="w-6 h-6 shrink-0"></i>
+                            <h4 class="text-lg font-bold">Категорично заборонено</h4>
+                        </div>
+                        <p class="text-xs text-red-700">Ці продукти містять високу концентрацію йоду та зведуть ефект терапії до нуля.</p>
+                        <div class="space-y-3 pt-2 text-sm text-stone-800">
+                            <div>
+                                <span class="font-bold block text-red-950">Сіль та морепродукти:</span>
+                                <p class="text-stone-600 text-xs">Йодована та морська сіль, будь-яка морська риба (тріска, лосось, оселедець, тунець), креветки, мідії, краби, кальмари, морська капуста (ламінарія), водорості (норі, чука).</p>
+                            </div>
+                            <div>
+                                <span class="font-bold block text-red-950">Молочні продукти та жовтки:</span>
+                                <p class="text-stone-600 text-xs">Молоко, вершки, кефір, сметана, сир кисломолочний, тверді сири, масло вершкове. Яєчні жовтки (та все, що їх містить: майонез, соуси, випічка).</p>
+                            </div>
+                            <div>
+                                <span class="font-bold block text-red-950">Соя та бобові:</span>
+                                <p class="text-stone-600 text-xs">Соя (тофу, соєвий соус, соєве молоко), червона та строката квасоля.</p>
+                            </div>
+                            <div>
+                                <span class="font-bold block text-red-950">Зелень та трави (Критично важливе обмеження!):</span>
+                                <p class="text-stone-600 text-xs"><strong>Шпинат</strong> (накопичує йод у великій кількості), <strong>щавель</strong>, <strong>рукола</strong>, ревінь, селера (стеблова та корінь — обмежити максимально).</p>
+                            </div>
+                            <div>
+                                <span class="font-bold block text-red-950">Інше:</span>
+                                <p class="text-stone-600 text-xs">Червоні харчові барвники (особливо еритрозин E127, який часто є в ліках рожевого/червоного кольору та кондитерських виробах), молочний шоколад.</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="bg-amber-50/50 border border-amber-200 rounded-2xl p-6 space-y-4 food-card" data-food-tags="м'ясо курка яловичина свинина рис макарони хліб кава чай зелень кріп петрушка кінза базилік">
+                        <div class="flex items-center gap-2 text-amber-800">
+                            <i data-lucide="alert-triangle" class="w-6 h-6 shrink-0"></i>
+                            <h4 class="text-lg font-bold">Обмежити (вживати помірно)</h4>
+                        </div>
+                        <p class="text-xs text-amber-700">Вживати не частіше 1 разу на день у чітко контрольованих кількостях.</p>
+                        <div class="space-y-3 pt-2 text-sm text-stone-800">
+                            <div>
+                                <span class="font-bold block text-amber-950">Свіже м'ясо (до 150 г на добу):</span>
+                                <p class="text-stone-600 text-xs">Яловичина, телятина, свинина, курка, індичка. М'ясо купувати лише свіжим (не напівфабрикати) та готувати без солі.</p>
+                            </div>
+                            <div>
+                                <span class="font-bold block text-amber-950">Зернові та крупи:</span>
+                                <p class="text-stone-600 text-xs">Овес, пшениця, ячмінь, рис, макарони без додавання яєць. Обмежити споживання покупного хліба (може містити йодовані покращувачі тіста).</p>
+                            </div>
+                            <div>
+                                <span class="font-bold block text-amber-950">Зелень та трави (Помірно, до 15 г на добу):</span>
+                                <p class="text-stone-600 text-xs"><strong>Кріп</strong>, <strong>петрушка</strong>, <strong>кінза</strong>, <strong>базилік</strong>, чебрець, розмарин. Їх можна додавати для смаку, але в обмеженій кількості (краще вирощені самостійно або добре вимиті домашні трави, без хімічних добрив).</p>
+                            </div>
+                            <div>
+                                <span class="font-bold block text-amber-950">Напої:</span>
+                                <p class="text-stone-600 text-xs">Чорна кава та чай середньої міцності без молока або вершків.</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="bg-emerald-50/50 border border-emerald-200 rounded-2xl p-6 space-y-4 food-card" data-food-tags="овочі фрукти білок олія горіхи цукор мед картопля огірок помідор яблуко банан">
+                        <div class="flex items-center gap-2 text-emerald-800">
+                            <i data-lucide="check-circle" class="w-6 h-6 shrink-0"></i>
+                            <h4 class="text-lg font-bold">Дозволені продукти</h4>
+                        </div>
+                        <p class="text-xs text-emerald-700">Основа вашого раціону на ці 14 днів. Готуйте виключно на нейодованій солі.</p>
+                        <div class="space-y-3 pt-2 text-sm text-stone-800">
+                            <div>
+                                <span class="font-bold block text-emerald-950">Нейодована сіль:</span>
+                                <p class="text-stone-600 text-xs">Звичайна кам'яна сіль крупного помелу (без поміток "йодована"). Додавайте її самостійно під час приготування їжі.</p>
+                            </div>
+                            <div>
+                                <span class="font-bold block text-emerald-950">Овочі та фрукти:</span>
+                                <p class="text-stone-600 text-xs">Картопля (без шкірки), свіжі огірки, помідори, білокачанна капуста, брокколі, кабачки, яблука, груші, персики, банани, цитрусові.</p>
+                            </div>
+                            <div>
+                                <span class="font-bold block text-emerald-950">Яєчний білок:</span>
+                                <p class="text-stone-600 text-xs">У будь-якій кількості. Можна готувати омлети виключно з білків.</p>
+                            </div>
+                            <div>
+                                <span class="font-bold block text-emerald-950">Жири та солодке:</span>
+                                <p class="text-stone-600 text-xs">Рослинні олії (оливкова, соняшникова), домашня випічка без яєчних жовтків та молока, цукор, мед, варення, клейкі цукерки, сорбети без барвників.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="tab-after" class="tab-content hidden space-y-12">
+            <div class="grid grid-cols-1 md:grid-cols-12 gap-8 items-center">
+                <div class="md:col-span-7 space-y-6">
+                    <span class="text-xs font-bold uppercase tracking-wider text-amber-700 bg-amber-50 px-3 py-1 rounded-full">Розділ 3</span>
+                    <h2 class="text-3xl md:text-4xl font-semibold text-stone-900 leading-tight">Період після прийняття радіойоду</h2>
+                    <p class="text-stone-600 text-base leading-relaxed">
+                        Після прийому капсули I-131 ви стаєте джерелом слабкого іонізуючого випромінювання. Ваше головне завдання у перші дні — захистити оточуючих (особливо дітей та вагітних жінок) та максимально швидко вивести залишки йоду з власного організму.
+                    </p>
+                </div>
+                <div class="md:col-span-5 flex justify-center py-6">
+                    <div class="relative bg-stone-50 p-6 rounded-2xl border border-stone-100 max-w-xs w-full shadow-sm">
+                        <svg viewBox="0 0 200 200" class="w-full h-auto text-stone-600">
+                            <path d="M 100,40 C 60,40 50,60 50,110 C 50,150 100,175 100,175 C 100,175 150,150 150,110 C 150,60 140,40 100,40 Z" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="pencil-stroke" />
+                            <circle cx="100" cy="85" r="12" fill="none" stroke="currentColor" stroke-width="1.5" />
+                            <path d="M 100,97 L 100,135 M 100,105 L 85,120 M 100,105 L 115,120 M 100,135 L 85,155 M 100,135 L 115,155" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" />
+                            <path d="M 30,80 Q 20,100 30,120 M 170,80 Q 180,100 170,120" stroke="#ccc" stroke-width="1" stroke-dasharray="3,3" />
+                        </svg>
+                        <p class="text-center text-xs text-stone-500 mt-4 font-mono">[Ілюстрація: Захисний бар'єр та ізоляція для безпеки інших]</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="space-y-6 pt-6 border-t border-stone-200">
+                <h3 class="text-2xl font-bold text-stone-900">Етапи та правила радіаційної безпеки</h3>
+                <div class="space-y-4">
+                    <div class="bg-stone-50 p-6 rounded-xl border border-stone-200 grid grid-cols-1 md:grid-cols-12 gap-4">
+                        <div class="md:col-span-3">
+                            <span class="text-xs uppercase tracking-widest text-amber-700 font-bold block">Етап 1</span>
+                            <span class="text-lg font-bold text-stone-900">День 1 - 3</span>
+                            <span class="text-xs text-stone-500 block">Стаціонар або сувора домашня ізоляція</span>
+                        </div>
+                        <div class="md:col-span-9 space-y-2 text-stone-600 text-sm">
+                            <p><strong>Максимальне виведення:</strong> 80% невикористаного йоду виходить із сечею саме в ці дні. Пийте багато рідини (2.5 - 3 літри води на день), щоб прискорити цей процес і захистити сечовий міхур.</p>
+                            <p><strong>Особиста гігієна:</strong> Користуйтеся виключно окремим туалетом. Змивайте воду 2-3 рази після кожного використання. Чоловікам рекомендовано мочитися сидячи, щоб уникнути розбризкування.</p>
+                            <p><strong>Регулярний душ:</strong> Приймайте душ щодня, ретельно мийте руки з милом кілька разів на день.</p>
+                        </div>
+                    </div>
+                    <div class="bg-stone-50 p-6 rounded-xl border border-stone-200 grid grid-cols-1 md:grid-cols-12 gap-4">
+                        <div class="md:col-span-3">
+                            <span class="text-xs uppercase tracking-widest text-amber-700 font-bold block">Етап 2</span>
+                            <span class="text-lg font-bold text-stone-900">День 4 - 7</span>
+                            <span class="text-xs text-stone-500 block">Соціальна дистанція</span>
+                        </div>
+                        <div class="md:col-span-9 space-y-2 text-stone-600 text-sm">
+                            <p><strong>Дистанція з людьми:</strong> Уникайте близьких контактів. Дотримуйтесь безпечної відстані (мінімум 2 метри) з оточуючими. Спіть в окремій кімнаті на окремому ліжку.</p>
+                            <p><strong>Діти та вагітні:</strong> Повністю виключіть контакт із дітьми до 12 років та вагітними жінками. Бажано відправити дітей до родичів на цей тиждень.</p>
+                            <p><strong>Посуд та речі:</strong> Використовуйте індивідуальний посуд та столові прибори. Періть свій одяг та постільну білизну окремо від речей інших членів родини.</p>
+                        </div>
+                    </div>
+                    <div class="bg-stone-50 p-6 rounded-xl border border-stone-200 grid grid-cols-1 md:grid-cols-12 gap-4">
+                        <div class="md:col-span-3">
+                            <span class="text-xs uppercase tracking-widest text-amber-700 font-bold block">Етап 3</span>
+                            <span class="text-lg font-bold text-stone-900">День 8 - 14+</span>
+                            <span class="text-xs text-stone-500 block">Поступове повернення</span>
+                        </div>
+                        <div class="md:col-span-9 space-y-2 text-stone-600 text-sm">
+                            <p><strong>Повернення до дієти:</strong> Низькойодову дієту зазвичай скасовують через 24–48 годин після прийому терапевтичної дози йоду. Ви можете поступово повертатися до повноцінного раціону.</p>
+                            <p><strong>Медичне сканування:</strong> На 5-7 день після прийому йоду зазвичай призначають сцинтиграфію всього тіла для оцінки розподілу препарату.</p>
+                            <p><strong>Гігієнічне прання:</strong> Після завершення періоду ізоляції проведіть ретельне прибирання кімнати та фінальне прання всієї постільної білизни.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="tab-planner" class="tab-content hidden space-y-12">
+            <div class="bg-stone-50 border border-stone-200 p-6 md:p-8 rounded-2xl space-y-6">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-full bg-stone-900 text-white flex items-center justify-center">
+                        <i data-lucide="calendar" class="w-5 h-5"></i>
+                    </div>
+                    <div>
+                        <h3 class="text-2xl font-bold text-stone-900">Персональний Календар підготовки до РЙТ</h3>
+                        <p class="text-stone-500 text-xs">Вкажіть плановану дату процедури, і система розрахує точні дати початку кожного етапу.</p>
+                    </div>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-12 gap-6 items-end">
+                    <div class="md:col-span-5 space-y-2">
+                        <label for="procedureDate" class="block text-sm font-semibold text-stone-700">Запланована дата прийняття радіойоду:</label>
+                        <input type="date" id="procedureDate" onchange="calculateSchedule()" class="w-full px-4 py-3 border border-stone-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-stone-500 focus:border-stone-500">
+                    </div>
+                    <div class="md:col-span-7">
+                        <p class="text-xs text-stone-600 italic">*Стандартна схема базується на 14-денній низькойодовій дієті та 28-денному припиненні прийому L-тироксину. Завжди узгоджуйте дати з вашим лікарем!</p>
+                    </div>
+                </div>
+                <div id="scheduleResults" class="hidden grid grid-cols-1 md:grid-cols-4 gap-4 pt-6 border-t border-stone-200">
+                    <div class="bg-white p-4 rounded-xl border border-stone-150 shadow-sm">
+                        <span class="text-xs font-bold text-amber-800 uppercase tracking-widest block">День -28</span>
+                        <span id="date-hormone" class="text-lg font-bold text-stone-800 block">--.--.----</span>
+                        <p class="text-xs text-stone-500 mt-2">Скасування L-тироксину / Еутироксу (якщо призначено лікарем без використання Тирогену).</p>
+                    </div>
+                    <div class="bg-white p-4 rounded-xl border border-stone-150 shadow-sm">
+                        <span class="text-xs font-bold text-amber-800 uppercase tracking-widest block">День -14</span>
+                        <span id="date-diet" class="text-lg font-bold text-stone-800 block">--.--.----</span>
+                        <p class="text-xs text-stone-500 mt-2">Початок суворої <strong>низькойодової дієти</strong>. Повна відмова від морепродуктів та йодованої солі.</p>
+                    </div>
+                    <div class="bg-stone-900 text-white p-4 rounded-xl shadow-sm">
+                        <span class="text-xs font-bold text-amber-400 uppercase tracking-widest block">День 0 (Процедура)</span>
+                        <span id="date-procedure" class="text-lg font-bold block">--.--.----</span>
+                        <p class="text-xs text-stone-300 mt-2">День госпіталізації та прийняття капсули радіоактивного йоду I-131.</p>
+                    </div>
+                    <div class="bg-white p-4 rounded-xl border border-stone-150 shadow-sm">
+                        <span class="text-xs font-bold text-emerald-800 uppercase tracking-widest block">День +7</span>
+                        <span id="date-recovery" class="text-lg font-bold text-stone-800 block">--.--.----</span>
+                        <p class="text-xs text-stone-500 mt-2">Завершення основної ізоляції, відновлення нормальної дієти.</p>
+                    </div>
+                </div>
+            </div>
+            <div class="space-y-6 pt-6 border-t border-stone-200">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <h3 class="text-2xl font-bold text-stone-900">Чек-лист готовності до терапії</h3>
+                        <p class="text-stone-500 text-xs">Відзначайте виконані кроки, щоб нічого не забути під час підготовки.</p>
+                    </div>
+                    <button onclick="resetChecklist()" class="text-xs text-stone-500 hover:text-stone-800 underline">Скинути все</button>
+                </div>
+                <div class="space-y-3">
+                    <label class="flex items-start gap-3 p-4 bg-stone-50 hover:bg-stone-100/50 rounded-xl cursor-pointer transition border border-stone-200">
+                        <input type="checkbox" id="check-1" onchange="saveChecklist()" class="mt-1 w-5 h-5 rounded border-stone-300 text-stone-900 focus:ring-stone-500">
+                        <div>
+                            <span class="font-bold text-stone-800 block text-sm">Проконсультуватися з ендокринологом щодо схеми відміни препаратів</span>
+                            <span class="text-xs text-stone-500">Потрібно точно визначити дату скасування тироксину або дати ін'єкцій Тирогену.</span>
+                        </div>
+                    </label>
+                    <label class="flex items-start gap-3 p-4 bg-stone-50 hover:bg-stone-100/50 rounded-xl cursor-pointer transition border border-stone-200">
+                        <input type="checkbox" id="check-2" onchange="saveChecklist()" class="mt-1 w-5 h-5 rounded border-stone-300 text-stone-900 focus:ring-stone-500">
+                        <div>
+                            <span class="font-bold text-stone-800 block text-sm">Придбати звичайну кам'яну сіль без йоду</span>
+                            <span class="text-xs text-stone-500">Зверніть увагу на склад на пакованні: там не повинно бути сполук калію йодату або калію йодиду.</span>
+                        </div>
+                    </label>
+                    <label class="flex items-start gap-3 p-4 bg-stone-50 hover:bg-stone-100/50 rounded-xl cursor-pointer transition border border-stone-200">
+                        <input type="checkbox" id="check-3" onchange="saveChecklist()" class="mt-1 w-5 h-5 rounded border-stone-300 text-stone-900 focus:ring-stone-500">
+                        <div>
+                            <span class="font-bold text-stone-800 block text-sm">Повністю припинити вживання морепродуктів за 14 днів до процедури</span>
+                            <span class="text-xs text-stone-500">Це стосується навіть дрібних інгредієнтів у готових соусах та суші.</span>
+                        </div>
+                    </label>
+                    <label class="flex items-start gap-3 p-4 bg-stone-50 hover:bg-stone-100/50 rounded-xl cursor-pointer transition border border-stone-200">
+                        <input type="checkbox" id="check-4" onchange="saveChecklist()" class="mt-1 w-5 h-5 rounded border-stone-300 text-stone-900 focus:ring-stone-500">
+                        <div>
+                            <span class="font-bold text-stone-800 block text-sm">Перевірити домашню аптечку на наявність йодовмісних засобів</span>
+                            <span class="text-xs text-stone-500">Спреї для горла, розчини для полоскання рота, серцеві препарати (Кордарон), вітаміни.</span>
+                        </div>
+                    </label>
+                    <label class="flex items-start gap-3 p-4 bg-stone-50 hover:bg-stone-100/50 rounded-xl cursor-pointer transition border border-stone-200">
+                        <input type="checkbox" id="check-5" onchange="saveChecklist()" class="mt-1 w-5 h-5 rounded border-stone-300 text-stone-900 focus:ring-stone-500">
+                        <div>
+                            <span class="font-bold text-stone-800 block text-sm">Підготувати сумку для госпіталізації (якщо передбачено стаціонар)</span>
+                            <span class="text-xs text-stone-500">Візьміть речі, які згодом не шкода буде викинути або випрати окремо. Обов'язково візьміть кислі смоктальні цукерки або лимонний сік (стимулює виділення слини для захисту слинних залоз у день процедури).</span>
+                        </div>
+                    </label>
+                    <label class="flex items-start gap-3 p-4 bg-stone-50 hover:bg-stone-100/50 rounded-xl cursor-pointer transition border border-stone-200">
+                        <input type="checkbox" id="check-6" onchange="saveChecklist()" class="mt-1 w-5 h-5 rounded border-stone-300 text-stone-900 focus:ring-stone-500">
+                        <div>
+                            <span class="font-bold text-stone-800 block text-sm">Домовитися про ізоляцію від близьких після виписки</span>
+                            <span class="text-xs text-stone-500">Підготувати окрему кімнату, окремий комплект постільної білизни та посуду. Забезпечити тимчасове окреме проживання маленьких дітей.</span>
+                        </div>
+                    </label>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer class="bg-stone-900 text-stone-400 py-12 px-6 mt-16 border-t border-stone-800">
+        <div class="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-8">
+            <div class="space-y-4">
+                <h4 class="text-white font-bold text-lg">Універсальний посібник РЙТ</h4>
+                <p class="text-xs text-stone-400 leading-relaxed">
+                    Матеріал створено виключно з інформаційною метою згідно з міжнародними стандартами лікування захворювань щитоподібної залози. Ця інформація не замінює індивідуальну очну медичну консультацію вашого лікаря-ендокринолога та спеціаліста з радіоізотопної медицини.
+                </p>
+            </div>
+            <div class="space-y-4 md:text-right">
+                <span class="text-xs text-stone-500 block">Розробка у рамках проекту:</span>
+                <a href="https://github.com/igorrius/ai-pages" target="_blank" class="text-stone-300 hover:text-white transition inline-flex items-center gap-2 text-sm">
+                    <i data-lucide="github" class="w-4 h-4"></i> github.com/igorrius/ai-pages
+                </a>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        lucide.createIcons();
+
+        function switchTab(tabId) {
+            document.querySelectorAll('.tab-content').forEach(el => {
+                el.classList.add('hidden');
+                el.classList.remove('block');
+            });
+
+            const activeTab = document.getElementById(tabId);
+            activeTab.classList.remove('hidden');
+            activeTab.classList.add('block');
+
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.classList.remove('bg-stone-900', 'text-white');
+                btn.classList.add('text-stone-600', 'hover:text-stone-900', 'hover:bg-stone-50');
+            });
+
+            const activeBtn = document.getElementById('btn-' + tabId);
+            activeBtn.classList.remove('text-stone-600', 'hover:text-stone-900', 'hover:bg-stone-50');
+            activeBtn.classList.add('bg-stone-900', 'text-white');
+
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function filterFoods() {
+            const input = document.getElementById('foodSearchInput').value.toLowerCase();
+            const cards = document.querySelectorAll('.food-card');
+
+            cards.forEach(card => {
+                const tags = card.getAttribute('data-food-tags').toLowerCase();
+                card.style.display = tags.includes(input) ? 'block' : 'none';
+            });
+        }
+
+        function calculateSchedule() {
+            const inputDateVal = document.getElementById('procedureDate').value;
+            if (!inputDateVal) return;
+
+            const procedureDate = new Date(inputDateVal);
+            const dateHormone = new Date(procedureDate);
+            dateHormone.setDate(procedureDate.getDate() - 28);
+
+            const dateDiet = new Date(procedureDate);
+            dateDiet.setDate(procedureDate.getDate() - 14);
+
+            const dateRecovery = new Date(procedureDate);
+            dateRecovery.setDate(procedureDate.getDate() + 7);
+
+            const options = { year: 'numeric', month: 'long', day: 'numeric' };
+
+            document.getElementById('date-hormone').innerText = dateHormone.toLocaleDateString('uk-UA', options);
+            document.getElementById('date-diet').innerText = dateDiet.toLocaleDateString('uk-UA', options);
+            document.getElementById('date-procedure').innerText = procedureDate.toLocaleDateString('uk-UA', options);
+            document.getElementById('date-recovery').innerText = dateRecovery.toLocaleDateString('uk-UA', options);
+
+            document.getElementById('scheduleResults').classList.remove('hidden');
+        }
+
+        function saveChecklist() {
+            const checklistState = {};
+            for (let i = 1; i <= 6; i++) {
+                checklistState['check-' + i] = document.getElementById('check-' + i).checked;
+            }
+            localStorage.setItem('rit_checklist_state', JSON.stringify(checklistState));
+        }
+
+        function loadChecklist() {
+            const savedState = localStorage.getItem('rit_checklist_state');
+            if (savedState) {
+                const checklistState = JSON.parse(savedState);
+                for (let i = 1; i <= 6; i++) {
+                    if (document.getElementById('check-' + i)) {
+                        document.getElementById('check-' + i).checked = !!checklistState['check-' + i];
+                    }
+                }
+            }
+        }
+
+        function resetChecklist() {
+            for (let i = 1; i <= 6; i++) {
+                if (document.getElementById('check-' + i)) {
+                    document.getElementById('check-' + i).checked = false;
+                }
+            }
+            saveChecklist();
+        }
+
+        window.onload = function() {
+            loadChecklist();
+        };
+    </script>
+</body>
+</html>
