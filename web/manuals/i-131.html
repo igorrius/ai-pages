@@ -37,6 +37,35 @@
             background: #c2baa6;
             border-radius: 3px;
         }
+        .food-card {
+            transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
+        }
+        .food-card:hover {
+            transform: translateY(-2px);
+        }
+        .food-point {
+            position: relative;
+            padding-left: 0.95rem;
+        }
+        .food-point::before {
+            content: "";
+            width: 0.4rem;
+            height: 0.4rem;
+            border-radius: 999px;
+            position: absolute;
+            left: 0;
+            top: 0.5rem;
+            background: currentColor;
+            opacity: 0.5;
+        }
+        .food-highlight {
+            background: #fde68a;
+            color: #7c2d12;
+            border-radius: 0.25rem;
+            padding: 0 0.15rem;
+            box-decoration-break: clone;
+            -webkit-box-decoration-break: clone;
+        }
     </style>
 </head>
 <body class="min-h-screen flex flex-col justify-between selection:bg-amber-100 selection:text-amber-900">
@@ -193,86 +222,9 @@
                         <i data-lucide="search" class="w-4 h-4 text-stone-400 absolute left-3 top-3"></i>
                     </div>
                 </div>
-                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6" id="foodsContainer">
-                    <div class="bg-red-50/50 border border-red-200 rounded-2xl p-6 space-y-4 food-card" data-food-tags="сіль морепродукти риба капуста водорості жовток молоко сир соя квасоля шоколад шпинат щавель рукола">
-                        <div class="flex items-center gap-2 text-red-800">
-                            <i data-lucide="x-circle" class="w-6 h-6 shrink-0"></i>
-                            <h4 class="text-lg font-bold">Категорично заборонено</h4>
-                        </div>
-                        <p class="text-xs text-red-700">Ці продукти містять високу концентрацію йоду та зведуть ефект терапії до нуля.</p>
-                        <div class="space-y-3 pt-2 text-sm text-stone-800">
-                            <div>
-                                <span class="font-bold block text-red-950">Сіль та морепродукти:</span>
-                                <p class="text-stone-600 text-xs">Йодована та морська сіль, будь-яка морська риба (тріска, лосось, оселедець, тунець), креветки, мідії, краби, кальмари, морська капуста (ламінарія), водорості (норі, чука).</p>
-                            </div>
-                            <div>
-                                <span class="font-bold block text-red-950">Молочні продукти та жовтки:</span>
-                                <p class="text-stone-600 text-xs">Молоко, вершки, кефір, сметана, сир кисломолочний, тверді сири, масло вершкове. Яєчні жовтки (та все, що їх містить: майонез, соуси, випічка).</p>
-                            </div>
-                            <div>
-                                <span class="font-bold block text-red-950">Соя та бобові:</span>
-                                <p class="text-stone-600 text-xs">Соя (тофу, соєвий соус, соєве молоко), червона та строката квасоля.</p>
-                            </div>
-                            <div>
-                                <span class="font-bold block text-red-950">Зелень та трави (Критично важливе обмеження!):</span>
-                                <p class="text-stone-600 text-xs"><strong>Шпинат</strong> (накопичує йод у великій кількості), <strong>щавель</strong>, <strong>рукола</strong>, ревінь, селера (стеблова та корінь — обмежити максимально).</p>
-                            </div>
-                            <div>
-                                <span class="font-bold block text-red-950">Інше:</span>
-                                <p class="text-stone-600 text-xs">Червоні харчові барвники (особливо еритрозин E127, який часто є в ліках рожевого/червоного кольору та кондитерських виробах), молочний шоколад.</p>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="bg-amber-50/50 border border-amber-200 rounded-2xl p-6 space-y-4 food-card" data-food-tags="м'ясо курка яловичина свинина рис макарони хліб кава чай зелень кріп петрушка кінза базилік">
-                        <div class="flex items-center gap-2 text-amber-800">
-                            <i data-lucide="alert-triangle" class="w-6 h-6 shrink-0"></i>
-                            <h4 class="text-lg font-bold">Обмежити (вживати помірно)</h4>
-                        </div>
-                        <p class="text-xs text-amber-700">Вживати не частіше 1 разу на день у чітко контрольованих кількостях.</p>
-                        <div class="space-y-3 pt-2 text-sm text-stone-800">
-                            <div>
-                                <span class="font-bold block text-amber-950">Свіже м'ясо (до 150 г на добу):</span>
-                                <p class="text-stone-600 text-xs">Яловичина, телятина, свинина, курка, індичка. М'ясо купувати лише свіжим (не напівфабрикати) та готувати без солі.</p>
-                            </div>
-                            <div>
-                                <span class="font-bold block text-amber-950">Зернові та крупи:</span>
-                                <p class="text-stone-600 text-xs">Овес, пшениця, ячмінь, рис, макарони без додавання яєць. Обмежити споживання покупного хліба (може містити йодовані покращувачі тіста).</p>
-                            </div>
-                            <div>
-                                <span class="font-bold block text-amber-950">Зелень та трави (Помірно, до 15 г на добу):</span>
-                                <p class="text-stone-600 text-xs"><strong>Кріп</strong>, <strong>петрушка</strong>, <strong>кінза</strong>, <strong>базилік</strong>, чебрець, розмарин. Їх можна додавати для смаку, але в обмеженій кількості (краще вирощені самостійно або добре вимиті домашні трави, без хімічних добрив).</p>
-                            </div>
-                            <div>
-                                <span class="font-bold block text-amber-950">Напої:</span>
-                                <p class="text-stone-600 text-xs">Чорна кава та чай середньої міцності без молока або вершків.</p>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="bg-emerald-50/50 border border-emerald-200 rounded-2xl p-6 space-y-4 food-card" data-food-tags="овочі фрукти білок олія горіхи цукор мед картопля огірок помідор яблуко банан">
-                        <div class="flex items-center gap-2 text-emerald-800">
-                            <i data-lucide="check-circle" class="w-6 h-6 shrink-0"></i>
-                            <h4 class="text-lg font-bold">Дозволені продукти</h4>
-                        </div>
-                        <p class="text-xs text-emerald-700">Основа вашого раціону на ці 14 днів. Готуйте виключно на нейодованій солі.</p>
-                        <div class="space-y-3 pt-2 text-sm text-stone-800">
-                            <div>
-                                <span class="font-bold block text-emerald-950">Нейодована сіль:</span>
-                                <p class="text-stone-600 text-xs">Звичайна кам'яна сіль крупного помелу (без поміток "йодована"). Додавайте її самостійно під час приготування їжі.</p>
-                            </div>
-                            <div>
-                                <span class="font-bold block text-emerald-950">Овочі та фрукти:</span>
-                                <p class="text-stone-600 text-xs">Картопля (без шкірки), свіжі огірки, помідори, білокачанна капуста, брокколі, кабачки, яблука, груші, персики, банани, цитрусові.</p>
-                            </div>
-                            <div>
-                                <span class="font-bold block text-emerald-950">Яєчний білок:</span>
-                                <p class="text-stone-600 text-xs">У будь-якій кількості. Можна готувати омлети виключно з білків.</p>
-                            </div>
-                            <div>
-                                <span class="font-bold block text-emerald-950">Жири та солодке:</span>
-                                <p class="text-stone-600 text-xs">Рослинні олії (оливкова, соняшникова), домашня випічка без яєчних жовтків та молока, цукор, мед, варення, клейкі цукерки, сорбети без барвників.</p>
-                            </div>
-                        </div>
-                    </div>
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6" id="foodsContainer"></div>
+                <div id="foodNoResults" class="hidden text-center text-sm text-stone-500 bg-stone-50 border border-stone-200 rounded-xl py-6">
+                    Нічого не знайдено. Спробуйте іншу назву продукту або інгредієнта.
                 </div>
             </div>
         </section>
@@ -454,12 +406,231 @@
                 <a href="https://github.com/igorrius/ai-pages" target="_blank" class="text-stone-300 hover:text-white transition inline-flex items-center gap-2 text-sm">
                     <i data-lucide="github" class="w-4 h-4"></i> github.com/igorrius/ai-pages
                 </a>
+                <div>
+                    <a href="files/I-131_Patient_Guide.pdf" download class="mt-2 text-amber-300 hover:text-amber-200 transition inline-flex items-center gap-2 text-sm">
+                        <i data-lucide="download" class="w-4 h-4"></i> Посібник пацієнта (PDF, офлайн)
+                    </a>
+                </div>
             </div>
         </div>
     </footer>
 
     <script>
-        lucide.createIcons();
+        const foodLists = {
+            prohibited: {
+                key: 'prohibited',
+                title: 'Категорично заборонено',
+                subtitle: 'Ці продукти або препарати знижують ефективність терапії або підвищують ризики.',
+                icon: 'x-circle',
+                cardClass: 'bg-red-50/70 border-red-200 shadow-red-100/50',
+                iconClass: 'text-red-700 bg-red-100',
+                headingClass: 'text-red-900',
+                subtitleClass: 'text-red-700',
+                sectionTitleClass: 'text-red-950',
+                bulletClass: 'text-red-800',
+                groups: [
+                    {
+                        title: 'Сіль та морепродукти',
+                        items: [
+                            'Йодована та морська сіль.',
+                            'Будь-яка морська риба (тріска, лосось, оселедець, тунець).',
+                            'Креветки, мідії, краби, кальмари, морська капуста (ламінарія), водорості (норі, чука).'
+                        ]
+                    },
+                    {
+                        title: 'Молочні продукти та жовтки',
+                        items: [
+                            'Молоко, вершки, кефір, сметана, сир кисломолочний, тверді сири, масло вершкове.',
+                            'Яєчні жовтки та все, що їх містить: майонез, соуси, випічка.'
+                        ]
+                    },
+                    {
+                        title: 'Соя, бобові та горіхи',
+                        items: [
+                            'Соя (тофу, соєвий соус, соєве молоко), червона та строката квасоля.',
+                            'Боби, нут, сочевиця, горох, вігна.',
+                            'Солоні та смажені горіхи, арахіс.'
+                        ]
+                    },
+                    {
+                        title: 'Окремі овочі та зелень',
+                        items: [
+                            'Картопля зі шкіркою.',
+                            'Шпинат, щавель, ревінь, петрушка, селера (стеблова та корінь).',
+                            'Помідор/томат, банани.'
+                        ]
+                    },
+                    {
+                        title: 'Препарати та інше',
+                        items: [
+                            'Вітаміни та препарати червоного, помаранчевого або коричневого кольорів.',
+                            'Препарати з йодом (Люголь, Йокс, Кордарон, вітаміни з йодом).',
+                            'Препарати, що містять морські добавки (ірландський мох, агар-агар, ламінарія, алгін, алгінат).',
+                            'Червоні харчові барвники (особливо еритрозин E127), молочний шоколад.'
+                        ]
+                    },
+                    {
+                        title: 'Напої',
+                        items: [
+                            'Розчини для полоскання рота з йодом.',
+                            'Розчинна кава.'
+                        ]
+                    }
+
+                ]
+            },
+            limited: {
+                key: 'limited',
+                title: 'Обмежити (вживати помірно)',
+                subtitle: 'Вживати не частіше 1 разу на день у чітко контрольованих порціях.',
+                icon: 'alert-triangle',
+                cardClass: 'bg-amber-50/70 border-amber-200 shadow-amber-100/50',
+                iconClass: 'text-amber-700 bg-amber-100',
+                headingClass: 'text-amber-900',
+                subtitleClass: 'text-amber-700',
+                sectionTitleClass: 'text-amber-950',
+                bulletClass: 'text-amber-800',
+                groups: [
+                    {
+                        title: 'Свіже м\'ясо (до 150 г на добу)',
+                        items: [
+                            'Яловичина, телятина, свинина, курка, індичка.',
+                            'Купуйте тільки свіже м\'ясо (не напівфабрикати) та готуйте без йодованої солі.'
+                        ]
+                    },
+                    {
+                        title: 'Зернові та крупи',
+                        items: [
+                            'Овес, пшениця, ячмінь, рис, макарони без додавання яєць.',
+                            'Покупний хліб обмежувати (може містити йодовані покращувачі тіста).'
+                        ]
+                    },
+                    {
+                        title: 'Зелень та трави (до 15 г на добу)',
+                        items: [
+                            'Кріп, кінза, базилік, чебрець, розмарин.',
+                            'Використовуйте невеликими порціями для смаку.'
+                        ]
+                    }
+                ]
+            },
+            allowed: {
+                key: 'allowed',
+                title: 'Дозволені продукти',
+                subtitle: 'Основа раціону на 14 днів підготовки. Готувати на нейодованій солі.',
+                icon: 'check-circle',
+                cardClass: 'bg-emerald-50/70 border-emerald-200 shadow-emerald-100/50',
+                iconClass: 'text-emerald-700 bg-emerald-100',
+                headingClass: 'text-emerald-900',
+                subtitleClass: 'text-emerald-700',
+                sectionTitleClass: 'text-emerald-950',
+                bulletClass: 'text-emerald-800',
+                groups: [
+                    {
+                        title: 'Нейодована сіль',
+                        items: [
+                            'Звичайна кам\'яна сіль крупного помелу без поміток "йодована".'
+                        ]
+                    },
+                    {
+                        title: 'Овочі та фрукти',
+                        items: [
+                            'Картопля тільки без шкірки, свіжі огірки, білокачанна капуста, броколі, кабачки.',
+                            'Яблука тільки без кісточок та качана, груші, персики, цитрусові, авокадо.'
+                        ]
+                    },
+                    {
+                        title: 'Яєчний білок',
+                        items: [
+                            'У будь-якій кількості. Можна готувати омлети виключно з білків.'
+                        ]
+                    },
+                    {
+                        title: 'Жири та солодке',
+                        items: [
+                            'Рослинні олії (оливкова, соняшникова).',
+                            'Домашня випічка без жовтків та молока, цукор, мед, варення, клейкі цукерки, сорбети без барвників.'
+                        ]
+                    },
+                    {
+                        title: 'Напої',
+                        items: [
+                            'Газована вода, лімонад, дієтична кола.',
+                            'Фільтрована кава',
+                            'Чорна кава та чай середньої міцності без молока або вершків.'
+                        ]
+                    }
+
+                ]
+            }
+        };
+
+        function buildFoodSearchText(listData) {
+            return [
+                listData.title,
+                listData.subtitle,
+                ...listData.groups.map(group => `${group.title} ${group.items.join(' ')}`)
+            ].join(' ').toLowerCase();
+        }
+
+        function escapeRegExp(text) {
+            return text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        }
+
+        function highlightFoodMatches(query) {
+            const searchableNodes = document.querySelectorAll('.food-searchable');
+
+            searchableNodes.forEach(node => {
+                const originalText = node.getAttribute('data-original-text') || node.textContent;
+                if (!node.getAttribute('data-original-text')) {
+                    node.setAttribute('data-original-text', originalText);
+                }
+
+                if (!query) {
+                    node.textContent = originalText;
+                    return;
+                }
+
+                const regExp = new RegExp(`(${escapeRegExp(query)})`, 'giu');
+                node.innerHTML = originalText.replace(regExp, '<mark class="food-highlight">$1</mark>');
+            });
+        }
+
+        function renderFoods() {
+            const foodCardsOrder = ['prohibited', 'limited', 'allowed'];
+            const container = document.getElementById('foodsContainer');
+            if (!container) return;
+
+            container.innerHTML = foodCardsOrder.map((key) => {
+                const listData = foodLists[key];
+                const sectionsHtml = listData.groups.map(group => `
+                    <div>
+                        <h5 class="food-searchable font-semibold ${listData.sectionTitleClass} text-sm">${group.title}</h5>
+                        <ul class="mt-2 space-y-1.5 text-xs text-stone-700 leading-relaxed">
+                            ${group.items.map(item => `<li class="food-point ${listData.bulletClass}"><span class="food-searchable text-stone-700">${item}</span></li>`).join('')}
+                        </ul>
+                    </div>
+                `).join('');
+
+                return `
+                    <article class="food-card rounded-2xl border p-6 shadow-sm h-full ${listData.cardClass}" data-food-search="${buildFoodSearchText(listData)}">
+                        <div class="flex items-start gap-3">
+                            <div class="w-10 h-10 rounded-xl flex items-center justify-center ${listData.iconClass}">
+                                <i data-lucide="${listData.icon}" class="w-5 h-5"></i>
+                            </div>
+                            <div class="flex-1 space-y-1">
+                                <h4 class="food-searchable text-lg font-bold ${listData.headingClass}">${listData.title}</h4>
+                                <p class="food-searchable text-xs ${listData.subtitleClass}">${listData.subtitle}</p>
+                            </div>
+                        </div>
+                        <div class="mt-4 space-y-4">${sectionsHtml}</div>
+                    </article>
+                `;
+            }).join('');
+
+            lucide.createIcons();
+            filterFoods();
+        }
 
         function switchTab(tabId) {
             document.querySelectorAll('.tab-content').forEach(el => {
@@ -484,13 +655,24 @@
         }
 
         function filterFoods() {
-            const input = document.getElementById('foodSearchInput').value.toLowerCase();
+            const rawInput = document.getElementById('foodSearchInput').value.trim();
+            const input = rawInput.toLowerCase();
             const cards = document.querySelectorAll('.food-card');
+            const noResults = document.getElementById('foodNoResults');
+            let visibleCount = 0;
 
             cards.forEach(card => {
-                const tags = card.getAttribute('data-food-tags').toLowerCase();
-                card.style.display = tags.includes(input) ? 'block' : 'none';
+                const searchText = (card.getAttribute('data-food-search') || '').toLowerCase();
+                const shouldShow = !input || searchText.includes(input);
+                card.style.display = shouldShow ? 'block' : 'none';
+                if (shouldShow) visibleCount += 1;
             });
+
+            if (noResults) {
+                noResults.classList.toggle('hidden', visibleCount > 0);
+            }
+
+            highlightFoodMatches(rawInput);
         }
 
         function calculateSchedule() {
@@ -547,6 +729,7 @@
         }
 
         window.onload = function() {
+            renderFoods();
             loadChecklist();
         };
     </script>
