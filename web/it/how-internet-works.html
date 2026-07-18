@@ -1,0 +1,866 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Як працює інтернет — на прикладі roblox.com</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0a1120;
+  --bg2:#0f1a30;
+  --panel:#111f39;
+  --ink:#eaf0fb;
+  --ink-dim:#a3b4d4;
+  --muted:#5f7399;
+  --line:#26385a;
+  --line-soft:#1b2a45;
+  --signal:#f6b73c;   /* запит */
+  --data:#4fd6c4;     /* відповідь / дані */
+  --grid:rgba(120,160,220,0.05);
+  --radius:14px;
+}
+
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+body{
+  font-family:'Space Grotesk',system-ui,sans-serif;
+  background:
+    radial-gradient(1200px 700px at 80% -10%, rgba(79,214,196,.08), transparent 60%),
+    radial-gradient(900px 600px at 0% 110%, rgba(246,183,60,.07), transparent 55%),
+    linear-gradient(180deg,var(--bg),var(--bg2));
+  background-attachment:fixed;
+  color:var(--ink);
+  overflow:hidden;
+  -webkit-font-smoothing:antialiased;
+}
+body::before{
+  content:"";position:fixed;inset:0;pointer-events:none;z-index:0;
+  background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);
+  background-size:34px 34px;
+  mask-image:radial-gradient(120% 100% at 50% 40%,#000 60%,transparent 100%);
+}
+
+/* ---------- layout ---------- */
+.app{position:relative;z-index:1;height:100dvh;display:grid;grid-template-rows:auto 1fr auto;gap:0}
+
+.topbar{
+  display:flex;align-items:center;justify-content:space-between;gap:12px 16px;flex-wrap:wrap;
+  padding:16px clamp(18px,4vw,54px) 6px;
+}
+.topbar .tabs{order:0}
+.brand{display:flex;align-items:center;gap:10px;color:var(--ink-dim)}
+.brand__dot{width:9px;height:9px;border-radius:50%;background:var(--signal);box-shadow:0 0 12px var(--signal)}
+.brand__t{font-family:'IBM Plex Mono',monospace;font-size:12px;letter-spacing:.22em;text-transform:uppercase}
+.counter{font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--muted);letter-spacing:.15em}
+.counter b{color:var(--ink)}
+
+.stage{position:relative;overflow:hidden}
+.slide{
+  position:absolute;inset:0;
+  display:grid;align-content:center;
+  gap:clamp(20px,3vw,40px);
+  padding:clamp(10px,2vh,26px) clamp(18px,5vw,64px);
+  grid-template-columns:minmax(0,0.82fr) minmax(0,1.18fr);
+  align-items:center;
+  opacity:0;transform:translateY(18px);
+  transition:opacity .5s ease,transform .5s ease;
+  pointer-events:none;
+}
+.slide.active{opacity:1;transform:none;pointer-events:auto}
+.slide.center{grid-template-columns:1fr;justify-items:center;text-align:center}
+
+/* ---------- typography ---------- */
+.eyebrow{
+  font-family:'IBM Plex Mono',monospace;font-size:12px;letter-spacing:.28em;text-transform:uppercase;
+  color:var(--signal);display:inline-flex;align-items:center;gap:10px;margin-bottom:16px;
+}
+.eyebrow::before{content:"";width:26px;height:1px;background:var(--signal);opacity:.7}
+h1{font-size:clamp(34px,6vw,68px);line-height:1.02;font-weight:700;letter-spacing:-.02em}
+h1 .accent{color:var(--signal)}
+h2{font-size:clamp(24px,3.4vw,40px);line-height:1.06;font-weight:600;letter-spacing:-.01em;margin-bottom:14px}
+.lead{font-size:clamp(15px,1.5vw,18px);line-height:1.6;color:var(--ink-dim);max-width:46ch}
+.sub{font-size:clamp(15px,1.6vw,19px);color:var(--ink-dim);line-height:1.6;max-width:52ch;margin-top:14px}
+.mono{font-family:'IBM Plex Mono',monospace}
+
+.chips{display:flex;flex-wrap:wrap;gap:10px;margin-top:22px}
+.chip{
+  font-family:'IBM Plex Mono',monospace;font-size:13px;
+  padding:8px 12px;border:1px solid var(--line);border-radius:9px;
+  background:rgba(255,255,255,.02);color:var(--ink-dim);
+  display:inline-flex;align-items:center;gap:8px;
+}
+.chip b{color:var(--ink);font-weight:600}
+.chip.signal{border-color:rgba(246,183,60,.4);color:#ffdca0}
+.chip.data{border-color:rgba(79,214,196,.4);color:#b3f2e9}
+
+/* ---------- diagram / nodes ---------- */
+.diagram{display:flex;flex-direction:column;gap:18px;align-items:stretch;width:100%}
+.row{display:flex;align-items:center;justify-content:center;gap:clamp(6px,1.4vw,18px);flex-wrap:nowrap}
+.node{
+  position:relative;flex:0 0 auto;
+  min-width:132px;max-width:210px;
+  background:linear-gradient(180deg,var(--panel),#0e1a31);
+  border:1px solid var(--line);border-radius:var(--radius);
+  padding:16px 16px 14px;
+  display:flex;flex-direction:column;gap:8px;
+  box-shadow:0 18px 40px -28px rgba(0,0,0,.9);
+}
+.node.lit{border-color:rgba(246,183,60,.55);box-shadow:0 0 0 1px rgba(246,183,60,.25),0 18px 44px -26px rgba(246,183,60,.35)}
+.node.litd{border-color:rgba(79,214,196,.5);box-shadow:0 0 0 1px rgba(79,214,196,.22),0 18px 44px -26px rgba(79,214,196,.3)}
+.node__head{display:flex;align-items:center;gap:10px}
+.node__ico{width:34px;height:34px;flex:0 0 auto;border-radius:9px;display:grid;place-items:center;background:rgba(255,255,255,.04);border:1px solid var(--line-soft);color:var(--ink)}
+.node__ico svg{width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+.node.lit .node__ico{color:var(--signal);border-color:rgba(246,183,60,.4)}
+.node.litd .node__ico{color:var(--data);border-color:rgba(79,214,196,.4)}
+.node__name{font-weight:600;font-size:15px;line-height:1.1}
+.node__sub{font-family:'IBM Plex Mono',monospace;font-size:11.5px;color:var(--muted);letter-spacing:.02em}
+.node__body{font-family:'IBM Plex Mono',monospace;font-size:12.5px;color:var(--ink-dim);line-height:1.5;word-break:break-word}
+.node__body .k{color:var(--signal)}
+.node__body .v{color:var(--data)}
+
+/* wire */
+.wire{flex:1 1 40px;min-width:34px;height:34px;position:relative}
+.wire svg{width:100%;height:100%;overflow:visible}
+.wire .ln{stroke:var(--line);stroke-width:2.4;fill:none}
+.wire .fl{stroke-dasharray:7 9;stroke-linecap:round;stroke-width:2.6;fill:none;opacity:.9}
+.wire .fl.s{stroke:var(--signal)}
+.wire .fl.d{stroke:var(--data)}
+.wire .hd{fill:var(--line)}
+.wire .hd.s{fill:var(--signal)}
+.wire .hd.d{fill:var(--data)}
+.wire__lbl{
+  position:absolute;top:-16px;left:50%;transform:translateX(-50%);
+  font-family:'IBM Plex Mono',monospace;font-size:10.5px;white-space:nowrap;
+  color:var(--muted);letter-spacing:.05em;
+}
+.wire__lbl.s{color:#ffce7d}
+.wire__lbl.d{color:#8fe9dd}
+.slide.active .fl{animation:march 1.1s linear infinite}
+@keyframes march{to{stroke-dashoffset:-32}}
+
+/* browser mock */
+.browser{
+  width:min(560px,100%);border:1px solid var(--line);border-radius:16px;overflow:hidden;
+  background:#0d182e;box-shadow:0 30px 70px -40px rgba(0,0,0,.9)
+}
+.browser__bar{display:flex;align-items:center;gap:12px;padding:12px 14px;background:#0a1424;border-bottom:1px solid var(--line-soft)}
+.dots{display:flex;gap:7px}
+.dots i{width:11px;height:11px;border-radius:50%;background:#2b3d5e;display:block}
+.dots i:nth-child(1){background:#f6b73c}.dots i:nth-child(2){background:#4fd6c4}.dots i:nth-child(3){background:#5f7399}
+.url{flex:1;display:flex;align-items:center;gap:9px;background:#111f39;border:1px solid var(--line);border-radius:10px;padding:9px 13px;font-family:'IBM Plex Mono',monospace;font-size:14px;color:var(--ink)}
+.url svg{width:15px;height:15px;stroke:var(--data);fill:none;stroke-width:1.7;flex:0 0 auto}
+.url .typed{color:var(--ink)}
+.caret{display:inline-block;width:2px;height:16px;background:var(--signal);margin-left:1px;animation:blink 1s step-end infinite;vertical-align:middle}
+@keyframes blink{50%{opacity:0}}
+.browser__view{height:150px;display:grid;place-items:center;color:var(--muted);font-family:'IBM Plex Mono',monospace;font-size:12px;background:repeating-linear-gradient(180deg,transparent,transparent 26px,rgba(255,255,255,.02) 27px)}
+
+/* octets (IP) */
+.octets{display:flex;gap:12px;align-items:stretch;flex-wrap:wrap;justify-content:center}
+.oct{border:1px solid var(--line);border-radius:12px;padding:16px 18px;min-width:96px;text-align:center;background:var(--panel)}
+.oct .n{font-family:'IBM Plex Mono',monospace;font-size:34px;font-weight:600;color:var(--signal);line-height:1}
+.oct .r{font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--muted);margin-top:8px;letter-spacing:.05em}
+.dot-sep{display:grid;place-items:center;font-size:30px;color:var(--muted);font-weight:700}
+.iplist{margin-top:22px;display:flex;flex-direction:column;gap:8px}
+.iplist code{font-family:'IBM Plex Mono',monospace;font-size:14px;color:var(--ink-dim)}
+.iplist code b{color:var(--data)}
+
+/* html doc card */
+.doc{
+  width:min(430px,100%);border:1px solid var(--line);border-radius:14px;background:#0c1830;overflow:hidden;
+  box-shadow:0 26px 60px -40px rgba(0,0,0,.9)
+}
+.doc__t{display:flex;align-items:center;gap:9px;padding:11px 15px;background:#0a1424;border-bottom:1px solid var(--line-soft);font-family:'IBM Plex Mono',monospace;font-size:12.5px;color:var(--ink-dim)}
+.doc__t svg{width:15px;height:15px;stroke:var(--signal);fill:none;stroke-width:1.7}
+.doc__code{padding:14px 16px;font-family:'IBM Plex Mono',monospace;font-size:13px;line-height:1.75}
+.doc__code .tag{color:#7fa6de}
+.doc__code .at{color:var(--signal)}
+.doc__code .st{color:var(--data)}
+.doc__code .in{padding-left:18px}
+.doc__code .hl{background:rgba(246,183,60,.12);border-radius:4px;padding:1px 4px;margin:0 -4px}
+
+/* rendered page */
+.page{
+  width:min(440px,100%);border:1px solid var(--line);border-radius:14px;background:#0d1a33;padding:20px;
+  display:flex;flex-direction:column;gap:14px;box-shadow:0 26px 60px -40px rgba(0,0,0,.9)
+}
+.page h4{font-size:20px;font-weight:700}
+.page .ln{height:9px;border-radius:5px;background:linear-gradient(90deg,#22345600,#223456)}
+.page .ln.s{width:70%}
+.page .imgs{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:4px}
+.page .ph{aspect-ratio:16/10;border-radius:10px;border:1px dashed var(--line);display:grid;place-items:center;color:var(--muted);gap:6px;background:rgba(79,214,196,.05)}
+.page .ph svg{width:26px;height:26px;stroke:var(--data);fill:none;stroke-width:1.6}
+.page .ph span{font-family:'IBM Plex Mono',monospace;font-size:10.5px}
+
+/* recap flow */
+.recap{display:flex;align-items:center;justify-content:center;gap:6px;flex-wrap:wrap;width:100%}
+.rstep{display:flex;align-items:center;gap:6px}
+.rnode{border:1px solid var(--line);border-radius:11px;padding:12px 12px;min-width:98px;text-align:center;background:var(--panel)}
+.rnode .ri{width:26px;height:26px;margin:0 auto 7px;color:var(--ink)}
+.rnode .ri svg{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:1.7}
+.rnode .rt{font-size:12.5px;font-weight:600}
+.rnode .rn{font-family:'IBM Plex Mono',monospace;font-size:9.5px;color:var(--muted);margin-top:2px}
+.rarrow{color:var(--muted);font-size:18px}
+.recap-track{position:relative;width:min(760px,100%);height:3px;margin-top:26px;background:var(--line-soft);border-radius:3px}
+.recap-track .fill{position:absolute;inset:0;width:0;background:linear-gradient(90deg,var(--signal),var(--data));border-radius:3px}
+.slide.active .recap-track .fill{animation:sweep 2.6s ease-in-out infinite}
+.recap-track .pk{position:absolute;top:50%;left:0;width:12px;height:12px;border-radius:50%;background:var(--signal);box-shadow:0 0 16px var(--signal);transform:translate(-50%,-50%)}
+.slide.active .recap-track .pk{animation:sweepdot 2.6s ease-in-out infinite}
+@keyframes sweep{0%{width:0}50%{width:100%}100%{width:0}}
+@keyframes sweepdot{0%{left:0;background:var(--signal);box-shadow:0 0 16px var(--signal)}50%{left:100%;background:var(--signal)}50.01%{background:var(--data);box-shadow:0 0 16px var(--data)}100%{left:0;background:var(--data)}}
+
+/* title hero strip */
+.hero-wire{width:min(720px,90%);height:60px;margin-top:30px;position:relative}
+.hero-wire svg{width:100%;height:100%;overflow:visible}
+.hero-wire .base{stroke:var(--line);stroke-width:2;fill:none}
+.hero-wire .go{stroke:var(--signal);stroke-width:2.6;fill:none;stroke-dasharray:8 10;stroke-linecap:round}
+.slide.active .hero-wire .go{animation:march 1s linear infinite}
+.hero-wire .stop{fill:var(--bg2);stroke:var(--line);stroke-width:2}
+.hero-wire .stop.on{stroke:var(--signal);fill:#1a1405}
+.hint{margin-top:30px;font-family:'IBM Plex Mono',monospace;font-size:13px;color:var(--muted);letter-spacing:.1em;display:flex;align-items:center;gap:10px}
+.kbd{border:1px solid var(--line);border-radius:6px;padding:3px 9px;color:var(--ink-dim);font-size:12px}
+
+/* ---------- footer: journey map + nav ---------- */
+.footer{padding:8px clamp(18px,4vw,54px) clamp(14px,2vh,22px)}
+.map{position:relative;display:flex;align-items:flex-start;justify-content:space-between;gap:4px;margin-bottom:14px}
+.map__line{position:absolute;top:11px;left:2%;right:2%;height:2px;background:var(--line-soft);z-index:0}
+.map__pk{position:absolute;top:11px;left:0;width:14px;height:14px;border-radius:50%;background:var(--signal);box-shadow:0 0 14px var(--signal);transform:translate(-50%,-50%);transition:left .55s cubic-bezier(.5,.05,.2,1);z-index:2}
+.stn{position:relative;z-index:1;flex:1;display:flex;flex-direction:column;align-items:center;gap:8px;cursor:pointer;background:none;border:none;color:inherit;font-family:inherit}
+.stn__d{width:22px;height:22px;border-radius:50%;background:var(--bg2);border:2px solid var(--line);transition:.3s}
+.stn__l{font-family:'IBM Plex Mono',monospace;font-size:10.5px;letter-spacing:.04em;color:var(--muted);transition:.3s;text-align:center}
+.stn.done .stn__d{border-color:var(--data);background:#0c2b28}
+.stn.on .stn__d{border-color:var(--signal);background:#1a1405;box-shadow:0 0 0 4px rgba(246,183,60,.14)}
+.stn.on .stn__l{color:var(--ink)}
+
+.nav{display:flex;align-items:center;justify-content:space-between;gap:16px}
+.dots-nav{display:flex;gap:8px;flex:1;justify-content:center;flex-wrap:wrap}
+.dots-nav button{width:9px;height:9px;border-radius:50%;border:none;background:var(--line);cursor:pointer;padding:0;transition:.3s}
+.dots-nav button.on{background:var(--signal);width:26px;border-radius:5px}
+.btn{
+  display:inline-flex;align-items:center;gap:9px;cursor:pointer;
+  background:var(--panel);border:1px solid var(--line);color:var(--ink);
+  padding:11px 18px;border-radius:11px;font-family:'Space Grotesk';font-size:14px;font-weight:600;
+  transition:.2s;
+}
+.btn:hover:not(:disabled){border-color:var(--signal);color:#ffdca0}
+.btn:disabled{opacity:.3;cursor:default}
+.btn svg{width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.btn.primary{background:linear-gradient(180deg,#f6b73c,#e59f1f);color:#231803;border-color:transparent}
+.btn.primary:hover{color:#231803;filter:brightness(1.06)}
+.btn.primary.net{background:linear-gradient(180deg,#4fd6c4,#2fb7a6);color:#04211d}
+
+/* track tabs */
+.tabs{display:flex;gap:4px;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:4px}
+.tab{border:none;background:none;color:var(--ink-dim);font-family:'Space Grotesk',sans-serif;font-weight:600;font-size:13px;padding:8px 15px;border-radius:9px;cursor:pointer;transition:.2s;white-space:nowrap;display:inline-flex;align-items:center;gap:7px}
+.tab:hover{color:var(--ink)}
+.tab svg{width:15px;height:15px;stroke:currentColor;fill:none;stroke-width:1.7}
+.tab.on{background:var(--signal);color:#231803}
+.tab[data-track="net"].on{background:var(--data);color:#04211d}
+
+/* cross-reference links */
+.xref{
+  display:inline-flex;align-items:center;gap:9px;margin-top:20px;cursor:pointer;
+  background:rgba(79,214,196,.06);border:1px dashed rgba(79,214,196,.45);color:#a5f1e6;
+  font-family:'IBM Plex Mono',monospace;font-size:12.5px;padding:10px 14px;border-radius:10px;transition:.2s;text-align:left;
+}
+.xref:hover{background:rgba(79,214,196,.14);border-style:solid}
+.xref.back{background:rgba(246,183,60,.06);border-color:rgba(246,183,60,.45);color:#ffd591}
+.xref.back:hover{background:rgba(246,183,60,.14)}
+.xref svg{width:15px;height:15px;flex:0 0 auto;stroke:currentColor;fill:none;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
+
+/* net-track accent */
+.eyebrow.net{color:var(--data)}
+.eyebrow.net::before{background:var(--data)}
+h1 .accent.net{color:var(--data)}
+
+:focus-visible{outline:2px solid var(--signal);outline-offset:3px;border-radius:6px}
+
+/* ---------- responsive ---------- */
+@media (max-width:920px){
+  .slide{grid-template-columns:1fr;gap:22px;align-content:center;justify-items:center;text-align:center}
+  .slide .txt{max-width:640px}
+  .lead,.sub{max-width:56ch;margin-left:auto;margin-right:auto}
+  .eyebrow{justify-content:center}
+  .chips{justify-content:center}
+  .node{min-width:112px;padding:13px}
+  .stn__l{font-size:0}          /* лишаємо тільки крапки на вузьких */
+  .stn__l::first-letter{font-size:10px}
+}
+@media (max-width:560px){
+  .row{gap:4px}
+  .node{min-width:96px;padding:11px}
+  .node__name{font-size:13px}
+  .wire{min-width:22px}
+  .rnode{min-width:74px;padding:9px}
+  .oct{min-width:74px;padding:12px}
+  .oct .n{font-size:26px}
+  .topbar{padding:14px 18px 4px}
+  .btn{padding:10px 14px;font-size:13px}
+}
+@media (prefers-reduced-motion:reduce){
+  *{animation:none!important;transition:opacity .2s linear!important}
+  .slide{transform:none}
+}
+</style>
+</head>
+<body>
+
+<!-- SVG icon sprite -->
+<svg class="sprite" width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <symbol id="i-browser" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><circle cx="6" cy="6.5" r=".6"/><circle cx="8.5" cy="6.5" r=".6"/></symbol>
+    <symbol id="i-dns" viewBox="0 0 24 24"><path d="M4 5a2 2 0 0 1 2-2h5v18H6a2 2 0 0 1-2-2Z"/><path d="M20 5a2 2 0 0 0-2-2h-5v18h5a2 2 0 0 0 2-2Z"/><line x1="7" y1="7" x2="9" y2="7"/><line x1="7" y1="10" x2="9" y2="10"/></symbol>
+    <symbol id="i-ip" viewBox="0 0 24 24"><path d="M20 12a2 2 0 0 0-.6-1.4l-7-7A2 2 0 0 0 11 3H5a2 2 0 0 0-2 2v6a2 2 0 0 0 .6 1.4l7 7a2 2 0 0 0 2.8 0l4.6-4.6A2 2 0 0 0 20 12Z"/><circle cx="7.5" cy="7.5" r="1.1"/></symbol>
+    <symbol id="i-server" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="7" rx="1.5"/><rect x="3" y="13" width="18" height="7" rx="1.5"/><circle cx="7" cy="7.5" r=".8"/><circle cx="7" cy="16.5" r=".8"/></symbol>
+    <symbol id="i-html" viewBox="0 0 24 24"><polyline points="9 8 5 12 9 16"/><polyline points="15 8 19 12 15 16"/></symbol>
+    <symbol id="i-image" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="8.5" cy="9" r="1.5"/><path d="m4 18 5-5 4 4 3-3 4 4"/></symbol>
+    <symbol id="i-check" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><polyline points="8 12 11 15 16 9"/></symbol>
+    <symbol id="i-lock" viewBox="0 0 24 24"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></symbol>
+    <symbol id="i-globe" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M3 12h18"/><path d="M12 3a14 14 0 0 1 0 18 14 14 0 0 1 0-18"/></symbol>
+    <symbol id="i-arrow" viewBox="0 0 24 24"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="13 6 19 12 13 18"/></symbol>
+    <symbol id="i-router" viewBox="0 0 24 24"><rect x="3" y="13" width="18" height="7" rx="2"/><circle cx="7" cy="16.5" r=".9"/><line x1="11" y1="16.5" x2="17" y2="16.5"/><path d="M8 10a4 4 0 0 1 8 0"/><path d="M5.5 8a7 7 0 0 1 13 0"/></symbol>
+    <symbol id="i-device" viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="11" rx="1.5"/><path d="M2 19h20"/><path d="M10 15h4"/></symbol>
+    <symbol id="i-cloud" viewBox="0 0 24 24"><path d="M7 18a4 4 0 0 1 0-8 5 5 0 0 1 9.6-1.3A3.5 3.5 0 0 1 18 18Z"/></symbol>
+    <symbol id="i-wifi" viewBox="0 0 24 24"><path d="M5 12.5a10 10 0 0 1 14 0"/><path d="M8 15.5a6 6 0 0 1 8 0"/><circle cx="12" cy="19" r="1"/></symbol>
+  </defs>
+</svg>
+
+<div class="app">
+  <header class="topbar">
+    <div class="brand"><span class="brand__dot"></span><span class="brand__t">Як працює інтернет</span></div>
+    <div class="tabs" id="tabs">
+      <button class="tab on" data-track="main" type="button"><svg><use href="#i-globe"/></svg>Основний потік</button>
+      <button class="tab" data-track="net" type="button"><svg><use href="#i-server"/></svg>Роутер і провайдер</button>
+    </div>
+    <div class="counter"><b id="cur">01</b> / <span id="tot">10</span></div>
+  </header>
+
+  <main class="stage" id="stage">
+
+    <!-- 0 · ТИТУЛ -->
+    <section class="slide center active" id="m0" data-station="all">
+      <div class="txt">
+        <div class="eyebrow">схема запиту в мережі</div>
+        <h1>Як працює <span class="accent">інтернет</span></h1>
+        <p class="sub">Простеж увесь шлях — від моменту, коли ти вводиш <span class="mono">roblox.com</span>, до готової сторінки з картинками. Крок за кроком, як на паперовій схемі.</p>
+      </div>
+      <div class="hero-wire" aria-hidden="true">
+        <svg viewBox="0 0 720 60" preserveAspectRatio="none">
+          <line class="base" x1="20" y1="30" x2="700" y2="30"/>
+          <line class="go" x1="20" y1="30" x2="700" y2="30"/>
+          <circle class="stop on" cx="20" cy="30" r="9"/>
+          <circle class="stop" cx="187" cy="30" r="9"/>
+          <circle class="stop" cx="360" cy="30" r="9"/>
+          <circle class="stop" cx="533" cy="30" r="9"/>
+          <circle class="stop" cx="700" cy="30" r="9"/>
+        </svg>
+      </div>
+      <div class="hint"><span>Гортай</span><span class="kbd">→</span><span class="kbd">Пробіл</span><span>або свайп</span></div>
+    </section>
+
+    <!-- 1 · БРАУЗЕР -->
+    <section class="slide" data-station="0">
+      <div class="txt">
+        <div class="eyebrow">Крок 1</div>
+        <h2>Ти вводиш адресу</h2>
+        <p class="lead">Усе починається з <b>клієнта</b> — це твій комп'ютер і <b>браузер</b> (Google Chrome, Safari…). Ти пишеш назву сайту й тиснеш Enter. Але комп'ютери не знають назв — вони спілкуються числами. Тож спершу треба з'ясувати адресу.</p>
+        <div class="chips">
+          <span class="chip">клієнт <b>=</b> браузер</span>
+          <span class="chip mono">roblox.com</span>
+        </div>
+      </div>
+      <div class="diagram">
+        <div class="browser">
+          <div class="browser__bar">
+            <div class="dots"><i></i><i></i><i></i></div>
+            <div class="url"><svg><use href="#i-lock"/></svg><span class="typed">roblox.com</span><span class="caret"></span></div>
+          </div>
+          <div class="browser__view">чекаємо на відповідь…</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 2 · DNS ЗАПИТ -->
+    <section class="slide" id="m-dns" data-station="1">
+      <div class="txt">
+        <div class="eyebrow">Крок 2</div>
+        <h2>DNS — телефонна книга інтернету</h2>
+        <p class="lead">Браузер не знає, де фізично живе <span class="mono">roblox.com</span>. Він питає <b>DNS-сервер</b>: «яка IP-адреса в цього імені?». DNS перекладає зрозумілі людині назви в числові адреси, зрозумілі мережі.</p>
+        <div class="chips"><span class="chip signal">запит: roblox.com → ?</span></div>
+        <button class="xref" data-goto="n-isp" type="button">До кого летить це питання насправді?<svg><use href="#i-arrow"/></svg></button>
+      </div>
+      <div class="diagram">
+        <div class="row">
+          <div class="node lit">
+            <div class="node__head"><div class="node__ico"><svg><use href="#i-browser"/></svg></div><div><div class="node__name">Браузер</div><div class="node__sub">клієнт</div></div></div>
+          </div>
+          <div class="wire"><span class="wire__lbl s">roblox.com = ?</span>
+            <svg viewBox="0 0 120 34" preserveAspectRatio="none"><line class="ln" x1="4" y1="17" x2="104" y2="17"/><line class="fl s" x1="4" y1="17" x2="104" y2="17"/><path class="hd s" d="M104 10 L118 17 L104 24 Z"/></svg>
+          </div>
+          <div class="node">
+            <div class="node__head"><div class="node__ico"><svg><use href="#i-dns"/></svg></div><div><div class="node__name">DNS-сервер</div><div class="node__sub">довідник</div></div></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 3 · DNS ВІДПОВІДЬ -->
+    <section class="slide" data-station="1">
+      <div class="txt">
+        <div class="eyebrow">Крок 3</div>
+        <h2>DNS-сервер повертає IP</h2>
+        <p class="lead">Довідник знаходить запис і відповідає: <span class="mono">roblox.com → 172.17.0.27</span>. Разом із відповіддю приходить <b>TTL</b> (Time To Live) — на скільки цю адресу можна <b>запам'ятати в кеші</b>, щоб наступного разу не питати знову.</p>
+        <div class="chips">
+          <span class="chip data">172.17.0.27</span>
+          <span class="chip">TTL = кеш на N сек</span>
+        </div>
+      </div>
+      <div class="diagram">
+        <div class="row">
+          <div class="node litd">
+            <div class="node__head"><div class="node__ico"><svg><use href="#i-browser"/></svg></div><div><div class="node__name">Браузер</div><div class="node__sub">кешує адресу</div></div></div>
+          </div>
+          <div class="wire"><span class="wire__lbl d">172.17.0.27</span>
+            <svg viewBox="0 0 120 34" preserveAspectRatio="none"><line class="ln" x1="16" y1="17" x2="116" y2="17"/><line class="fl d" x1="16" y1="17" x2="116" y2="17"/><path class="hd d" d="M16 10 L2 17 L16 24 Z"/></svg>
+          </div>
+          <div class="node lit">
+            <div class="node__head"><div class="node__ico"><svg><use href="#i-dns"/></svg></div><div><div class="node__name">DNS-сервер</div></div></div>
+            <div class="node__body"><span class="k">roblox.com</span><br>&nbsp;→ <span class="v">172.17.0.27</span></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 4 · IP-АДРЕСА -->
+    <section class="slide" id="m-ip" data-station="2">
+      <div class="txt">
+        <div class="eyebrow">Що це взагалі таке</div>
+        <h2>IP-адреса</h2>
+        <p class="lead">Це унікальна адреса пристрою в мережі — як номер будинку. У версії <b>IPv4</b> вона складається з <b>4 чисел від 0 до 255</b>, розділених крапками.</p>
+        <div class="iplist">
+          <code>Максимум: <b>255.255.255.255</b></code>
+          <code>Мінімум:&nbsp; <b>0.0.0.0</b></code>
+          <code>Домашній роутер: <b>192.168.15.1</b></code>
+        </div>
+        <button class="xref" data-goto="n-router" type="button">Звідки береться 192.168.15.1?<svg><use href="#i-arrow"/></svg></button>
+      </div>
+      <div class="diagram">
+        <div class="octets">
+          <div class="oct"><div class="n">172</div><div class="r">0–255</div></div>
+          <div class="dot-sep">.</div>
+          <div class="oct"><div class="n">17</div><div class="r">0–255</div></div>
+          <div class="dot-sep">.</div>
+          <div class="oct"><div class="n">0</div><div class="r">0–255</div></div>
+          <div class="dot-sep">.</div>
+          <div class="oct"><div class="n">27</div><div class="r">0–255</div></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 5 · ЗАПИТ ДО СЕРВЕРА -->
+    <section class="slide" id="m-server" data-station="3">
+      <div class="txt">
+        <div class="eyebrow">Крок 4</div>
+        <h2>Браузер стукає до сервера</h2>
+        <p class="lead">Тепер, знаючи IP, браузер з'єднується з <b>сервером</b> за адресою <span class="mono">172.17.0.27</span> по захищеному протоколу <b>HTTPS</b> (замочок = шифрування) і просить конкретну сторінку.</p>
+        <div class="chips">
+          <span class="chip signal">🔒 HTTPS</span>
+          <span class="chip mono">GET /page.html</span>
+        </div>
+        <button class="xref" data-goto="n-path" type="button">А як цей запит виходить із твого дому?<svg><use href="#i-arrow"/></svg></button>
+      </div>
+      <div class="diagram">
+        <div class="row">
+          <div class="node lit">
+            <div class="node__head"><div class="node__ico"><svg><use href="#i-browser"/></svg></div><div><div class="node__name">Браузер</div></div></div>
+          </div>
+          <div class="wire"><span class="wire__lbl s">https://roblox.com/page.html</span>
+            <svg viewBox="0 0 120 34" preserveAspectRatio="none"><line class="ln" x1="4" y1="17" x2="104" y2="17"/><line class="fl s" x1="4" y1="17" x2="104" y2="17"/><path class="hd s" d="M104 10 L118 17 L104 24 Z"/></svg>
+          </div>
+          <div class="node">
+            <div class="node__head"><div class="node__ico"><svg><use href="#i-server"/></svg></div><div><div class="node__name">Сервер</div><div class="node__sub">хостинг · 172.17.0.27</div></div></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 6 · СЕРВЕР ВІДДАЄ HTML -->
+    <section class="slide" data-station="4">
+      <div class="txt">
+        <div class="eyebrow">Крок 5</div>
+        <h2>Сервер віддає HTML</h2>
+        <p class="lead">Хостинг зберігає файли сайту. У відповідь він надсилає <b>HTML</b> — текстовий код сторінки з тегами. Це ще не картинка на екрані, а «інструкція», за якою браузер її збере.</p>
+        <div class="chips"><span class="chip data">← page.html</span></div>
+      </div>
+      <div class="diagram" style="align-items:center">
+        <div class="doc">
+          <div class="doc__t"><svg><use href="#i-html"/></svg> page.html</div>
+          <div class="doc__code">
+<span class="tag">&lt;html&gt;</span><br>
+<span class="in"><span class="tag">&lt;title&gt;</span>Roblox<span class="tag">&lt;/title&gt;</span></span><br>
+<span class="in"><span class="tag">&lt;p&gt;</span>Текст сторінки<span class="tag">&lt;/p&gt;</span></span><br>
+<span class="in"><span class="tag">&lt;img</span> <span class="at">src</span>=<span class="st">"/картинка1.jpg"</span><span class="tag">&gt;</span></span><br>
+<span class="tag">&lt;/html&gt;</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 7 · КАРТИНКИ -->
+    <section class="slide" data-station="5">
+      <div class="txt">
+        <div class="eyebrow">Крок 6</div>
+        <h2>За картинками — окремі запити</h2>
+        <p class="lead">Читаючи HTML, браузер бачить теги <span class="mono">&lt;img&gt;</span>. Самих картинок у коді немає — лише посилання на них. Тож на <b>кожну</b> картинку браузер робить ще один запит до сервера.</p>
+        <div class="chips">
+          <span class="chip mono">/картинка1.jpg</span>
+          <span class="chip mono">/картинка2.jpg</span>
+        </div>
+      </div>
+      <div class="diagram">
+        <div class="row">
+          <div class="node lit" style="max-width:250px">
+            <div class="node__head"><div class="node__ico"><svg><use href="#i-html"/></svg></div><div><div class="node__name">HTML</div><div class="node__sub">знайдено &lt;img&gt;</div></div></div>
+            <div class="node__body"><span class="k">src</span>=<span class="v">"/картинка1.jpg"</span></div>
+          </div>
+          <div class="wire"><span class="wire__lbl s">дай картинки</span>
+            <svg viewBox="0 0 120 34" preserveAspectRatio="none"><line class="ln" x1="4" y1="17" x2="104" y2="17"/><line class="fl s" x1="4" y1="17" x2="104" y2="17"/><path class="hd s" d="M104 10 L118 17 L104 24 Z"/></svg>
+          </div>
+          <div class="node">
+            <div class="node__head"><div class="node__ico"><svg><use href="#i-server"/></svg></div><div><div class="node__name">Сервер</div></div></div>
+            <div class="node__body"><span class="v">картинка1.jpg</span><br><span class="v">картинка2.jpg</span></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 8 · ГОТОВО -->
+    <section class="slide" data-station="6">
+      <div class="txt">
+        <div class="eyebrow">Крок 7</div>
+        <h2>Сторінка зібрана</h2>
+        <p class="lead">Браузер отримав HTML і всі картинки, склав їх докупи й <b>намалював сторінку</b> на екрані. Увесь цей шлях займає долі секунди — і повторюється щоразу, коли ти відкриваєш новий сайт.</p>
+        <div class="chips"><span class="chip data">✓ готово</span></div>
+      </div>
+      <div class="diagram" style="align-items:center">
+        <div class="page">
+          <h4>Roblox</h4>
+          <div class="ln s"></div><div class="ln"></div>
+          <div class="imgs">
+            <div class="ph"><svg><use href="#i-image"/></svg><span>картинка1.jpg</span></div>
+            <div class="ph"><svg><use href="#i-image"/></svg><span>картинка2.jpg</span></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 9 · ПІДСУМОК -->
+    <section class="slide center" data-station="all">
+      <div class="txt">
+        <div class="eyebrow">Уся схема разом</div>
+        <h2>Шлях одного запиту</h2>
+      </div>
+      <div class="recap">
+        <div class="rstep"><div class="rnode"><div class="ri"><svg><use href="#i-browser"/></svg></div><div class="rt">Браузер</div><div class="rn">клієнт</div></div></div>
+        <span class="rarrow">→</span>
+        <div class="rstep"><div class="rnode"><div class="ri"><svg><use href="#i-dns"/></svg></div><div class="rt">DNS</div><div class="rn">ім'я→IP</div></div></div>
+        <span class="rarrow">→</span>
+        <div class="rstep"><div class="rnode"><div class="ri"><svg><use href="#i-server"/></svg></div><div class="rt">Сервер</div><div class="rn">172.17.0.27</div></div></div>
+        <span class="rarrow">→</span>
+        <div class="rstep"><div class="rnode"><div class="ri"><svg><use href="#i-html"/></svg></div><div class="rt">HTML</div><div class="rn">page.html</div></div></div>
+        <span class="rarrow">→</span>
+        <div class="rstep"><div class="rnode"><div class="ri"><svg><use href="#i-image"/></svg></div><div class="rt">Картинки</div><div class="rn">.jpg</div></div></div>
+        <span class="rarrow">→</span>
+        <div class="rstep"><div class="rnode"><div class="ri" style="color:var(--data)"><svg><use href="#i-check"/></svg></div><div class="rt">Готово</div><div class="rn">рендер</div></div></div>
+      </div>
+      <div class="recap-track"><div class="fill"></div><div class="pk"></div></div>
+      <p class="sub" style="margin-top:24px">Домен → IP → з'єднання → сторінка. Щоразу, коли відкриваєш будь-який сайт.</p>
+    </section>
+
+    <!-- ==================== ТРЕК: РОУТЕР І ПРОВАЙДЕР ==================== -->
+
+    <!-- N0 · ТИТУЛ -->
+    <section class="slide center" id="n0" data-track="net" data-station="all">
+      <div class="txt">
+        <div class="eyebrow net">мережа під капотом</div>
+        <h1>Роутер і <span class="accent net">провайдер</span></h1>
+        <p class="sub">В основному потоці ми йшли «браузер → сервер» однією стрілкою. Але між твоїм пристроєм і сервером стоять двоє учасників, яких ти не бачиш. Ось як запит насправді виходить із твого дому в глобальну мережу.</p>
+      </div>
+      <div class="hero-wire" aria-hidden="true">
+        <svg viewBox="0 0 720 60" preserveAspectRatio="none">
+          <line class="base" x1="20" y1="30" x2="700" y2="30"/>
+          <line class="go" x1="20" y1="30" x2="700" y2="30" style="stroke:var(--data)"/>
+          <circle class="stop on" cx="20" cy="30" r="9" style="stroke:var(--data)"/>
+          <circle class="stop" cx="190" cy="30" r="9"/>
+          <circle class="stop" cx="360" cy="30" r="9"/>
+          <circle class="stop" cx="530" cy="30" r="9"/>
+          <circle class="stop" cx="700" cy="30" r="9"/>
+        </svg>
+      </div>
+      <button class="xref back" data-goto="m0" type="button">← Повернутись до основного потоку</button>
+    </section>
+
+    <!-- N1 · РОУТЕР -->
+    <section class="slide" id="n-router" data-track="net" data-station="1">
+      <div class="txt">
+        <div class="eyebrow net">Учасник 1</div>
+        <h2>Роутер — серце домашньої мережі</h2>
+        <p class="lead">Роутер (маршрутизатор) з'єднує всі твої пристрої — телефон, ноутбук, ТВ — в одну <b>локальну мережу</b> й роздає Wi-Fi. Кожному він видає локальну адресу з діапазону <span class="mono">192.168.x.x</span>, а сам зазвичай має <span class="mono">192.168.15.1</span> — це <b>шлюз</b>, вихід у зовнішній світ.</p>
+        <div class="chips">
+          <span class="chip data">шлюз 192.168.15.1</span>
+          <span class="chip">Wi-Fi + кабель</span>
+        </div>
+        <button class="xref back" data-goto="m-ip" type="button">← Так, це та сама 192.168.15.1 зі слайда про IP</button>
+      </div>
+      <div class="diagram">
+        <div class="row">
+          <div class="node">
+            <div class="node__head"><div class="node__ico"><svg><use href="#i-device"/></svg></div><div><div class="node__name">Твої пристрої</div><div class="node__sub">телефон · ноут · ТВ</div></div></div>
+            <div class="node__body"><span class="v">192.168.15.24</span><br><span class="v">192.168.15.10</span></div>
+          </div>
+          <div class="wire"><span class="wire__lbl s">Wi-Fi</span>
+            <svg viewBox="0 0 120 34" preserveAspectRatio="none"><line class="ln" x1="4" y1="17" x2="104" y2="17"/><line class="fl s" x1="4" y1="17" x2="104" y2="17"/><path class="hd s" d="M104 10 L118 17 L104 24 Z"/></svg>
+          </div>
+          <div class="node litd">
+            <div class="node__head"><div class="node__ico"><svg><use href="#i-router"/></svg></div><div><div class="node__name">Роутер</div><div class="node__sub">шлюз · 192.168.15.1</div></div></div>
+            <div class="node__body">роздає <span class="k">192.168.x.x</span></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- N2 · NAT -->
+    <section class="slide" id="n-nat" data-track="net" data-station="1">
+      <div class="txt">
+        <div class="eyebrow net">Приватне vs публічне</div>
+        <h2>Одна адреса назовні: NAT</h2>
+        <p class="lead">Адреси <span class="mono">192.168.x.x</span> — <b>приватні</b>: працюють лише в межах твого дому, в інтернеті їх не видно. Тому роутер робить підміну — <b>NAT</b>: усі твої пристрої виходять у мережу під <b>однією публічною IP</b>. Сервер бачить саме її, а не окремо твій телефон.</p>
+        <div class="chips">
+          <span class="chip">приватна: 192.168.x.x</span>
+          <span class="chip data">публічна: одна на всіх</span>
+        </div>
+      </div>
+      <div class="diagram">
+        <div class="row">
+          <div class="node">
+            <div class="node__head"><div class="node__ico"><svg><use href="#i-device"/></svg></div><div><div class="node__name">Пристрій</div><div class="node__sub">приватна IP</div></div></div>
+            <div class="node__body"><span class="v">192.168.15.24</span></div>
+          </div>
+          <div class="wire"><span class="wire__lbl s">NAT</span>
+            <svg viewBox="0 0 120 34" preserveAspectRatio="none"><line class="ln" x1="4" y1="17" x2="104" y2="17"/><line class="fl s" x1="4" y1="17" x2="104" y2="17"/><path class="hd s" d="M104 10 L118 17 L104 24 Z"/></svg>
+          </div>
+          <div class="node litd">
+            <div class="node__head"><div class="node__ico"><svg><use href="#i-router"/></svg></div><div><div class="node__name">Роутер</div><div class="node__sub">підміняє адресу</div></div></div>
+          </div>
+          <div class="wire"><span class="wire__lbl s">назовні</span>
+            <svg viewBox="0 0 120 34" preserveAspectRatio="none"><line class="ln" x1="4" y1="17" x2="104" y2="17"/><line class="fl s" x1="4" y1="17" x2="104" y2="17"/><path class="hd s" d="M104 10 L118 17 L104 24 Z"/></svg>
+          </div>
+          <div class="node">
+            <div class="node__head"><div class="node__ico"><svg><use href="#i-cloud"/></svg></div><div><div class="node__name">Інтернет</div><div class="node__sub">публічна IP</div></div></div>
+            <div class="node__body"><span class="k">188.163.24.7</span></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- N3 · ПРОВАЙДЕР -->
+    <section class="slide" id="n-isp" data-track="net" data-station="2">
+      <div class="txt">
+        <div class="eyebrow net">Учасник 2</div>
+        <h2>Провайдер — ворота в інтернет</h2>
+        <p class="lead">Провайдер (ISP) фізично підключає твій дім до глобальної мережі — кабелем чи оптикою. Він видає роутеру <b>публічну IP</b>, пропускає весь трафік до потрібних серверів і назад, а ще часто має <b>власний DNS</b> — саме йому першому летить питання «яка IP в roblox.com?».</p>
+        <div class="chips">
+          <span class="chip data">видає публічну IP</span>
+          <span class="chip">власний DNS</span>
+          <span class="chip">маршрутизація</span>
+        </div>
+        <button class="xref back" data-goto="m-dns" type="button">← Ось до кого йшов той DNS-запит із Кроку 2</button>
+      </div>
+      <div class="diagram">
+        <div class="row">
+          <div class="node">
+            <div class="node__head"><div class="node__ico"><svg><use href="#i-router"/></svg></div><div><div class="node__name">Роутер</div><div class="node__sub">твій дім</div></div></div>
+          </div>
+          <div class="wire"><span class="wire__lbl s">кабель / оптика</span>
+            <svg viewBox="0 0 120 34" preserveAspectRatio="none"><line class="ln" x1="4" y1="17" x2="104" y2="17"/><line class="fl s" x1="4" y1="17" x2="104" y2="17"/><path class="hd s" d="M104 10 L118 17 L104 24 Z"/></svg>
+          </div>
+          <div class="node litd">
+            <div class="node__head"><div class="node__ico"><svg><use href="#i-cloud"/></svg></div><div><div class="node__name">Провайдер</div><div class="node__sub">ISP · DNS</div></div></div>
+          </div>
+          <div class="wire"><span class="wire__lbl s">магістраль</span>
+            <svg viewBox="0 0 120 34" preserveAspectRatio="none"><line class="ln" x1="4" y1="17" x2="104" y2="17"/><line class="fl s" x1="4" y1="17" x2="104" y2="17"/><path class="hd s" d="M104 10 L118 17 L104 24 Z"/></svg>
+          </div>
+          <div class="node">
+            <div class="node__head"><div class="node__ico"><svg><use href="#i-globe"/></svg></div><div><div class="node__name">Інтернет</div><div class="node__sub">до серверів</div></div></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- N4 · ПОВНИЙ ШЛЯХ -->
+    <section class="slide center" id="n-path" data-track="net" data-station="all">
+      <div class="txt">
+        <div class="eyebrow net">Уся картина</div>
+        <h2>Справжній шлях пакета</h2>
+      </div>
+      <div class="recap">
+        <div class="rstep"><div class="rnode"><div class="ri"><svg><use href="#i-device"/></svg></div><div class="rt">Пристрій</div><div class="rn">192.168.x.x</div></div></div>
+        <span class="rarrow">→</span>
+        <div class="rstep"><div class="rnode"><div class="ri"><svg><use href="#i-router"/></svg></div><div class="rt">Роутер</div><div class="rn">NAT · шлюз</div></div></div>
+        <span class="rarrow">→</span>
+        <div class="rstep"><div class="rnode"><div class="ri"><svg><use href="#i-cloud"/></svg></div><div class="rt">Провайдер</div><div class="rn">ISP</div></div></div>
+        <span class="rarrow">→</span>
+        <div class="rstep"><div class="rnode"><div class="ri"><svg><use href="#i-globe"/></svg></div><div class="rt">Магістраль</div><div class="rn">вузли мережі</div></div></div>
+        <span class="rarrow">→</span>
+        <div class="rstep"><div class="rnode"><div class="ri" style="color:var(--data)"><svg><use href="#i-server"/></svg></div><div class="rt">Сервер</div><div class="rn">172.17.0.27</div></div></div>
+      </div>
+      <div class="recap-track"><div class="fill"></div><div class="pk"></div></div>
+      <p class="sub" style="margin-top:24px">Те, що в основному потоці було однією стрілкою «браузер → сервер», насправді йде через роутер, провайдера й десятки проміжних вузлів — і все за долі секунди.</p>
+      <button class="xref back" data-goto="m-server" type="button">← Повернутись до Кроку 4 основного потоку</button>
+    </section>
+
+  </main>
+
+  <footer class="footer">
+    <div class="map" id="map">
+      <div class="map__line"></div>
+      <div class="map__pk" id="mapPk"></div>
+      <!-- stations injected by JS -->
+    </div>
+    <div class="nav">
+      <button class="btn" id="prev"><svg><use href="#i-arrow" style="transform:rotate(180deg);transform-origin:center"/></svg>Назад</button>
+      <div class="dots-nav" id="dotsNav"></div>
+      <button class="btn primary" id="next">Далі<svg><use href="#i-arrow"/></svg></button>
+    </div>
+  </footer>
+</div>
+
+<script>
+(function(){
+  const allSlides=[...document.querySelectorAll('.slide')];
+  allSlides.forEach(s=>{ if(!s.dataset.track) s.dataset.track='main'; });
+
+  const tracks={main:[],net:[]};
+  allSlides.forEach(s=>tracks[s.dataset.track].push(s));
+
+  const stationDefs={
+    main:['Браузер','DNS','IP','Сервер','HTML','Картинки','Готово'],
+    net:['Пристрій','Роутер','Провайдер','Магістраль','Сервер']
+  };
+
+  const pos={main:0,net:0};
+  let track='main';
+  let stnEls=[], dots=[];
+
+  const map=document.getElementById('map');
+  const mapPk=document.getElementById('mapPk');
+  const dotsNav=document.getElementById('dotsNav');
+  const curEl=document.getElementById('cur');
+  const totEl=document.getElementById('tot');
+  const prevBtn=document.getElementById('prev');
+  const nextBtn=document.getElementById('next');
+  const tabs=[...document.querySelectorAll('.tab')];
+
+  const curSlides=()=>tracks[track];
+
+  function buildMap(){
+    map.querySelectorAll('.stn').forEach(e=>e.remove());
+    stnEls=stationDefs[track].map((s,idx)=>{
+      const b=document.createElement('button');
+      b.className='stn';b.type='button';b.setAttribute('aria-label',s);
+      b.innerHTML='<span class="stn__d"></span><span class="stn__l">'+s+'</span>';
+      b.addEventListener('click',()=>{const t=curSlides().findIndex(sl=>sl.dataset.station==String(idx));if(t>=0)go(t);});
+      map.appendChild(b);return b;
+    });
+    const c=track==='net'?'var(--data)':'var(--signal)';
+    mapPk.style.background=c; mapPk.style.boxShadow='0 0 14px '+c;
+  }
+
+  function buildDots(){
+    dotsNav.innerHTML='';
+    dots=curSlides().map((_,idx)=>{
+      const b=document.createElement('button');b.type='button';b.setAttribute('aria-label','Слайд '+(idx+1));
+      b.addEventListener('click',()=>go(idx));dotsNav.appendChild(b);return b;
+    });
+  }
+
+  function stationIndex(idx){
+    const v=curSlides()[idx].dataset.station;
+    return v==='all'?null:parseInt(v,10);
+  }
+
+  function updateMap(idx){
+    const active=stationIndex(idx);
+    let reached=-1;
+    for(let k=0;k<=idx;k++){const si=stationIndex(k);if(si!==null&&si>reached)reached=si;}
+    stnEls.forEach((el,s)=>{
+      el.classList.toggle('on',active!==null&&s===active);
+      el.classList.toggle('done',active===null? (s<=reached&&idx>0) : s<active);
+    });
+    const target=active!==null?active:reached;
+    if(target>=0&&stnEls[target]){
+      const d=stnEls[target].querySelector('.stn__d');
+      const mr=map.getBoundingClientRect(),dr=d.getBoundingClientRect();
+      mapPk.style.left=(dr.left+dr.width/2-mr.left)+'px';mapPk.style.opacity='1';
+    }else{mapPk.style.opacity='0';}
+  }
+
+  function go(n){
+    const sl=curSlides();
+    const i=Math.max(0,Math.min(sl.length-1,n));
+    pos[track]=i;
+    allSlides.forEach(s=>s.classList.remove('active'));
+    sl[i].classList.add('active');
+    dots.forEach((d,k)=>d.classList.toggle('on',k===i));
+    curEl.textContent=String(i+1).padStart(2,'0');
+    totEl.textContent=String(sl.length).padStart(2,'0');
+    prevBtn.disabled=i===0;
+    nextBtn.disabled=i===sl.length-1;
+    nextBtn.classList.toggle('net',track==='net');
+    nextBtn.innerHTML=i===sl.length-1?'Готово<svg><use href="#i-check"/></svg>':'Далі<svg><use href="#i-arrow"/></svg>';
+    updateMap(i);
+  }
+
+  function switchTrack(t,targetIdx){
+    if(!tracks[t]) return;
+    track=t;
+    tabs.forEach(tb=>tb.classList.toggle('on',tb.dataset.track===t));
+    buildMap();buildDots();
+    go(targetIdx!=null?targetIdx:pos[t]);
+  }
+
+  tabs.forEach(tb=>tb.addEventListener('click',()=>switchTrack(tb.dataset.track)));
+
+  document.querySelectorAll('.xref').forEach(x=>{
+    x.addEventListener('click',()=>{
+      const el=document.getElementById(x.dataset.goto);
+      if(!el)return;
+      const t=el.dataset.track||'main';
+      switchTrack(t,tracks[t].indexOf(el));
+    });
+  });
+
+  nextBtn.addEventListener('click',()=>go(pos[track]+1));
+  prevBtn.addEventListener('click',()=>go(pos[track]-1));
+  document.addEventListener('keydown',e=>{
+    if(e.key==='ArrowRight'||e.key===' '||e.key==='PageDown'){e.preventDefault();go(pos[track]+1);}
+    else if(e.key==='ArrowLeft'||e.key==='PageUp'){e.preventDefault();go(pos[track]-1);}
+    else if(e.key==='Home')go(0);else if(e.key==='End')go(curSlides().length-1);
+  });
+
+  let sx=0,sy=0;const stage=document.getElementById('stage');
+  stage.addEventListener('touchstart',e=>{sx=e.touches[0].clientX;sy=e.touches[0].clientY;},{passive:true});
+  stage.addEventListener('touchend',e=>{
+    const dx=e.changedTouches[0].clientX-sx,dy=e.changedTouches[0].clientY-sy;
+    if(Math.abs(dx)>50&&Math.abs(dx)>Math.abs(dy))go(pos[track]+(dx<0?1:-1));
+  },{passive:true});
+
+  window.addEventListener('resize',()=>updateMap(pos[track]));
+
+  switchTrack('main',0);
+})();
+</script>
+</body>
+</html>
