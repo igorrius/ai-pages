@@ -93,13 +93,14 @@
           display:flex;flex-direction:column;gap:2px;border:2px solid transparent;
           transition:opacity .15s,transform .1s;position:relative}
   .lesson:active{transform:scale(.985)}
-  .lesson b{font-weight:800;font-size:15px;line-height:1.15}
+  .lesson b{font-weight:800;font-size:15px;line-height:1.15;padding-right:42px}
   .lesson .t{font-size:13px;font-weight:600;color:#33404d}
   .lesson .r{font-size:12px;font-weight:800;position:absolute;right:10px;top:9px;
              background:rgba(255,255,255,.65);padding:1px 7px;border-radius:999px}
   .lesson .r.none{opacity:.55;font-weight:700}
   .lesson.now-live{border-color:var(--now);box-shadow:0 0 0 3px #ffd9cf}
   .lesson.dim{opacity:.22}
+  .row.pad{display:none}
   .free{border:2px dashed var(--line);border-radius:var(--radius);color:var(--ink-soft);
         font-weight:700;display:flex;align-items:center;padding:0 12px;font-size:14px}
   .vacancy b{font-style:italic}
@@ -136,6 +137,11 @@
     .col.today .col-head{border-bottom-color:var(--today)}
     .col.today{background:#fffbe8;border-radius:16px;padding:0 6px 6px;margin:0 -6px}
     .row{grid-template-columns:34px 1fr;gap:6px;min-height:78px}
+    .row.pad{display:block;min-height:0}
+    @supports (grid-template-rows:subgrid){
+      .week{grid-template-rows:auto repeat(var(--periods,7),auto)}
+      .col{grid-row:1/-1;grid-template-rows:subgrid}
+    }
     .slot{font-size:15px}
     .slot time{display:none}
     .lesson b{font-size:14px}
@@ -283,11 +289,12 @@ function lessonHTML(l, di, p){
 }
 
 function renderWeek(){
+  $("#week").style.setProperty("--periods", maxPeriod);
   $("#week").innerHTML = DAYS.map((d,di)=>{
     const rows=[];
     for(let p=1;p<=maxPeriod;p++){
       const ls=d.lessons[p];
-      if(!ls && p>lastPeriod(d)) break;
+      if(!ls && p>lastPeriod(d)){ rows.push('<div class="row pad" aria-hidden="true"></div>'); continue; }
       const [a,b]=BELLS[p]||["",""];
       rows.push(`<div class="row">
         <div class="slot">${p}<time>${a}<br>${b}</time></div>
