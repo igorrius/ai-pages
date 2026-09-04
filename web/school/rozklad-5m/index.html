@@ -33,7 +33,6 @@
     --line-strong:#d5cfc0;
     --today:#ffd541;
     --today-wash:#fff8d8;
-    --now:#e8442020;
     --accent:#e84420;
     --shadow:0 1px 2px rgba(31,42,55,.06), 0 8px 24px rgba(31,42,55,.06);
     --shadow-lg:0 24px 64px rgba(31,42,55,.22);
@@ -43,6 +42,7 @@
     --lesson-ink:#1f2a37;
     --lesson-ink-soft:#3b4754;
     --badge-bg:rgba(255,255,255,.7);
+    --track:rgba(31,42,55,.16);
 
     --radius:14px;
     --radius-lg:18px;
@@ -81,6 +81,7 @@
       --lesson-ink:#e9edf2;
       --lesson-ink-soft:#a9b5c3;
       --badge-bg:rgba(0,0,0,.28);
+      --track:rgba(255,255,255,.18);
     }
   }
 
@@ -163,7 +164,7 @@
   .cell.split{grid-template-columns:repeat(2,minmax(0,1fr))}
   @media (max-width:400px){.cell.split{grid-template-columns:minmax(0,1fr)}}
 
-  .lesson{min-width:0;border-radius:var(--radius);padding:10px 12px;text-align:left;width:100%;
+  .lesson{min-width:0;border-radius:var(--radius);padding:10px 12px;text-align:left;width:100%;overflow:hidden;
           display:flex;flex-direction:column;gap:3px;border:2px solid transparent;position:relative;
           background:color-mix(in srgb, var(--c) var(--tint), var(--surface));color:var(--lesson-ink);
           transition:opacity .15s,filter .15s,transform .1s}
@@ -174,9 +175,11 @@
   .lesson .r{flex:0 0 auto;font-size:12px;font-weight:800;background:var(--badge-bg);
              padding:2px 8px;border-radius:999px;white-space:nowrap}
   .lesson .r.none{opacity:.6;font-weight:700}
-  .lesson.now-live{border-color:var(--accent);box-shadow:0 0 0 3px var(--now)}
-  .lesson.now-live::after{content:"";position:absolute;left:0;bottom:0;height:3px;width:var(--progress,0%);
-                          background:var(--accent);border-radius:0 999px 999px var(--radius)}
+  .lesson.now-live{border-color:var(--accent);
+                   box-shadow:0 0 0 3px color-mix(in srgb, var(--accent) 20%, transparent)}
+  .lesson.now-live::before,.lesson.now-live::after{content:"";position:absolute;bottom:0;height:4px}
+  .lesson.now-live::before{left:0;right:0;background:var(--track)}
+  .lesson.now-live::after{left:0;width:var(--progress,0%);background:var(--accent);transition:width .6s linear}
   .lesson.dim{opacity:.3;filter:saturate(.35)}
   .vacancy b{font-style:italic}
 
@@ -264,7 +267,7 @@
     .col.today{background:none}
     .slot time{display:block}
     .lesson{border:1px solid #999;box-shadow:none}
-    .lesson.now-live::after{display:none}
+    .lesson.now-live::before,.lesson.now-live::after{display:none}
   }
 
   @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
