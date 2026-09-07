@@ -197,6 +197,16 @@
   .chip.reset{background:var(--surface);border-color:var(--line-strong);color:var(--ink)}
   .note{margin-top:18px;color:var(--ink-soft);font-size:13px;font-weight:600;line-height:1.45}
 
+  /* ---------- підручники ---------- */
+  .books{margin-top:22px;border-top:2px solid var(--line);padding-top:16px}
+  .books p{margin:0 0 9px;font-weight:700;color:var(--ink-soft);font-size:14px}
+  .book-list{display:flex;flex-wrap:wrap;gap:8px}
+  .book{display:inline-flex;align-items:center;gap:8px;padding:9px 14px;border-radius:14px;
+        font-weight:800;font-size:14px;text-decoration:none;border:2px solid transparent;
+        background:color-mix(in srgb, var(--c, var(--surface)) var(--tint), var(--surface));color:var(--lesson-ink)}
+  .book:hover,.book:focus-visible{border-color:var(--ink)}
+  .book .b-sub{display:block;font-weight:600;font-size:12px;color:var(--ink-soft)}
+
   /* ---------- деталі уроку ---------- */
   dialog{border:0;border-radius:20px;padding:0;max-width:440px;width:calc(100% - 28px);
          background:var(--surface);color:var(--ink);box-shadow:var(--shadow-lg)}
@@ -207,6 +217,7 @@
   .sheet dl{margin:16px 0 0;display:grid;grid-template-columns:auto minmax(0,1fr);gap:8px 16px;font-weight:600}
   .sheet dt{color:var(--ink-soft);font-weight:700}
   .sheet dd{margin:0;overflow-wrap:anywhere}
+  .sheet dd a{color:inherit;font-weight:800;text-decoration:underline;text-underline-offset:3px}
   .sheet .close{margin-top:20px;width:100%;padding:12px;border-radius:12px;background:var(--ink);
                 color:var(--paper);font-weight:800}
 
@@ -300,6 +311,11 @@
     <div class="chips" id="chips" role="group" aria-labelledby="filter-label"></div>
     <p class="note">Дзвінки — за офіційним розкладом ліцею на 2026/27 н.р. Кабінет «—» означає, що аудиторію в розкладі ще не призначено. Дані станом на 06.09.2026.</p>
   </section>
+
+  <section class="books" id="books" hidden>
+    <p id="books-label">Підручники онлайн</p>
+    <div class="book-list" id="book-list" role="list" aria-labelledby="books-label"></div>
+  </section>
 </div>
 
 <dialog id="dlg" aria-labelledby="sheet-title"><div class="sheet" id="sheet"></div></dialog>
@@ -328,7 +344,9 @@ const SUBJ = {
   ukr:    {name:"Українська мова",        color:"var(--c-ukr)"},
   ukrlit: {name:"Українська література",  color:"var(--c-ukrlit)"},
   eng:    {name:"Англійська мова",        color:"var(--c-eng)"},
-  nature: {name:"Пізнаємо природу",       color:"var(--c-nature)"},
+  nature: {name:"Пізнаємо природу",       color:"var(--c-nature)",
+           book:{title:"Пізнаємо природу, 5 клас", author:"Д. Біда",
+                 url:"https://pidruchnyk.com.ua/1718-piznaiemo-pryrodu-bida-5-klas.html"}},
   world:  {name:"Зарубіжна література",   color:"var(--c-world)"},
   tech:   {name:"Технології",             color:"var(--c-tech)"},
   inf:    {name:"Інформатика / STEM",     color:"var(--c-inf)"},
@@ -461,6 +479,21 @@ function renderChips(){
     + (filter?`<button type="button" class="chip reset" data-s="">Показати все</button>`:"");
 }
 
+// Секція з підручниками: лише для предметів, які реально є в розкладі.
+function renderBooks(){
+  const used=new Set(DAYS.flatMap(d=>Object.values(d.lessons).flat().map(l=>l.s)));
+  const books=[...used].filter(k=>SUBJ[k].book);
+  $("#books").hidden = books.length===0;
+  $("#book-list").innerHTML = books.map(k=>{
+    const b=SUBJ[k].book;
+    return `<a class="book" role="listitem" style="--c:${SUBJ[k].color}" href="${esc(b.url)}"
+              target="_blank" rel="noopener noreferrer">
+      <span aria-hidden="true">📖</span>
+      <span>${esc(b.title)}<span class="b-sub">${b.author?esc(b.author)+" · ":""}${esc(new URL(b.url).hostname)}</span></span>
+    </a>`;
+  }).join("");
+}
+
 function applyFilter(){
   document.querySelectorAll(".lesson").forEach(el=>el.classList.toggle("dim", !!filter && el.dataset.s!==filter));
 }
@@ -578,6 +611,7 @@ $("#week").addEventListener("click",e=>{
         <dt>Кабінет</dt><dd>${l.r ? esc(l.r) : "не призначено"}</dd>
         <dt>${l.t.length>1?"Вчителі":"Вчитель"}</dt><dd>${l.t.map(esc).join("<br>")}</dd>
         ${others.length?`<dt>Паралельно</dt><dd>${others.map(x=>esc(SUBJ[x.s].name+" — "+x.t.join(", "))).join("<br>")}</dd>`:""}
+        ${SUBJ[l.s].book?`<dt>Підручник</dt><dd><a href="${esc(SUBJ[l.s].book.url)}" target="_blank" rel="noopener noreferrer">${esc(SUBJ[l.s].book.title)}</a>${SUBJ[l.s].book.author?" · "+esc(SUBJ[l.s].book.author):""}</dd>`:""}
     </dl><button type="button" class="close" data-close>Закрити</button>`;
   dlg.showModal();
 });
@@ -639,7 +673,7 @@ $("#install").addEventListener("click",async()=>{
 addEventListener("appinstalled",()=>$("#install").classList.remove("show"));
 
 /* ---------- старт ---------- */
-renderDays(); renderWeek(); renderChips(); setDay(activeDay);
+renderDays(); renderWeek(); renderChips(); renderBooks(); setDay(activeDay);
 setInterval(tick, 10000);
 document.addEventListener("visibilitychange",()=>{ if(!document.hidden) tick(); });
 addEventListener("focus", tick);
