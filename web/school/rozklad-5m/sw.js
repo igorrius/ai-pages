@@ -1,6 +1,6 @@
 // Service worker: кешує застосунок для офлайн-роботи.
 // При зміні розкладу — підніми VERSION, і телефони підтягнуть нову версію.
-const VERSION = "v8";
+const VERSION = "v9";
 const CACHE = `rozklad-5m-${VERSION}`;
 const ASSETS = ["./", "./index.html", "./manifest.webmanifest", "./icon-192.png", "./icon-512.png", "./icon-maskable-512.png"];
 
