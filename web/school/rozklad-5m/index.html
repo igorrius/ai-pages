@@ -309,7 +309,7 @@
   <section class="legend">
     <p id="filter-label">Показати лише предмет</p>
     <div class="chips" id="chips" role="group" aria-labelledby="filter-label"></div>
-    <p class="note">Дзвінки — за офіційним розкладом ліцею на 2026/27 н.р. Кабінет «—» означає, що аудиторію в розкладі ще не призначено. Дані станом на 06.09.2026.</p>
+    <p class="note">Дзвінки — за офіційним розкладом ліцею на 2026/27 н.р. Кабінет «—» означає, що аудиторію в розкладі ще не призначено. Дані станом на 13.09.2026.</p>
   </section>
 
   <section class="books" id="books" hidden>
@@ -357,55 +357,67 @@ const SUBJ = {
   health: {name:"Здоров'я, безпека та добробут", color:"var(--c-health)"},
 };
 
-// L(предмет, вчителі, кімната)
-const L = (s, t, r) => ({s, t: Array.isArray(t) ? t : [t], r});
-const VAC_INF = "Вакансія (інформатика)";
+// L(предмет, вчителі, кабінети)
+// Кабінет може бути один на весь урок ("319") або окремий для кожного
+// вчителя (["311","107"]) — коли клас ділиться на групи і вони сидять різно.
+// Всередині l.r — завжди масив тієї ж довжини, що й l.t.
+const L = (s, t, r) => {
+  const teachers = Array.isArray(t) ? t : [t];
+  const rooms = Array.isArray(r) ? r : teachers.map(() => r || "");
+  return {s, t: teachers, r: rooms};
+};
 const VAC_HIST = "Вакансія (історія)";
+
+const roomList = l => [...new Set(l.r.filter(Boolean))];
+// Кабінет підписуємо біля вчителя лише тоді, коли групи сидять у різних кабінетах.
+const teacherLine = l => roomList(l).length > 1
+  ? l.t.map((t,i) => l.r[i] ? `${t} (${l.r[i]})` : t).join(" · ")
+  : l.t.join(" · ");
 
 const DAYS = [
   {short:"Пн", name:"Понеділок", lessons:{
-    1:[L("nature","Римарчук О.М.","213")],
-    2:[L("world","Ярмак Є.А.","213")],
-    3:[L("tech","Захарченко Л.Л.","213")],
-    4:[L("math","Рябошапка В.С.","213")],
-    5:[L("inf",["Бернатович О.О.",VAC_INF],"213")],
-    6:[L("inf",[VAC_INF,"Рябошапка В.О."],"213")],
+    1:[L("nature","Римарчук О.М.","215")],
+    2:[L("world","Ярмак Є.А.","316")],
+    3:[L("tech","Захарченко Л.Л.","130")],
+    4:[L("math","Рябошапка В.С.","319")],
+    5:[L("inf",["Бернатович О.О.","Яковенко В.А."],["311","107"])],
+    6:[L("inf",["Рябошапка В.О.","Яковенко В.А."],["208","124"])],
   }},
   {short:"Вт", name:"Вівторок", lessons:{
-    1:[L("math","Рябошапка В.С.")],
-    2:[L("eng","Чередник С.В.")],
-    3:[L("live","Парахонько М.М."), L("health","Романенко І.В.")],
-    4:[L("ukr","Яремчук О.В.")],
-    5:[L("pe","Міненко С.А.")],
-    6:[L("inf",["Бернатович О.О.",VAC_INF]), L("inf",[VAC_INF,"Рябошапка В.О."])],
+    1:[L("math","Рябошапка В.С.","319")],
+    2:[L("eng","Чередник С.В.","316")],
+    3:[L("live","Парахонько М.М.","316"), L("health","Романенко І.В.","316")],
+    4:[L("ukr","Яремчук О.В.","316")],
+    5:[L("pe","Міненко С.А.","113")],
+    6:[L("inf",["Бернатович О.О.","Яковенко В.А."],["311","305"]),
+       L("inf",["Рябошапка В.О.","Яковенко В.А."],["208","305"])],
   }},
   {short:"Ср", name:"Середа", lessons:{
-    1:[L("math","Рябошапка В.С.","213")],
+    1:[L("math","Рябошапка В.С.","319")],
     2:[L("tech","Захарченко Л.Л.","213")],
-    3:[L("ukr","Яремчук О.В.","213")],
-    4:[L("ukrlit","Яремчук О.В.")],
-    5:[L("eng","Чередник С.В.","213")],
+    3:[L("ukr","Яремчук О.В.","312")],
+    4:[L("ukrlit","Яремчук О.В.","312")],
+    5:[L("eng","Чередник С.В.","316")],
     6:[L("ukrlit","Яремчук О.В.","213")],
     7:[L("pe","Міненко С.А.","113")],
   }},
   {short:"Чт", name:"Четвер", lessons:{
     1:[L("ukr","Яремчук О.В.","213")],
     2:[L("hist",VAC_HIST,"213")],
-    3:[L("nature","Римарчук О.М.","213")],
-    4:[L("world","Ярмак Є.А.","213")],
-    5:[L("math","Рябошапка В.С.","213")],
+    3:[L("nature","Римарчук О.М.","215")],
+    4:[L("world","Ярмак Є.А.","124")],
+    5:[L("math","Рябошапка В.С.","319")],
     6:[L("eng","Чередник С.В.","213")],
   }},
   {short:"Пт", name:"П'ятниця", lessons:{
-    1:[L("math","Рябошапка В.С.","213")],
-    2:[L("math","Рябошапка В.С.","213")],
-    3:[L("art","Бохолдін А.О.","213")],
+    1:[L("math","Рябошапка В.С.","319")],
+    2:[L("math","Рябошапка В.С.","319")],
+    3:[L("art","Бохолдін А.О.","127")],
     4:[L("pe","Міненко С.А.","113")],
     5:[L("ukr","Яремчук О.В.","213")],
-    6:[L("eng","Чередник С.В.","213")],
+    6:[L("eng","Чередник С.В.","316")],
   }},
 ];
-
 /* ---------- стан ---------- */
 const $ = s => document.querySelector(s);
 const todayIdx = (() => { const d = new Date().getDay(); return d>=1 && d<=5 ? d-1 : -1; })();
@@ -437,15 +449,17 @@ function renderDays(){
 function lessonHTML(l, di, p, k){
   const s = SUBJ[l.s];
   const vac = l.t.some(t => t.startsWith("Вакансія"));
-  const room = l.r ? `каб. ${l.r}` : "кабінет не призначено";
+  const rs = roomList(l);
+  const room = rs.length ? `каб. ${rs.join(", ")}` : "кабінет не призначено";
   return `<button type="button" class="lesson ${vac?"vacancy":""}" style="--c:${s.color}"
             data-s="${l.s}" data-d="${di}" data-p="${p}" data-k="${k}"
             aria-label="${esc(s.name)}, ${p} урок, ${BELLS[p][0]}–${BELLS[p][1]}, ${esc(room)}, ${esc(l.t.join(", "))}">
       <span class="lesson-head">
         <b>${esc(s.name)}</b>
-        <span class="r ${l.r?"":"none"}" aria-hidden="true">${l.r || "—"}</span>
+        ${rs.length>1 ? "" /* кабінети підписані біля кожного вчителя — значок лише плутав би */
+          : `<span class="r ${rs.length?"":"none"}" aria-hidden="true">${esc(rs[0]) || "—"}</span>`}
       </span>
-      <span class="t">${esc(l.t.join(" · "))}</span>
+      <span class="t">${esc(teacherLine(l))}</span>
     </button>`;
 }
 
@@ -500,7 +514,7 @@ function applyFilter(){
 
 /* ---------- годинник, «зараз / далі» ---------- */
 function slotNames(d,p){ return d.lessons[p].map(l=>SUBJ[l.s].name).join(" / "); }
-function slotRooms(d,p){ return [...new Set(d.lessons[p].map(l=>l.r).filter(Boolean))].join(", "); }
+function slotRooms(d,p){ return [...new Set(d.lessons[p].flatMap(l=>l.r).filter(Boolean))].join(", "); }
 function slotTeachers(d,p){ return [...new Set(d.lessons[p].flatMap(l=>l.t))].join(" · "); }
 
 function card({label, live, title, sub, progress, countdown}){
@@ -608,8 +622,8 @@ $("#week").addEventListener("click",e=>{
   $("#sheet").innerHTML=`<p class="kicker">${esc(d.name)} · ${p} урок</p>
     <h2 id="sheet-title">${esc(SUBJ[l.s].name)}</h2>
     <dl><dt>Час</dt><dd>${BELLS[p][0]}–${BELLS[p][1]}</dd>
-        <dt>Кабінет</dt><dd>${l.r ? esc(l.r) : "не призначено"}</dd>
-        <dt>${l.t.length>1?"Вчителі":"Вчитель"}</dt><dd>${l.t.map(esc).join("<br>")}</dd>
+        <dt>${roomList(l).length>1?"Кабінети":"Кабінет"}</dt><dd>${roomList(l).length ? esc(roomList(l).join(", ")) : "не призначено"}</dd>
+        <dt>${l.t.length>1?"Вчителі":"Вчитель"}</dt><dd>${l.t.map((t,i)=>esc(t)+(roomList(l).length>1 && l.r[i] ? " — каб. "+esc(l.r[i]) : "")).join("<br>")}</dd>
         ${others.length?`<dt>Паралельно</dt><dd>${others.map(x=>esc(SUBJ[x.s].name+" — "+x.t.join(", "))).join("<br>")}</dd>`:""}
         ${SUBJ[l.s].book?`<dt>Підручник</dt><dd><a href="${esc(SUBJ[l.s].book.url)}" target="_blank" rel="noopener noreferrer">${esc(SUBJ[l.s].book.title)}</a>${SUBJ[l.s].book.author?" · "+esc(SUBJ[l.s].book.author):""}</dd>`:""}
     </dl><button type="button" class="close" data-close>Закрити</button>`;
