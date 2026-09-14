@@ -345,15 +345,8 @@ const SUBJ = {
   ukrlit: {name:"Українська література",  color:"var(--c-ukrlit)"},
   eng:    {name:"Англійська мова",        color:"var(--c-eng)"},
   nature: {name:"Пізнаємо природу",       color:"var(--c-nature)",
-           // book.pdf — пряме посилання на файл підручника (необов'язкове).
-           // Якщо покласти PDF у папку ./books/, тут досить вказати відносний
-           // шлях (наприклад "./books/piznaiemo-pryrodu-5-heneza.pdf") — тоді
-           // підручник роздається з GitHub Pages і кешується для офлайну.
-           book:{title:"Пізнаємо природу, 5 клас", author:"Д. Біда",
-                 url:"https://pidruchnyk.com.ua/1718-piznaiemo-pryrodu-bida-5-klas.html",
-                 pdf:{href:"https://www.geneza.ua/sites/default/files/ebooks/%D0%9F%D1%96%D0%B7%D0%BD%D0%B0%D1%94%D0%BC%D0%BE%20%D0%9F%D1%80%D0%B8%D1%80%D0%BE%D0%B4%D1%83_5%D0%BA%D0%BB_%D0%93%D0%B5%D0%BD%D0%B5%D0%B7%D0%B0.pdf",
-                      title:"Пізнаємо природу, 5 клас — PDF",
-                      sub:"видавництво «Генеза»"}}},
+           book:{title:"Пізнаємо природу, 5 клас", author:"PDF · «Генеза»",
+                 url:"https://www.geneza.ua/sites/default/files/ebooks/%D0%9F%D1%96%D0%B7%D0%BD%D0%B0%D1%94%D0%BC%D0%BE%20%D0%9F%D1%80%D0%B8%D1%80%D0%BE%D0%B4%D1%83_5%D0%BA%D0%BB_%D0%93%D0%B5%D0%BD%D0%B5%D0%B7%D0%B0.pdf"}},
   world:  {name:"Зарубіжна література",   color:"var(--c-world)"},
   tech:   {name:"Технології",             color:"var(--c-tech)"},
   inf:    {name:"Інформатика / STEM",     color:"var(--c-inf)"},
@@ -501,30 +494,18 @@ function renderChips(){
 }
 
 // Секція з підручниками: лише для предметів, які реально є в розкладі.
-// У кожного підручника може бути сторінка видавництва і, додатково, PDF —
-// або зовнішнє посилання, або файл із цього ж репозиторію (./books/...).
-const linkHost = href => { try { return new URL(href, location.href).hostname; } catch { return ""; } };
-
-function bookLinks(k){
-  const b = SUBJ[k].book;
-  const out = [{href:b.url, icon:"📖", title:b.title,
-                sub:`${b.author?b.author+" · ":""}${linkHost(b.url)}`}];
-  if(b.pdf) out.push({href:b.pdf.href, icon:"📄",
-                      title:b.pdf.title || `${b.title} — PDF`,
-                      sub:b.pdf.sub || linkHost(b.pdf.href)});
-  return out.map(x => ({...x, color:SUBJ[k].color}));
-}
-
 function renderBooks(){
   const used=new Set(DAYS.flatMap(d=>Object.values(d.lessons).flat().map(l=>l.s)));
-  const links=[...used].filter(k=>SUBJ[k].book).flatMap(bookLinks);
-  $("#books").hidden = links.length===0;
-  $("#book-list").innerHTML = links.map(x=>
-    `<a class="book" role="listitem" style="--c:${x.color}" href="${esc(x.href)}"
-        target="_blank" rel="noopener noreferrer">
-      <span aria-hidden="true">${x.icon}</span>
-      <span>${esc(x.title)}<span class="b-sub">${esc(x.sub)}</span></span>
-    </a>`).join("");
+  const books=[...used].filter(k=>SUBJ[k].book);
+  $("#books").hidden = books.length===0;
+  $("#book-list").innerHTML = books.map(k=>{
+    const b=SUBJ[k].book;
+    return `<a class="book" role="listitem" style="--c:${SUBJ[k].color}" href="${esc(b.url)}"
+              target="_blank" rel="noopener noreferrer">
+      <span aria-hidden="true">📖</span>
+      <span>${esc(b.title)}<span class="b-sub">${b.author?esc(b.author)+" · ":""}${esc(new URL(b.url).hostname)}</span></span>
+    </a>`;
+  }).join("");
 }
 
 function applyFilter(){
