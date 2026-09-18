@@ -543,12 +543,13 @@ function tick(){
 
   const m=now.getHours()*60+now.getMinutes()+now.getSeconds()/60;
   const d=DAYS[todayIdx];
-  let cur=null, next=null;
+  let cur=null, next=null, prevEnd=null;
   for(let p=1;p<=lastPeriod(d);p++){
     if(!d.lessons[p]) continue;
     const s=toMin(BELLS[p][0]), e=toMin(BELLS[p][1]);
     if(m>=s && m<e) cur=p;
     else if(s>m && next===null) next=p;
+    if(e<=m) prevEnd=e;
   }
 
   const first=Math.min(...Object.keys(d.lessons).map(Number));
@@ -565,9 +566,13 @@ function tick(){
     cards.push(card({label:"Сьогодні", title:`${d.name}, ${n} ${plural(n,"урок","уроки","уроків")}`,
       sub:`Початок о ${BELLS[first][0]}`,
       countdown:`до початку ${Math.max(1,Math.ceil(toMin(BELLS[first][0])-m))} хв`}));
+  }else if(next){
+    const ns=toMin(BELLS[next][0]);
+    cards.push(card({label:"Зараз", title:"Перерва",
+      sub:`Наступний урок о ${BELLS[next][0]}`,
+      progress: prevEnd!=null && ns>prevEnd ? Math.min(100,Math.max(0,(m-prevEnd)/(ns-prevEnd)*100)) : null}));
   }else{
-    cards.push(card({label:"Зараз", title: next ? "Перерва" : "Уроки закінчились",
-      sub: next ? `Наступний урок о ${BELLS[next][0]}` : "Гарного відпочинку!"}));
+    cards.push(card({label:"Зараз", title:"Уроки закінчились", sub:"Гарного відпочинку!"}));
   }
 
   if(next){
