@@ -175,6 +175,9 @@
   .lesson .r{flex:0 0 auto;font-size:12px;font-weight:800;background:var(--badge-bg);
              padding:2px 8px;border-radius:999px;white-space:nowrap}
   .lesson .r.none{opacity:.6;font-weight:700}
+  .lesson .r.online{font-size:11px;letter-spacing:.01em}
+  .day .d .on-mark{font-size:.8em}
+  .col-head .online{font-weight:800}
   .lesson.now-live{border-color:var(--accent);
                    box-shadow:0 0 0 3px color-mix(in srgb, var(--accent) 20%, transparent)}
   .lesson.now-live::before,.lesson.now-live::after{content:"";position:absolute;bottom:0;height:4px}
@@ -257,6 +260,9 @@
     .lesson b{font-size:13.5px}
     .lesson .t{font-size:12px}
     .lesson .r{font-size:11px;padding:1px 7px}
+    /* У сітці тижня колонки вузькі, а «онлайн» уже написано в шапці дня —
+       значок на кожній картці лише ламав би назви предметів. */
+    .lesson .r.online{display:none}
     .cell.split{grid-template-columns:minmax(0,1fr)}
   }
   @media (max-width:899px){.col-head{display:none}}
@@ -309,7 +315,7 @@
   <section class="legend">
     <p id="filter-label">Показати лише предмет</p>
     <div class="chips" id="chips" role="group" aria-labelledby="filter-label"></div>
-    <p class="note">Дзвінки — за офіційним розкладом ліцею на 2026/27 н.р. Кабінет «—» означає, що аудиторію в розкладі ще не призначено. Дані станом на 13.09.2026.</p>
+    <p class="note">Дзвінки — за офіційним розкладом ліцею на 2026/27 н.р. <b>П'ятниця — дистанційний день:</b> усі уроки онлайн, кабінетів немає. Кабінет «—» означає, що аудиторію в розкладі ще не призначено. Дані станом на 19.09.2026.</p>
   </section>
 
   <section class="books" id="books" hidden>
@@ -409,9 +415,10 @@ const DAYS = [
     5:[L("math","Рябошапка В.С.","319")],
     6:[L("eng","Чередник С.В.","316")],
   }},
-  // П'ятниця: у розкладі ліцею кабінети поки не призначені ([0]) —
-  // лишаємо порожніми, щоб не показувати застарілі номери.
-  {short:"Пт", name:"П'ятниця", lessons:{
+  // П'ятниця — дистанційний день: уроки онлайн, тому кабінетів немає
+  // (у розкладі ліцею вони позначені як [0]). online:true вмикає
+  // позначку «онлайн» на картках, у табах і в блоці «Зараз / Далі».
+  {short:"Пт", name:"П'ятниця", online:true, lessons:{
     1:[L("math","Рябошапка В.С.")],
     2:[L("math","Рябошапка В.С.")],
     3:[L("art","Бохолдін А.О.")],
@@ -440,8 +447,8 @@ function renderDays(){
     const n = lessonsCount(d);
     return `<button type="button" role="tab" class="day ${i===activeDay?"active":""} ${i===todayIdx?"today":""}"
         data-i="${i}" aria-selected="${i===activeDay}" aria-controls="col-${i}"
-        aria-label="${esc(d.name)}, ${n} ${plural(n,"урок","уроки","уроків")}">
-      <span class="d">${d.short}</span><span class="n">${n} ур.</span>
+        aria-label="${esc(d.name)}, ${n} ${plural(n,"урок","уроки","уроків")}${d.online?", онлайн":""}">
+      <span class="d">${d.short}${d.online?'<span class="on-mark" aria-hidden="true"> 💻</span>':""}</span><span class="n">${n} ур.</span>
     </button>`;
   }).join("");
 }
@@ -450,15 +457,18 @@ function renderDays(){
 // з однаковим предметом (наприклад дві групи інформатики).
 function lessonHTML(l, di, p, k){
   const s = SUBJ[l.s];
+  const online = !!DAYS[di].online;
   const vac = l.t.some(t => t.startsWith("Вакансія"));
   const rs = roomList(l);
-  const room = rs.length ? `каб. ${rs.join(", ")}` : "кабінет не призначено";
+  const room = online ? "онлайн, дистанційно"
+    : (rs.length ? `каб. ${rs.join(", ")}` : "кабінет не призначено");
   return `<button type="button" class="lesson ${vac?"vacancy":""}" style="--c:${s.color}"
             data-s="${l.s}" data-d="${di}" data-p="${p}" data-k="${k}"
             aria-label="${esc(s.name)}, ${p} урок, ${BELLS[p][0]}–${BELLS[p][1]}, ${esc(room)}, ${esc(l.t.join(", "))}">
       <span class="lesson-head">
         <b>${esc(s.name)}</b>
-        ${rs.length>1 ? "" /* кабінети підписані біля кожного вчителя — значок лише плутав би */
+        ${online ? `<span class="r online" aria-hidden="true">💻 онлайн</span>`
+          : rs.length>1 ? "" /* кабінети підписані біля кожного вчителя — значок лише плутав би */
           : `<span class="r ${rs.length?"":"none"}" aria-hidden="true">${esc(rs[0]) || "—"}</span>`}
       </span>
       <span class="t">${esc(teacherLine(l))}</span>
@@ -482,7 +492,7 @@ function renderWeek(){
     const n = lessonsCount(d);
     return `<section id="col-${di}" class="col ${di===activeDay?"active":""} ${di===todayIdx?"today":""}"
              data-i="${di}" role="tabpanel" aria-label="${esc(d.name)}">
-      <div class="col-head">${d.name}<small>${n} ${plural(n,"урок","уроки","уроків")}</small></div>${rows.join("")}</section>`;
+      <div class="col-head">${d.name}<small>${n} ${plural(n,"урок","уроки","уроків")}${d.online?' · <span class="online">онлайн</span>':""}</small></div>${rows.join("")}</section>`;
   }).join("");
   applyFilter(); tick();
 }
@@ -516,7 +526,12 @@ function applyFilter(){
 
 /* ---------- годинник, «зараз / далі» ---------- */
 function slotNames(d,p){ return d.lessons[p].map(l=>SUBJ[l.s].name).join(" / "); }
-function slotRooms(d,p){ return [...new Set(d.lessons[p].flatMap(l=>l.r).filter(Boolean))].join(", "); }
+// Для картки «Зараз / Далі»: дистанційний день або перелік кабінетів.
+function slotPlace(d,p){
+  if(d.online) return "онлайн";
+  const rooms=[...new Set(d.lessons[p].flatMap(l=>l.r).filter(Boolean))];
+  return rooms.length ? `каб. ${rooms.join(", ")}` : "";
+}
 function slotTeachers(d,p){ return [...new Set(d.lessons[p].flatMap(l=>l.t))].join(" · "); }
 
 function card({label, live, title, sub, progress, countdown}){
@@ -558,15 +573,15 @@ function tick(){
   const cards=[];
   if(cur){
     const s=toMin(BELLS[cur][0]), e=toMin(BELLS[cur][1]);
-    const rooms=slotRooms(d,cur);
+    const place=slotPlace(d,cur);
     cards.push(card({label:`Зараз · ${cur} урок`, live:true, title:slotNames(d,cur),
-      sub:`${BELLS[cur][0]}–${BELLS[cur][1]}${rooms?" · каб. "+rooms:""} · ${slotTeachers(d,cur)}`,
+      sub:`${BELLS[cur][0]}–${BELLS[cur][1]}${place?" · "+place:""} · ${slotTeachers(d,cur)}`,
       progress:Math.min(100,Math.max(0,(m-s)/(e-s)*100)),
       countdown:`до дзвінка ${Math.max(1,Math.ceil(e-m))} хв`}));
   }else if(m < toMin(BELLS[first][0])){
     const n=lessonsCount(d);
     cards.push(card({label:"Сьогодні", title:`${d.name}, ${n} ${plural(n,"урок","уроки","уроків")}`,
-      sub:`Початок о ${BELLS[first][0]}`,
+      sub:`Початок о ${BELLS[first][0]}${d.online?" · уроки онлайн":""}`,
       countdown:`до початку ${Math.max(1,Math.ceil(toMin(BELLS[first][0])-m))} хв`}));
   }else if(next){
     const ns=toMin(BELLS[next][0]);
@@ -578,13 +593,15 @@ function tick(){
   }
 
   if(next){
-    const rooms=slotRooms(d,next);
+    const place=slotPlace(d,next);
     cards.push(card({label:`Далі · ${next} урок`, title:slotNames(d,next),
-      sub:`${BELLS[next][0]}–${BELLS[next][1]}${rooms?" · каб. "+rooms:""} · ${slotTeachers(d,next)}`,
+      sub:`${BELLS[next][0]}–${BELLS[next][1]}${place?" · "+place:""} · ${slotTeachers(d,next)}`,
       countdown:`до початку ${Math.max(1,Math.ceil(toMin(BELLS[next][0])-m))} хв`}));
   }else{
     cards.push(card({label:"Далі", title:"На сьогодні все",
-      sub: todayIdx<4 ? `Завтра — ${DAYS[todayIdx+1].name.toLowerCase()}, ${lessonsCount(DAYS[todayIdx+1])} уроків` : "Гарних вихідних!"}));
+      sub: todayIdx<4
+        ? `Завтра — ${DAYS[todayIdx+1].name.toLowerCase()}, ${lessonsCount(DAYS[todayIdx+1])} уроків${DAYS[todayIdx+1].online?" онлайн":""}`
+        : "Гарних вихідних!"}));
   }
   box.innerHTML = cards.join("");
 
@@ -623,14 +640,16 @@ $("#chips").addEventListener("click",e=>{
 const dlg=$("#dlg");
 $("#week").addEventListener("click",e=>{
   const b=e.target.closest(".lesson"); if(!b) return;
-  const d=DAYS[+b.dataset.d], p=+b.dataset.p, all=d.lessons[p];
+  const d=DAYS[+b.dataset.d], p=+b.dataset.p, all=d.lessons[p], online=!!d.online;
   const l=all[+b.dataset.k];
   const others=all.filter((_,i)=>i!==+b.dataset.k);
   $("#sheet").innerHTML=`<p class="kicker">${esc(d.name)} · ${p} урок</p>
     <h2 id="sheet-title">${esc(SUBJ[l.s].name)}</h2>
     <dl><dt>Час</dt><dd>${BELLS[p][0]}–${BELLS[p][1]}</dd>
-        <dt>${roomList(l).length>1?"Кабінети":"Кабінет"}</dt><dd>${roomList(l).length ? esc(roomList(l).join(", ")) : "не призначено"}</dd>
-        <dt>${l.t.length>1?"Вчителі":"Вчитель"}</dt><dd>${l.t.map((t,i)=>esc(t)+(roomList(l).length>1 && l.r[i] ? " — каб. "+esc(l.r[i]) : "")).join("<br>")}</dd>
+        ${online
+          ? `<dt>Формат</dt><dd>Онлайн, дистанційно</dd>`
+          : `<dt>${roomList(l).length>1?"Кабінети":"Кабінет"}</dt><dd>${roomList(l).length ? esc(roomList(l).join(", ")) : "не призначено"}</dd>`}
+        <dt>${l.t.length>1?"Вчителі":"Вчитель"}</dt><dd>${l.t.map((t,i)=>esc(t)+(!online && roomList(l).length>1 && l.r[i] ? " — каб. "+esc(l.r[i]) : "")).join("<br>")}</dd>
         ${others.length?`<dt>Паралельно</dt><dd>${others.map(x=>esc(SUBJ[x.s].name+" — "+x.t.join(", "))).join("<br>")}</dd>`:""}
         ${SUBJ[l.s].book?`<dt>Підручник</dt><dd><a href="${esc(SUBJ[l.s].book.url)}" target="_blank" rel="noopener noreferrer">${esc(SUBJ[l.s].book.title)}</a>${SUBJ[l.s].book.author?" · "+esc(SUBJ[l.s].book.author):""}</dd>`:""}
     </dl><button type="button" class="close" data-close>Закрити</button>`;
