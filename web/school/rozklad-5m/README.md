@@ -40,11 +40,12 @@ SDK `telegram-web-app.js` вантажиться лише тоді, коли с�
 
 ### Як підключити (один раз, через @BotFather)
 1. `/newbot` — створити бота (наприклад, `rozklad5m_bot`).
-2. `/newapp` → вибрати бота → назва, опис, картинка 640×360 →
+2. `/newapp` → вибрати бота → назва, опис, картинка 640×360 ([`telegram/cover-640x360.png`](telegram/cover-640x360.png)) →
    URL `https://igorrius.github.io/ai-pages/web/school/rozklad-5m/` → коротка назва (наприклад, `rozklad`).
    Посилання для класу: `https://t.me/rozklad5m_bot/rozklad`.
 3. (За бажанням) `/mybots` → бот → *Bot Settings* → *Menu Button* → той самий URL.
    Тоді в чаті з ботом з'явиться кнопка «Розклад» біля поля введення.
+4. (За бажанням) `/setuserpic` → бот → аватар [`telegram/avatar-640.png`](telegram/avatar-640.png).
 
 ## Оновлення розкладу
 1. Правиш `DAYS` / `BELLS` в `index.html`.
