@@ -15,6 +15,13 @@
 <link rel="icon" href="icon-192.png">
 <link rel="apple-touch-icon" href="icon-192.png">
 <title>Розклад 5-М · Ліцей №29</title>
+<script>
+  // Telegram Mini App: SDK вантажимо лише всередині Telegram (він додає #tgWebAppData… до адреси),
+  // щоб у браузері та офлайн сторінка не чекала на telegram.org.
+  if(/tgWebApp/.test(location.hash) || window.TelegramWebviewProxy ||
+     (()=>{try{return !!sessionStorage.getItem("__telegram__initParams")}catch{return false}})())
+    document.write('<script src="https://telegram.org/js/telegram-web-app.js"><\/script>');
+</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@500;700;800;900&display=swap" rel="stylesheet">
@@ -63,8 +70,10 @@
     --c-live:#ff9e9e;
     --c-health:#7ee07e;
   }
+  /* Темна тема: за системою, або примусово через data-theme
+     (у Telegram тему задає сам месенджер — див. блок «Telegram Mini App»). */
   @media (prefers-color-scheme: dark){
-    :root{
+    :root:not([data-theme="light"]){
       --paper:#12161c;
       --surface:#1a2029;
       --ink:#e9edf2;
@@ -83,6 +92,27 @@
       --badge-bg:rgba(0,0,0,.28);
       --track:rgba(255,255,255,.18);
     }
+  }
+  :root[data-theme="light"]{color-scheme:light}
+  :root[data-theme="dark"]{
+    color-scheme:dark;
+    --paper:#12161c;
+    --surface:#1a2029;
+    --ink:#e9edf2;
+    --ink-soft:#98a4b3;
+    --line:#2b3440;
+    --line-strong:#3a4553;
+    --today:#ffd541;
+    --today-wash:#231f10;
+    --accent:#ff7a5c;
+    --shadow:0 1px 2px rgba(0,0,0,.4), 0 8px 24px rgba(0,0,0,.35);
+    --shadow-lg:0 24px 64px rgba(0,0,0,.6);
+
+    --tint:26%;
+    --lesson-ink:#e9edf2;
+    --lesson-ink-soft:#a9b5c3;
+    --badge-bg:rgba(0,0,0,.28);
+    --track:rgba(255,255,255,.18);
   }
 
   *{box-sizing:border-box}
@@ -704,13 +734,44 @@ if("serviceWorker" in navigator){
 }
 
 let deferredPrompt=null;
-addEventListener("beforeinstallprompt",e=>{e.preventDefault();deferredPrompt=e;$("#install").classList.add("show");});
+addEventListener("beforeinstallprompt",e=>{e.preventDefault(); if(tg) return;deferredPrompt=e;$("#install").classList.add("show");});
 $("#install").addEventListener("click",async()=>{
   if(!deferredPrompt) return;
   deferredPrompt.prompt(); await deferredPrompt.userChoice;
   deferredPrompt=null; $("#install").classList.remove("show");
 });
 addEventListener("appinstalled",()=>$("#install").classList.remove("show"));
+
+/* ---------- Telegram Mini App ---------- */
+const tg = window.Telegram && Telegram.WebApp && Telegram.WebApp.platform !== "unknown" ? Telegram.WebApp : null;
+if(tg){
+  document.documentElement.classList.add("tg");
+  const syncTheme=()=>{
+    document.documentElement.dataset.theme = tg.colorScheme==="dark" ? "dark" : "light";
+    const paper=getComputedStyle(document.documentElement).getPropertyValue("--paper").trim();
+    try{ tg.setHeaderColor(paper); tg.setBackgroundColor(paper); }catch{}
+  };
+  syncTheme();
+  tg.onEvent("themeChanged", syncTheme);
+  tg.ready(); tg.expand();
+
+  // Кнопка «Назад» Telegram закриває деталі уроку.
+  const back=()=>dlg.close();
+  new MutationObserver(()=>{
+    if(dlg.open){ tg.BackButton.onClick(back); tg.BackButton.show(); }
+    else{ tg.BackButton.offClick(back); tg.BackButton.hide(); }
+  }).observe(dlg,{attributes:true,attributeFilter:["open"]});
+
+  // Легка вібрація при перемиканні дня.
+  const _setDay=setDay;
+  setDay=i=>{ const prev=activeDay; _setDay(i); if(prev!==activeDay) try{ tg.HapticFeedback.selectionChanged(); }catch{} };
+
+  // Зовнішні посилання (підручники) — через Telegram, щоб не губився застосунок.
+  document.addEventListener("click",e=>{
+    const a=e.target.closest('a[target="_blank"]'); if(!a) return;
+    e.preventDefault(); tg.openLink(a.href);
+  });
+}
 
 /* ---------- старт ---------- */
 renderDays(); renderWeek(); renderChips(); renderBooks(); setDay(activeDay);
