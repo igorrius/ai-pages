@@ -1045,11 +1045,12 @@ spark.sql(<span class="s">"SELECT city, SUM(amount) AS total FROM orders WHERE s
     {q: "Чому звичайні Python UDF у PySpark повільні?", o: ["Виконуються тільки на driver", "Кожен рядок серіалізується між JVM і процесом Python, а Catalyst не бачить, що всередині функції", "Python не вміє працювати з числами", "Вони вимикають кеш"], a: 1, w: "Вбудовані функції F.* працюють усередині JVM і оптимізуються. Якщо без власної логіки ніяк, беріть pandas UDF: вони передають дані пачками через Apache Arrow."},
     {q: "Головна перевага Broadcast Hash Join?", o: ["Не потребує пам’яті", "Велика таблиця не пересилається мережею: маленьку копіюють на кожен executor", "Сортує дані швидше", "Працює тільки на driver"], a: 1, w: "Broadcast прибирає shuffle великої таблиці. Працює, поки мала таблиця справді мала: за замовчуванням до 10 МБ."}
   ];
+  function shuffle(a){ for (var i = a.length - 1; i > 0; i--) { var j = Math.floor(Math.random() * (i + 1)), t = a[i]; a[i] = a[j]; a[j] = t; } return a; }
   var answered = 0, correct = 0, qbox = $("#quizBox");
   QUIZ.forEach(function(item, qi){
     var d = document.createElement("div");
     d.className = "qq";
-    d.innerHTML = "<h3>" + (qi + 1) + ". " + item.q + '</h3><div class="opts">' + item.o.map(function(o, oi){ return '<button type="button" data-i="' + oi + '">' + o + "</button>"; }).join("") + '</div><p class="why" hidden></p>';
+    d.innerHTML = "<h3>" + (qi + 1) + ". " + item.q + '</h3><div class="opts">' + shuffle(item.o.map(function(o, oi){ return '<button type="button" data-i="' + oi + '">' + o + "</button>"; })).join("") + '</div><p class="why" hidden></p>';
     $$("button", d).forEach(function(b){
       b.addEventListener("click", function(){
         var pick = +b.dataset.i, ok = pick === item.a;
