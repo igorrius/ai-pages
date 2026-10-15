@@ -1,0 +1,1079 @@
+<!doctype html>
+<html lang="uk">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Apache Spark простими словами</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<meta name="description" content="Інтерактивний посібник: що таке Apache Spark, як він виконує запити на кластері, для чого його використовують і коли він не потрібен.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cpath d='M55 5 20 58h26l-8 37 42-56H52z' fill='%23e25a1c'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;1,400&family=JetBrains+Mono:wght@400;600&family=Unbounded:wght@500;700&display=swap">
+<style>
+/* Layout: long-read with a sticky section rail on desktop, a sticky chip bar on phones;
+   interactive "labs" are the only framed objects. Cool engineering neutrals, Spark-flame accent. */
+:root{
+  --bg:#f3f5f7; --surface:#ffffff; --sunk:#e9edf1; --line:#d6dde4;
+  --ink:#14202b; --muted:#56636f; --faint:#8a96a1;
+  --accent:#c2470c; --accent-strong:#e25a1c; --accent-soft:#fbe7dc;
+  --ok:#0f7a5a; --ok-soft:#dcf2ea; --warn:#a15c00; --warn-soft:#fbefd9; --bad:#b4233a; --bad-soft:#fae1e5;
+  --c1:#2c64c9; --c1-soft:#dfe8f8; --c2:#0d857a; --c2-soft:#d9f1ee; --c3:#8f3aa8; --c3-soft:#f1e2f6;
+  --code-bg:#14202b; --code-ink:#dfe6ec; --code-kw:#ff9a62; --code-str:#9fd7a8; --code-cm:#7f8f9c; --code-fn:#8cc4ff;
+  --f-display:"Unbounded","Arial Black",system-ui,sans-serif;
+  --f-body:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;
+  --f-mono:"JetBrains Mono",ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+  --r:10px;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0e1318; --surface:#151c23; --sunk:#1b242d; --line:#283440;
+  --ink:#e6ecf1; --muted:#9aa8b4; --faint:#6c7a86;
+  --accent:#ff8a4f; --accent-strong:#ff7a3d; --accent-soft:#3a2216;
+  --ok:#4cc79a; --ok-soft:#14322a; --warn:#f0b357; --warn-soft:#3a2c14; --bad:#ff7d8f; --bad-soft:#3d1b22;
+  --c1:#7aa7ff; --c1-soft:#1c2a45; --c2:#4fd1c2; --c2-soft:#13332f; --c3:#d18cf0; --c3-soft:#33203d;
+  --code-bg:#0a0f13; --code-ink:#dfe6ec;
+  color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0e1318; --surface:#151c23; --sunk:#1b242d; --line:#283440;
+  --ink:#e6ecf1; --muted:#9aa8b4; --faint:#6c7a86;
+  --accent:#ff8a4f; --accent-strong:#ff7a3d; --accent-soft:#3a2216;
+  --ok:#4cc79a; --ok-soft:#14322a; --warn:#f0b357; --warn-soft:#3a2c14; --bad:#ff7d8f; --bad-soft:#3d1b22;
+  --c1:#7aa7ff; --c1-soft:#1c2a45; --c2:#4fd1c2; --c2-soft:#13332f; --c3:#d18cf0; --c3-soft:#33203d;
+  --code-bg:#0a0f13; --code-ink:#dfe6ec;
+  color-scheme:dark}
+
+*{box-sizing:border-box}
+html{scroll-behavior:smooth;scroll-padding-top:72px}
+@media (prefers-reduced-motion: reduce){html{scroll-behavior:auto}*{animation:none!important;transition:none!important}}
+body{margin:0;background:var(--bg);color:var(--ink);font:400 16px/1.65 var(--f-body);-webkit-font-smoothing:antialiased}
+a{color:var(--accent)}
+a:hover{text-decoration-thickness:2px}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:4px}
+code,kbd{font-family:var(--f-mono);font-size:.88em}
+p code,li code,td code,dd code{background:var(--sunk);padding:.08em .35em;border-radius:4px}
+h1,h2,h3{text-wrap:balance;margin:0}
+h2{font:700 clamp(1.45rem,1.1rem + 1.4vw,2rem)/1.2 var(--f-display);letter-spacing:-.01em}
+h3{font:600 1.15rem/1.35 var(--f-body)}
+p{margin:0}
+.muted{color:var(--muted)}
+.mono{font-family:var(--f-mono)}
+.eyebrow{font:600 .72rem/1 var(--f-mono);letter-spacing:.12em;text-transform:uppercase;color:var(--accent)}
+
+/* ---------- top bar ---------- */
+.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:20;background:color-mix(in srgb,var(--bg) 88%,transparent);backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}
+.top-in{max-width:1180px;margin:0 auto;display:flex;align-items:center;gap:12px;padding-block:10px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.crumbs{display:flex;gap:8px;align-items:center;font-size:.9rem;min-width:0;white-space:nowrap;overflow:hidden}
+.crumbs a{color:var(--muted);text-decoration:none}
+.crumbs a:hover{color:var(--accent)}
+.crumbs span{color:var(--faint)}
+.crumbs b{font-weight:600;overflow:hidden;text-overflow:ellipsis}
+.theme{margin-left:auto;flex:none;border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:999px;padding:6px 12px;font:500 .82rem var(--f-body);cursor:pointer}
+.theme:hover{border-color:var(--accent)}
+.chips{display:none}
+@media (max-width:1023px){
+  .chips{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;padding-bottom:10px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+  .chips::-webkit-scrollbar{display:none}
+  .chips a{flex:none;font-size:.8rem;text-decoration:none;color:var(--muted);border:1px solid var(--line);border-radius:999px;padding:4px 10px;background:var(--surface)}
+  .chips a.on{color:var(--accent);border-color:var(--accent)}
+}
+
+/* ---------- page grid ---------- */
+.wrap{max-width:1180px;margin:0 auto;padding-block:0 64px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));display:grid;grid-template-columns:1fr;gap:40px}
+@media (min-width:1024px){.wrap{grid-template-columns:220px minmax(0,1fr);gap:56px}}
+.rail{display:none}
+@media (min-width:1024px){
+  .rail{display:block;position:sticky;top:calc(env(safe-area-inset-top,0px) + 76px);align-self:start;padding-top:40px}
+  .rail ol{list-style:none;margin:0;padding:0;display:grid;gap:2px;counter-reset:s}
+  .rail a{display:flex;gap:10px;align-items:baseline;padding:6px 10px;border-radius:8px;text-decoration:none;color:var(--muted);font-size:.9rem;line-height:1.35}
+  .rail a::before{counter-increment:s;content:counter(s,decimal-leading-zero);font:500 .7rem var(--f-mono);color:var(--faint)}
+  .rail a:hover{color:var(--ink);background:var(--sunk)}
+  .rail a.on{color:var(--ink);background:var(--surface);box-shadow:inset 2px 0 0 var(--accent)}
+  .rail a.on::before{color:var(--accent)}
+}
+main{min-width:0;display:grid;gap:88px;padding-top:40px}
+section{display:grid;gap:22px;min-width:0}
+.sec-head{display:grid;gap:10px}
+.lead{font-size:1.08rem;color:var(--muted);max-width:66ch}
+.prose{display:grid;gap:14px;max-width:68ch}
+.prose ul{margin:0;padding-left:1.2em;display:grid;gap:6px}
+
+/* ---------- hero ---------- */
+.hero{display:grid;gap:28px;padding-top:8px}
+.hero h1{font:700 clamp(2.1rem,1.3rem + 3.6vw,3.6rem)/1.05 var(--f-display);letter-spacing:-.02em}
+.hero h1 em{font-style:normal;color:var(--accent-strong)}
+.hero .def{font-size:clamp(1.08rem,1rem + .4vw,1.3rem);max-width:60ch;line-height:1.55}
+.facts{display:flex;flex-wrap:wrap;gap:8px}
+.facts span{font:500 .8rem var(--f-mono);border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:5px 11px;color:var(--muted)}
+.analogy{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:1px;background:var(--line);border:1px solid var(--line);border-radius:var(--r);overflow:hidden}
+.analogy div{background:var(--surface);padding:16px 18px;display:grid;gap:4px;align-content:start}
+.analogy b{font:600 .95rem var(--f-body)}
+.analogy .mono{font-size:.75rem;color:var(--accent)}
+.analogy p{font-size:.92rem;color:var(--muted)}
+
+/* ---------- generic blocks ---------- */
+.lab{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:clamp(16px,2.5vw,26px);display:grid;gap:18px;min-width:0}
+.lab-head{display:flex;flex-wrap:wrap;gap:8px 16px;align-items:baseline;justify-content:space-between}
+.lab-head .eyebrow{color:var(--muted)}
+.grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr));gap:16px}
+.grid4{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,190px),1fr));gap:16px}
+.grid3{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,240px),1fr));gap:16px}
+.cell{border-top:2px solid var(--line);padding-top:14px;display:grid;gap:6px;align-content:start;min-width:0}
+.cell h3{font-size:1.02rem}
+.cell p{font-size:.94rem;color:var(--muted)}
+.cell.hot{border-top-color:var(--accent)}
+.tag{display:inline-block;font:600 .68rem/1 var(--f-mono);letter-spacing:.06em;text-transform:uppercase;padding:4px 7px;border-radius:5px;background:var(--sunk);color:var(--muted);vertical-align:middle}
+.tag.ok{background:var(--ok-soft);color:var(--ok)}
+.tag.bad{background:var(--bad-soft);color:var(--bad)}
+.tag.warn{background:var(--warn-soft);color:var(--warn)}
+.tag.acc{background:var(--accent-soft);color:var(--accent)}
+
+pre.code{margin:0;background:var(--code-bg);color:var(--code-ink);border-radius:var(--r);padding:16px 18px;overflow-x:auto;font:400 .84rem/1.7 var(--f-mono);tab-size:4}
+pre.code .k{color:var(--code-kw)} pre.code .s{color:var(--code-str)} pre.code .c{color:var(--code-cm);font-style:italic} pre.code .f{color:var(--code-fn)}
+.tbl{overflow-x:auto;border:1px solid var(--line);border-radius:var(--r)}
+table{border-collapse:collapse;width:100%;font-size:.9rem;min-width:560px}
+th,td{text-align:left;padding:10px 14px;border-bottom:1px solid var(--line);vertical-align:top}
+th{font:600 .74rem var(--f-mono);letter-spacing:.06em;text-transform:uppercase;color:var(--muted);background:var(--sunk)}
+tr:last-child td{border-bottom:0}
+
+.btn{font:600 .88rem var(--f-body);border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:8px;padding:8px 14px;cursor:pointer;display:inline-flex;gap:6px;align-items:center}
+.btn:hover:not(:disabled){border-color:var(--accent);color:var(--accent)}
+.btn:disabled{opacity:.4;cursor:default}
+.btn.primary{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.btn.primary:hover:not(:disabled){background:var(--accent-strong);border-color:var(--accent-strong);color:#fff}
+.seg{display:inline-flex;flex-wrap:wrap;gap:6px}
+.seg button{font:500 .85rem var(--f-body);border:1px solid var(--line);background:var(--surface);color:var(--muted);border-radius:999px;padding:6px 12px;cursor:pointer}
+.seg button:hover{color:var(--ink);border-color:var(--faint)}
+.seg button[aria-pressed="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+
+/* ---------- why: MapReduce vs Spark ---------- */
+.flow{display:grid;gap:10px}
+.flow-row{display:grid;grid-template-columns:130px minmax(0,1fr) auto;gap:12px;align-items:center}
+@media (max-width:620px){.flow-row{grid-template-columns:1fr;gap:6px}}
+.flow-row .who{font-weight:600;font-size:.92rem}
+.steps{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.st{font:500 .78rem var(--f-mono);padding:6px 9px;border-radius:6px;background:var(--c1-soft);color:var(--c1)}
+.disk{font:500 .72rem var(--f-mono);padding:5px 7px;border-radius:6px;background:var(--bad-soft);color:var(--bad)}
+.ram{font:500 .72rem var(--f-mono);padding:5px 7px;border-radius:6px;background:var(--ok-soft);color:var(--ok)}
+.arr{color:var(--faint);font-size:.8rem}
+.flow-row .t{font:600 .85rem var(--f-mono);color:var(--muted);white-space:nowrap}
+
+/* ---------- architecture ---------- */
+.arch{display:grid;gap:10px;justify-items:center}
+.node{width:100%;border:1px solid var(--line);border-radius:12px;background:var(--surface);padding:14px 16px;display:grid;gap:8px}
+.node .nh{display:flex;gap:10px;align-items:baseline;flex-wrap:wrap}
+.node .nh b{font:700 1rem var(--f-display);letter-spacing:-.01em}
+.node .nh span{font-size:.85rem;color:var(--muted)}
+.node.driver{max-width:560px;border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft)}
+.node.cm{max-width:460px;background:var(--sunk)}
+.pills{display:flex;flex-wrap:wrap;gap:6px}
+.pills span{font:500 .74rem var(--f-mono);padding:4px 8px;border-radius:6px;background:var(--sunk);color:var(--muted)}
+.node.cm .pills span{background:var(--surface)}
+.link{font:500 .78rem var(--f-mono);color:var(--muted);display:flex;align-items:center;gap:8px}
+.link::before,.link::after{content:"";width:1px;height:14px;background:var(--faint)}
+.workers{width:100%;display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,210px),1fr));gap:10px}
+.slots{display:grid;grid-template-columns:repeat(4,1fr);gap:4px}
+.slots i{height:22px;border-radius:4px;background:var(--c1-soft);border:1px solid color-mix(in srgb,var(--c1) 35%,transparent);font:500 .62rem/22px var(--f-mono);text-align:center;color:var(--c1);font-style:normal}
+.cachebar{height:8px;border-radius:4px;background:linear-gradient(90deg,var(--ok) 0 55%,var(--sunk) 55%)}
+.small{font-size:.8rem;color:var(--muted)}
+
+/* ---------- simulator ---------- */
+.sim{display:grid;grid-template-columns:minmax(0,1fr);gap:18px}
+@media (min-width:1100px){.sim{grid-template-columns:minmax(0,.9fr) minmax(0,1.3fr)}}
+.sim-code{display:grid;gap:12px;align-content:start;min-width:0}
+.sim-code pre.code span.ln{display:block;padding:0 8px;margin:0 -8px;border-radius:4px;transition:background .25s}
+.sim-code pre.code span.ln.hl{background:rgba(255,138,79,.2);box-shadow:inset 3px 0 0 var(--accent-strong)}
+.explain{border-left:3px solid var(--accent);padding:4px 0 4px 14px;display:grid;gap:6px;min-height:150px}
+.explain h3{font-size:1.05rem}
+.explain p{font-size:.95rem;color:var(--muted)}
+.stagebar{display:flex;gap:6px;flex-wrap:wrap}
+.stagebar span{font:500 .72rem var(--f-mono);padding:4px 8px;border-radius:5px;border:1px solid var(--line);color:var(--faint)}
+.stagebar span.on{border-color:var(--accent);color:var(--accent);background:var(--accent-soft)}
+.cluster{display:grid;gap:10px;min-width:0}
+.drv{border:1px dashed var(--accent);border-radius:10px;padding:10px 12px;display:grid;gap:6px;background:color-mix(in srgb,var(--accent-soft) 45%,var(--surface))}
+.drv-h{font:600 .74rem var(--f-mono);letter-spacing:.06em;text-transform:uppercase;color:var(--accent)}
+.drv-body{font-size:.88rem;min-height:44px;display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.net{font:500 .74rem var(--f-mono);text-align:center;color:var(--faint);border-block:1px dashed var(--line);padding:5px;transition:all .3s}
+.net.on{color:var(--accent);border-color:var(--accent);background:var(--accent-soft)}
+.execs{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.ex{border:1px solid var(--line);border-radius:10px;background:var(--sunk);padding:8px;display:grid;gap:6px;align-content:start;min-height:210px;min-width:0}
+.ex-h{font:600 .7rem/1.3 var(--f-mono);color:var(--muted)}
+.ex-h small{display:block;font-weight:400;color:var(--faint)}
+.chip{font:500 .74rem/1.25 var(--f-mono);padding:6px 7px;border-radius:6px;border:1px solid transparent;display:flex;justify-content:space-between;gap:4px;flex-wrap:wrap;transition:opacity .3s}
+.chip.kyiv{background:var(--c1-soft);color:var(--c1);border-color:color-mix(in srgb,var(--c1) 30%,transparent)}
+.chip.lviv{background:var(--c2-soft);color:var(--c2);border-color:color-mix(in srgb,var(--c2) 30%,transparent)}
+.chip.odesa{background:var(--c3-soft);color:var(--c3);border-color:color-mix(in srgb,var(--c3) 30%,transparent)}
+.chip.drop{opacity:.45;text-decoration:line-through;background:var(--surface);color:var(--faint);border-color:var(--line)}
+.chip.task{background:var(--surface);color:var(--muted);border:1px dashed var(--faint);justify-content:center}
+.chip.sum{font-weight:600}
+.chip.big{font-size:.85rem;padding:9px}
+@media (max-width:520px){.chip{font-size:.66rem;padding:5px}.ex{padding:6px;min-height:190px}}
+.sim-ctl{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.dots{display:flex;gap:5px;margin-left:auto}
+.dots button{width:22px;height:22px;border-radius:50%;border:1px solid var(--line);background:var(--surface);font:500 .62rem var(--f-mono);color:var(--faint);cursor:pointer;padding:0}
+.dots button.on{background:var(--accent-strong);border-color:var(--accent-strong);color:#fff}
+.legend{display:flex;flex-wrap:wrap;gap:12px;font-size:.8rem;color:var(--muted)}
+.legend i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:5px;vertical-align:-1px}
+
+/* ---------- hierarchy ---------- */
+.hier{display:grid;gap:8px}
+.hier div{display:grid;grid-template-columns:110px minmax(0,1fr);gap:14px;padding:12px 14px;border-radius:10px;background:var(--surface);border:1px solid var(--line)}
+@media (max-width:520px){.hier div{grid-template-columns:1fr;gap:4px}}
+.hier b{font:700 .9rem var(--f-display)}
+.hier p{font-size:.93rem;color:var(--muted)}
+.hier div:nth-child(2){margin-left:clamp(0px,3vw,24px)} .hier div:nth-child(3){margin-left:clamp(0px,6vw,48px)} .hier div:nth-child(4){margin-left:clamp(0px,9vw,72px)}
+
+/* ---------- use cases ---------- */
+.cases{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,330px),1fr));gap:16px}
+.case{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:18px;display:grid;gap:10px;align-content:start;grid-template-rows:auto auto 1fr auto}
+.case-h{display:flex;justify-content:space-between;gap:10px;align-items:start}
+.case h3{font-size:1.05rem}
+.case p{font-size:.93rem;color:var(--muted)}
+.case p b{color:var(--ink);font-weight:600}
+.pipe{display:flex;flex-wrap:wrap;gap:4px;align-items:center;font:500 .72rem var(--f-mono)}
+.pipe span{padding:4px 7px;border-radius:5px;background:var(--sunk);color:var(--ink)}
+.pipe span.sp{background:var(--accent-soft);color:var(--accent)}
+.pipe i{font-style:normal;color:var(--faint)}
+.nope{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,260px),1fr));gap:12px}
+.nope div{border:1px solid var(--line);border-radius:10px;padding:14px;display:grid;gap:4px;background:var(--surface)}
+.nope b{font-size:.95rem}
+.nope p{font-size:.88rem;color:var(--muted)}
+
+/* ---------- decision helper ---------- */
+.ask{display:grid;gap:14px}
+.ask .q{display:grid;gap:8px}
+.ask .q > span{font:600 .74rem var(--f-mono);letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.verdict{border-radius:12px;padding:18px;display:grid;gap:8px;border:1px solid var(--line);background:var(--sunk)}
+.verdict.yes{background:var(--ok-soft);border-color:color-mix(in srgb,var(--ok) 40%,transparent)}
+.verdict.maybe{background:var(--warn-soft);border-color:color-mix(in srgb,var(--warn) 40%,transparent)}
+.verdict.no{background:var(--bad-soft);border-color:color-mix(in srgb,var(--bad) 40%,transparent)}
+.verdict .vh{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.verdict b{font:700 1.05rem var(--f-display)}
+.verdict p{font-size:.95rem}
+.verdict .alt{font-size:.88rem;color:var(--muted)}
+
+/* ---------- deep dive tabs ---------- */
+.tabs{display:flex;gap:4px;overflow-x:auto;border-bottom:1px solid var(--line);scrollbar-width:thin}
+.tabs button{flex:none;font:500 .9rem var(--f-body);background:none;border:0;border-bottom:2px solid transparent;color:var(--muted);padding:10px 12px;cursor:pointer;margin-bottom:-1px}
+.tabs button:hover{color:var(--ink)}
+.tabs button[aria-selected="true"]{color:var(--ink);border-bottom-color:var(--accent-strong);font-weight:600}
+.panel{display:grid;gap:18px;min-width:0}
+.stepper{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,150px),1fr));gap:6px}
+.stepper button{text-align:left;border:1px solid var(--line);background:var(--surface);border-radius:8px;padding:9px 11px;cursor:pointer;color:var(--muted);font:500 .85rem var(--f-body);display:grid;gap:2px}
+.stepper button small{font:500 .66rem var(--f-mono);color:var(--faint)}
+.stepper button[aria-pressed="true"]{border-color:var(--accent);color:var(--ink);box-shadow:inset 0 -2px 0 var(--accent)}
+.range{display:grid;gap:4px}
+.range .rl{display:flex;justify-content:space-between;gap:8px;font-size:.85rem}
+.range .rl code{background:none;padding:0;color:var(--muted)}
+.range output{font:600 .85rem var(--f-mono);color:var(--accent);white-space:nowrap}
+input[type=range]{width:100%;accent-color:var(--accent-strong)}
+.memgrid{display:grid;grid-template-columns:minmax(0,1fr);gap:22px}
+@media (min-width:900px){.memgrid{grid-template-columns:minmax(0,.8fr) minmax(0,1.2fr)}}
+.membar{display:flex;height:64px;border-radius:8px;overflow:hidden;border:1px solid var(--line)}
+.membar div{display:flex;flex-direction:column;justify-content:center;padding:0 6px;font:500 .68rem/1.25 var(--f-mono);min-width:0;overflow:hidden;white-space:nowrap;transition:flex-basis .25s}
+.m-res{background:var(--sunk);color:var(--muted)} .m-user{background:var(--c3-soft);color:var(--c3)} .m-sto{background:var(--ok-soft);color:var(--ok)} .m-exe{background:var(--c1-soft);color:var(--c1)} .m-ovh{background:var(--warn-soft);color:var(--warn)}
+.kv{display:grid;grid-template-columns:auto auto;justify-content:space-between;gap:6px 16px;font-size:.88rem}
+.kv span:nth-child(even){font-family:var(--f-mono);text-align:right;font-variant-numeric:tabular-nums}
+.kv .tot{font-weight:600;border-top:1px solid var(--line);padding-top:6px}
+.bars{display:grid;gap:6px}
+.bar{display:grid;grid-template-columns:62px minmax(0,1fr) 70px;gap:10px;align-items:center;font:500 .76rem var(--f-mono)}
+.bar .track{height:18px;background:var(--sunk);border-radius:4px;overflow:hidden}
+.bar .fill{height:100%;border-radius:4px;background:var(--c2);transition:width .35s}
+.bar .fill.hot{background:var(--bad)}
+.bar span:last-child{text-align:right;color:var(--muted);font-variant-numeric:tabular-nums}
+.stat{display:flex;flex-wrap:wrap;gap:10px 28px}
+.stat div{display:grid}
+.stat b{font:700 1.5rem var(--f-display);font-variant-numeric:tabular-nums}
+.stat span{font-size:.8rem;color:var(--muted)}
+
+/* ---------- quiz ---------- */
+.quiz{display:grid;gap:14px}
+.qq{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:18px;display:grid;gap:10px}
+.qq h3{font-size:1rem;font-weight:600}
+.qq .opts{display:grid;gap:6px}
+.qq .opts button{text-align:left;font:400 .93rem/1.45 var(--f-body);border:1px solid var(--line);background:var(--bg);color:var(--ink);border-radius:8px;padding:9px 12px;cursor:pointer}
+.qq .opts button:hover:not(:disabled){border-color:var(--faint)}
+.qq .opts button:disabled{cursor:default}
+.qq .opts button.right{border-color:var(--ok);background:var(--ok-soft)}
+.qq .opts button.wrong{border-color:var(--bad);background:var(--bad-soft)}
+.qq .why{font-size:.9rem;color:var(--muted);border-left:3px solid var(--line);padding-left:12px}
+.score{display:flex;gap:12px;align-items:center;flex-wrap:wrap;font-size:.95rem}
+.score b{font:700 1.3rem var(--f-display)}
+
+/* ---------- glossary ---------- */
+dl.gloss{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr));gap:0 28px;margin:0}
+dl.gloss div{padding:12px 0;border-bottom:1px solid var(--line);display:grid;gap:2px}
+dl.gloss dt{font:600 .92rem var(--f-mono);color:var(--accent)}
+dl.gloss dd{margin:0;font-size:.92rem;color:var(--muted)}
+
+footer{border-top:1px solid var(--line);padding-block:28px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));text-align:center;font-size:.85rem;color:var(--muted)}
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div class="top-in">
+    <nav class="crumbs" aria-label="Навігація">
+      <a href="../../index.html">AI Pages</a><span>/</span><a href="./index.html">IT</a><span>/</span><b>Apache Spark</b>
+    </nav>
+    <button class="theme" id="themeBtn" type="button" aria-label="Перемкнути тему">Тема: авто</button>
+  </div>
+  <nav class="chips" id="chips" aria-label="Розділи"></nav>
+</header>
+
+<div class="wrap">
+  <aside class="rail" aria-label="Зміст">
+    <ol id="toc"></ol>
+  </aside>
+
+  <main>
+    <!-- ============ 1. WHAT ============ -->
+    <section id="what" data-title="Що це таке">
+      <div class="hero">
+        <span class="eyebrow">Інтерактивний посібник</span>
+        <h1>Apache Spark: <em>одна програма</em>, сотні комп’ютерів</h1>
+        <p class="def"><b>Apache Spark</b> — відкритий рушій для обробки великих обсягів даних. Ви пишете звичайний код на Python або SQL, а Spark сам ділить дані на шматки, роздає їх багатьом машинам, рахує паралельно і збирає результат. Для вас це виглядає як робота з однією таблицею.</p>
+        <div class="facts">
+          <span>Apache License 2.0</span>
+          <span>Python · SQL · Scala · Java</span>
+          <span>від ноутбука до тисяч вузлів</span>
+          <span>батч + стрімінг + ML</span>
+        </div>
+      </div>
+
+      <div class="prose">
+        <p>Найпростіше уявити Spark як велику кухню, яка готує банкет на тисячу гостей. Один кухар не встигне, тож роботу ділять.</p>
+      </div>
+      <div class="analogy">
+        <div><span class="mono">Driver</span><b>Шеф-кухар</b><p>Читає замовлення (ваш код), складає план і роздає завдання. Сам не нарізає овочі.</p></div>
+        <div><span class="mono">Executors</span><b>Кухарі на станціях</b><p>Кожен працює зі своєю порцією продуктів одночасно з іншими.</p></div>
+        <div><span class="mono">Partitions</span><b>Порції продуктів</b><p>Великий мішок картоплі ділять на ящики, щоб кожен кухар мав свій.</p></div>
+        <div><span class="mono">Shuffle</span><b>Передача між станціями</b><p>Коли соуси треба зібрати в одного кухаря, продукти носять кухнею. Це найдорожча операція.</p></div>
+      </div>
+    </section>
+
+    <!-- ============ 2. WHY ============ -->
+    <section id="why" data-title="Навіщо він потрібен">
+      <div class="sec-head">
+        <span class="eyebrow">Проблема</span>
+        <h2>Дані більші за один комп’ютер</h2>
+      </div>
+      <div class="prose">
+        <p>Ноутбук має 16–32 ГБ оперативної пам’яті. Журнал подій великого сайту за рік займає десятки терабайт. Такий файл не вміститься ні в пам’ять, ні часто на диск однієї машини, а читати його послідовно довелося б днями.</p>
+        <p>Рішення — розподілена обробка: розкласти дані по багатьох машинах і рахувати всюди одночасно. До Spark стандартом був <b>Hadoop MapReduce</b>. Він працював, але після кожного кроку записував проміжний результат на диск. Spark тримає проміжні дані в пам’яті й склеює кілька кроків в один прохід.</p>
+      </div>
+      <div class="lab">
+        <div class="lab-head"><span class="eyebrow">Алгоритм із трьох кроків</span><span class="small">ітеративні задачі, як-от навчання моделі, повторюють кроки десятки разів</span></div>
+        <div class="flow">
+          <div class="flow-row">
+            <span class="who">Hadoop MapReduce</span>
+            <div class="steps"><span class="disk">HDFS</span><span class="arr">→</span><span class="st">крок 1</span><span class="arr">→</span><span class="disk">диск</span><span class="arr">→</span><span class="st">крок 2</span><span class="arr">→</span><span class="disk">диск</span><span class="arr">→</span><span class="st">крок 3</span><span class="arr">→</span><span class="disk">HDFS</span></div>
+            <span class="t">I/O × 4</span>
+          </div>
+          <div class="flow-row">
+            <span class="who">Apache Spark</span>
+            <div class="steps"><span class="disk">S3 / HDFS</span><span class="arr">→</span><span class="st">крок 1</span><span class="arr">→</span><span class="ram">RAM</span><span class="arr">→</span><span class="st">крок 2</span><span class="arr">→</span><span class="ram">RAM</span><span class="arr">→</span><span class="st">крок 3</span><span class="arr">→</span><span class="disk">S3 / HDFS</span></div>
+            <span class="t">I/O × 2</span>
+          </div>
+        </div>
+        <p class="small">На ітеративних задачах різниця сягає десятків разів. На простому «прочитав-порахував-записав» виграш скромніший: там вузьке місце — читання з диска і мережа.</p>
+      </div>
+      <div class="grid4">
+        <div class="cell"><span class="mono small">2009</span><h3>Народження</h3><p>Дослідницький проєкт AMPLab в UC Berkeley, автор — Матей Захарія.</p></div>
+        <div class="cell"><span class="mono small">2014</span><h3>Apache top-level</h3><p>Spark став проєктом верхнього рівня Apache і швидко витіснив MapReduce.</p></div>
+        <div class="cell"><span class="mono small">2016 → 2020</span><h3>DataFrame і AQE</h3><p>2.0 приніс SparkSession і Structured Streaming, 3.0 — адаптивне виконання запитів.</p></div>
+        <div class="cell hot"><span class="mono small">2025</span><h3>Spark 4.0</h3><p>ANSI SQL за замовчуванням, Spark Connect як клієнт-серверний режим, тип VARIANT для JSON.</p></div>
+      </div>
+    </section>
+
+    <!-- ============ 3. ARCHITECTURE ============ -->
+    <section id="arch" data-title="Архітектура">
+      <div class="sec-head">
+        <span class="eyebrow">Як влаштовано</span>
+        <h2>Driver, cluster manager і executors</h2>
+        <p class="lead">Будь-який Spark-застосунок складається з одного координатора і багатьох робочих процесів. Між ними стоїть менеджер кластера, який видає ресурси.</p>
+      </div>
+      <div class="arch">
+        <div class="node driver">
+          <div class="nh"><b>Driver</b><span>ваша програма, точка входу <code>SparkSession</code></span></div>
+          <div class="pills"><span>будує план (DAG)</span><span>Catalyst-оптимізатор</span><span>DAG Scheduler → стадії</span><span>Task Scheduler → таски</span></div>
+        </div>
+        <span class="link">запит ресурсів</span>
+        <div class="node cm">
+          <div class="nh"><b>Cluster manager</b><span>виділяє CPU і пам’ять</span></div>
+          <div class="pills"><span>Kubernetes</span><span>YARN</span><span>Standalone</span><span>local[*] на ноутбуці</span></div>
+        </div>
+        <span class="link">запускає executors · driver роздає їм таски</span>
+        <div class="workers">
+          <div class="node"><div class="nh"><b>Executor 1</b><span>вузол A</span></div><div class="slots"><i>task</i><i>task</i><i>task</i><i>task</i></div><div class="cachebar" title="кеш"></div><span class="small">4 ядра = 4 таски одночасно · кеш у пам’яті</span></div>
+          <div class="node"><div class="nh"><b>Executor 2</b><span>вузол B</span></div><div class="slots"><i>task</i><i>task</i><i>task</i><i>task</i></div><div class="cachebar"></div><span class="small">читає свої партиції з S3 / HDFS</span></div>
+          <div class="node"><div class="nh"><b>Executor N</b><span>вузол …</span></div><div class="slots"><i>task</i><i>task</i><i>task</i><i>task</i></div><div class="cachebar"></div><span class="small">обмінюється даними під час shuffle</span></div>
+        </div>
+      </div>
+      <div class="grid2">
+        <div class="cell"><h3>Driver думає, executors рахують</h3><p>Driver не обробляє дані сам. Якщо викликати <code>df.collect()</code> на мільярді рядків, усе поїде в пам’ять driver-а, і він упаде з OutOfMemoryError. Для перегляду беріть <code>show()</code> або <code>take(20)</code>.</p></div>
+        <div class="cell"><h3>Executor — окремий процес JVM</h3><p>Живе весь час роботи застосунку, тримає кеш і виконує таски. Одне ядро executor-а = одна таска одночасно. 10 executors × 4 ядра = 40 паралельних тасок.</p></div>
+      </div>
+    </section>
+
+    <!-- ============ 4. SIMULATOR ============ -->
+    <section id="run" data-title="Як виконується запит">
+      <div class="sec-head">
+        <span class="eyebrow">Покроково</span>
+        <h2>Що відбувається з вашим запитом</h2>
+        <p class="lead">Інтернет-магазин хоче знати суму оплачених замовлень по містах. Дані лежать у трьох партиціях на трьох executors. Пройдіть кроки й подивіться, як рухаються рядки.</p>
+      </div>
+      <div class="lab">
+        <div class="sim">
+          <div class="sim-code">
+<pre class="code" id="simCode"><span class="ln" data-l="0">orders = spark.read.parquet(<span class="s">"s3://shop/orders/"</span>)</span><span class="ln" data-l="1">paid = orders.filter(col(<span class="s">"status"</span>) == <span class="s">"paid"</span>)</span><span class="ln" data-l="2">by_city = paid.groupBy(<span class="s">"city"</span>).agg(sum(<span class="s">"amount"</span>))</span><span class="ln" data-l="3">by_city.show()   <span class="c"># дія (action)</span></span></pre>
+            <div class="stagebar" id="stagebar"><span data-s="plan">план</span><span data-s="0">Stage 0</span><span data-s="x">shuffle</span><span data-s="1">Stage 1</span><span data-s="res">результат</span></div>
+            <div class="explain" aria-live="polite"><h3 id="simTitle"></h3><p id="simText"></p></div>
+          </div>
+          <div class="cluster">
+            <div class="drv"><div class="drv-h">Driver</div><div class="drv-body" id="drvBody"></div></div>
+            <div class="net" id="net">мережа між вузлами</div>
+            <div class="execs" id="execs"></div>
+            <div class="legend"><span><i style="background:var(--c1)"></i>Київ</span><span><i style="background:var(--c2)"></i>Львів</span><span><i style="background:var(--c3)"></i>Одеса</span><span class="muted">суми в гривнях</span></div>
+          </div>
+        </div>
+        <div class="sim-ctl">
+          <button class="btn" id="simPrev" type="button">← Назад</button>
+          <button class="btn primary" id="simNext" type="button">Далі →</button>
+          <button class="btn" id="simPlay" type="button">▶ Програти все</button>
+          <div class="dots" id="simDots" role="group" aria-label="Кроки"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ 5. LAZY / STAGES ============ -->
+    <section id="lazy" data-title="Ліниві обчислення">
+      <div class="sec-head">
+        <span class="eyebrow">Ключові ідеї</span>
+        <h2>Трансформації, дії та стадії</h2>
+      </div>
+      <div class="grid2">
+        <div class="cell hot">
+          <h3>Трансформації ліниві</h3>
+          <p><code>filter</code>, <code>select</code>, <code>groupBy</code>, <code>join</code> нічого не рахують. Вони лише дописують крок у план. Тому Spark бачить запит цілком і може його оптимізувати: викинути зайві колонки, перенести фільтр до читання файлу.</p>
+        </div>
+        <div class="cell hot">
+          <h3>Дії запускають роботу</h3>
+          <p><code>show</code>, <code>count</code>, <code>collect</code>, <code>write</code> — дії. Кожна дія створює <b>job</b>. Якщо результат потрібен кілька разів, зробіть <code>df.cache()</code>, інакше план виконається заново.</p>
+        </div>
+      </div>
+      <div class="hier">
+        <div><b>Application</b><p>Ваша програма з одним SparkSession. Живе, доки працює driver.</p></div>
+        <div><b>Job</b><p>З’являється на кожну дію. <code>show()</code> у прикладі вище — один job.</p></div>
+        <div><b>Stage</b><p>Частина job-а, яку можна виконати без обміну даними між вузлами. Межа стадій — shuffle.</p></div>
+        <div><b>Task</b><p>Одна стадія над однією партицією на одному ядрі. 200 партицій = 200 тасок.</p></div>
+      </div>
+      <div class="tbl">
+        <table>
+          <thead><tr><th>Тип</th><th>Що відбувається</th><th>Приклади</th><th>Вартість</th></tr></thead>
+          <tbody>
+            <tr><td><b>Вузька</b> (narrow)</td><td>Кожна партиція обробляється на місці, без мережі. Кілька таких кроків склеюються в один прохід.</td><td><code>filter</code> <code>select</code> <code>withColumn</code> <code>union</code></td><td><span class="tag ok">дешево</span></td></tr>
+            <tr><td><b>Широка</b> (wide)</td><td>Рядки з однаковим ключем треба звести разом, тож дані пишуться на диск і йдуть мережею (shuffle).</td><td><code>groupBy</code> <code>join</code> <code>distinct</code> <code>orderBy</code> <code>repartition</code></td><td><span class="tag bad">дорого</span></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- ============ 6. ECOSYSTEM ============ -->
+    <section id="eco" data-title="Екосистема">
+      <div class="sec-head">
+        <span class="eyebrow">Модулі</span>
+        <h2>Один рушій, кілька способів ним користуватися</h2>
+        <p class="lead">Усі модулі працюють на одному ядрі та одних DataFrame, тож стрімінг, SQL і ML можна змішувати в одній програмі.</p>
+      </div>
+      <div class="grid3">
+        <div class="cell hot"><h3>Spark SQL і DataFrame</h3><p>Основа сучасного Spark. Таблиці з колонками, SQL-запити, оптимізатор Catalyst. Читає Parquet, ORC, JSON, CSV, JDBC, Delta Lake, Iceberg.</p></div>
+        <div class="cell"><h3>Structured Streaming</h3><p>Потік подій як нескінченна таблиця. Ті самі DataFrame-операції, обробка мікробатчами із затримкою від долі секунди до секунд. Джерела: Kafka, Kinesis, файли.</p></div>
+        <div class="cell"><h3>MLlib</h3><p>Розподілені алгоритми й пайплайни: підготовка ознак, регресія, класифікація, кластеризація, рекомендації.</p></div>
+        <div class="cell"><h3>pandas API on Spark</h3><p><code>import pyspark.pandas as ps</code> — знайомий синтаксис pandas, що працює на кластері.</p></div>
+        <div class="cell"><h3>Spark Connect</h3><p>Тонкий клієнт підключається до віддаленого кластера через gRPC. Зручно з IDE, ноутбуків і власних сервісів.</p></div>
+        <div class="cell"><h3>GraphX</h3><p>Старий графовий модуль на RDD, нових функцій майже не отримує. Для графів частіше беруть GraphFrames або окрему графову БД.</p></div>
+      </div>
+    </section>
+
+    <!-- ============ 7. USE CASES ============ -->
+    <section id="cases" data-title="Для чого використовують">
+      <div class="sec-head">
+        <span class="eyebrow">Юзкейси</span>
+        <h2>Де Spark справді на своєму місці</h2>
+        <p class="lead">Спільне в усіх сценаріях — даних забагато для однієї машини, а обробка має бути надійною й повторюваною.</p>
+      </div>
+      <div class="cases">
+        <article class="case">
+          <div class="case-h"><h3>ETL та Data Lakehouse</h3><span class="tag acc">батч</span></div>
+          <p><b>Задача:</b> щоночі забрати сирі логи, CDC з баз і вивантаження партнерів, почистити, дедуплікувати та скласти в таблиці для аналітиків.</p>
+          <p><b>Чому Spark:</b> терабайти за ніч, паралельне читання з об’єктного сховища, перезапуск упалих тасок без перезапуску всього.</p>
+          <div class="pipe"><span>S3 raw JSON</span><i>→</i><span class="sp">Spark job</span><i>→</i><span>Bronze</span><i>→</i><span>Silver</span><i>→</i><span>Gold</span></div>
+        </article>
+        <article class="case">
+          <div class="case-h"><h3>Антифрод у реальному часі</h3><span class="tag acc">стрімінг</span></div>
+          <p><b>Задача:</b> помітити, що з однієї картки за 5 хвилин пройшло 10 платежів у різних країнах.</p>
+          <p><b>Чому Spark:</b> віконні агрегації з watermark, стан між мікробатчами, exactly-once запис завдяки чекпоінтам.</p>
+          <div class="pipe"><span>Kafka</span><i>→</i><span class="sp">Structured Streaming</span><i>→</i><span>вікно 5 хв</span><i>→</i><span>алерти</span></div>
+        </article>
+        <article class="case">
+          <div class="case-h"><h3>Ознаки для машинного навчання</h3><span class="tag acc">ML</span></div>
+          <p><b>Задача:</b> для кожного з 50 млн клієнтів порахувати 300 ознак поведінки за пів року для моделі скорингу чи рекомендацій.</p>
+          <p><b>Чому Spark:</b> віконні функції та join-и на всьому масиві. Саму модель потім часто навчають у XGBoost або PyTorch.</p>
+          <div class="pipe"><span>Lakehouse</span><i>→</i><span class="sp">Spark features</span><i>→</i><span>Feature Store</span><i>→</i><span>навчання</span></div>
+        </article>
+        <article class="case">
+          <div class="case-h"><h3>Аналіз логів і розслідування</h3><span class="tag acc">SQL</span></div>
+          <p><b>Задача:</b> знайти сліди атаки серед мільярдів записів веб-серверів за три місяці.</p>
+          <p><b>Чому Spark:</b> SQL по сирих файлах без попереднього завантаження в базу, інтерактивно в ноутбуці.</p>
+          <div class="pipe"><span>access logs</span><i>→</i><span class="sp">Spark SQL</span><i>→</i><span>ноутбук / дашборд</span></div>
+        </article>
+        <article class="case">
+          <div class="case-h"><h3>Міграції та перерахунки</h3><span class="tag acc">батч</span></div>
+          <p><b>Задача:</b> змінилась формула метрики — перерахувати історію за 5 років або перенести сховище в новий формат.</p>
+          <p><b>Чому Spark:</b> задача разова, але велика. Кластер піднімається на годину й вимикається.</p>
+          <div class="pipe"><span>старе сховище</span><i>→</i><span class="sp">Spark backfill</span><i>→</i><span>Iceberg / Delta</span></div>
+        </article>
+        <article class="case">
+          <div class="case-h"><h3>Наука і геодані</h3><span class="tag acc">батч</span></div>
+          <p><b>Задача:</b> обробити геномні послідовності, супутникові знімки чи телеметрію мільйонів пристроїв.</p>
+          <p><b>Чому Spark:</b> обчислення легко ділиться на незалежні шматки, а бібліотеки на кшталт Apache Sedona додають гео-функції.</p>
+          <div class="pipe"><span>сирі файли</span><i>→</i><span class="sp">Spark + бібліотеки</span><i>→</i><span>агрегати</span></div>
+        </article>
+      </div>
+
+      <div class="sec-head"><h3>Коли Spark — поганий вибір</h3></div>
+      <div class="nope">
+        <div><b>Даних кілька гігабайт</b><p>pandas, Polars або DuckDB на ноутбуці зроблять те саме швидше. Spark додасть секунди на запуск і складність кластера.</p></div>
+        <div><b>Транзакції застосунку</b><p>Spark не база даних: він не оновлює окремий рядок за мілісекунди. Для цього PostgreSQL чи MySQL.</p></div>
+        <div><b>Відповідь потрібна за мілісекунди</b><p>Мікробатчі дають секунди. Для мілісекунд беруть Apache Flink, Kafka Streams або кеш.</p></div>
+        <div><b>Дашборд із сотнями дрібних запитів</b><p>Сховища на кшталт ClickHouse, BigQuery, Snowflake чи Trino відповідають швидше. Spark готує для них дані.</p></div>
+      </div>
+
+      <div class="sec-head"><h3>Де запускають</h3></div>
+      <div class="facts">
+        <span>pip install pyspark (локально)</span><span>Databricks</span><span>AWS EMR · Glue</span><span>Google Dataproc</span><span>Azure Databricks · Fabric</span><span>Kubernetes (spark-submit / оператор)</span>
+      </div>
+    </section>
+
+    <!-- ============ 8. DECIDE ============ -->
+    <section id="decide" data-title="Чи потрібен вам Spark">
+      <div class="sec-head">
+        <span class="eyebrow">Перевірка</span>
+        <h2>Чи потрібен Spark саме вам?</h2>
+        <p class="lead">Оберіть параметри задачі. Це грубе правило, а не закон: межі залежать від заліза та команди.</p>
+      </div>
+      <div class="lab">
+        <div class="ask">
+          <div class="q"><span>Обсяг даних</span><div class="seg" id="qSize"><button type="button" data-v="s">до 10 ГБ</button><button type="button" data-v="m">10–500 ГБ</button><button type="button" data-v="l" aria-pressed="true">0,5–50 ТБ</button><button type="button" data-v="xl">понад 50 ТБ</button></div></div>
+          <div class="q"><span>Тип задачі</span><div class="seg" id="qWork"><button type="button" data-v="etl" aria-pressed="true">ETL / перетворення</button><button type="button" data-v="stream">потік подій</button><button type="button" data-v="sql">аналітичні SQL-запити</button><button type="button" data-v="ml">дані для ML</button><button type="button" data-v="oltp">транзакції застосунку</button></div></div>
+          <div class="q"><span>Як швидко потрібен результат</span><div class="seg" id="qLat"><button type="button" data-v="hours" aria-pressed="true">хвилини–години</button><button type="button" data-v="sec">секунди</button><button type="button" data-v="ms">мілісекунди</button></div></div>
+        </div>
+        <div class="verdict" id="verdict" aria-live="polite"></div>
+      </div>
+    </section>
+
+    <!-- ============ 9. START ============ -->
+    <section id="start" data-title="Перший запуск">
+      <div class="sec-head">
+        <span class="eyebrow">Спробувати</span>
+        <h2>Перша програма за 5 хвилин</h2>
+        <p class="lead">Spark працює й на ноутбуці: режим <code>local[*]</code> використовує всі ядра процесора як executors. Потрібні Python і Java 17+.</p>
+      </div>
+<pre class="code"><span class="c"># pip install pyspark</span>
+<span class="k">from</span> pyspark.sql <span class="k">import</span> SparkSession
+<span class="k">from</span> pyspark.sql <span class="k">import</span> functions <span class="k">as</span> F
+
+spark = SparkSession.builder.master(<span class="s">"local[*]"</span>).appName(<span class="s">"hello"</span>).getOrCreate()
+
+orders = spark.createDataFrame(
+    [(<span class="s">"Київ"</span>, <span class="f">120</span>, <span class="s">"paid"</span>), (<span class="s">"Львів"</span>, <span class="f">80</span>, <span class="s">"paid"</span>), (<span class="s">"Київ"</span>, <span class="f">50</span>, <span class="s">"cancelled"</span>)],
+    [<span class="s">"city"</span>, <span class="s">"amount"</span>, <span class="s">"status"</span>],
+)
+
+result = (orders
+    .filter(F.col(<span class="s">"status"</span>) == <span class="s">"paid"</span>)          <span class="c"># трансформація: нічого не рахує</span>
+    .groupBy(<span class="s">"city"</span>)
+    .agg(F.sum(<span class="s">"amount"</span>).alias(<span class="s">"total"</span>)))
+
+result.explain()   <span class="c"># показати фізичний план</span>
+result.show()      <span class="c"># дія: тут Spark нарешті рахує</span>
+
+<span class="c"># Те саме на SQL</span>
+orders.createOrReplaceTempView(<span class="s">"orders"</span>)
+spark.sql(<span class="s">"SELECT city, SUM(amount) AS total FROM orders WHERE status = 'paid' GROUP BY city"</span>).show()</pre>
+      <p class="small">Поки програма працює, відкрийте <code>http://localhost:4040</code> — це Spark UI з job-ами, стадіями, тасками й часом кожної.</p>
+    </section>
+
+    <!-- ============ 10. DEEP ============ -->
+    <section id="deep" data-title="Поглиблено">
+      <div class="sec-head">
+        <span class="eyebrow">Для інженерів</span>
+        <h2>Під капотом: оптимізатор, пам’ять, перекіс даних</h2>
+        <p class="lead">Цей розділ для тих, хто вже пише Spark-джоби і хоче розуміти, чому вони повільні або падають.</p>
+      </div>
+      <div class="lab">
+        <div class="tabs" role="tablist" id="deepTabs">
+          <button role="tab" type="button" id="t-cat" aria-controls="p-cat" aria-selected="true">Catalyst</button>
+          <button role="tab" type="button" id="t-mem" aria-controls="p-mem" aria-selected="false">Пам’ять executor-а</button>
+          <button role="tab" type="button" id="t-skew" aria-controls="p-skew" aria-selected="false">Перекіс і salting</button>
+          <button role="tab" type="button" id="t-join" aria-controls="p-join" aria-selected="false">Join-и та AQE</button>
+          <button role="tab" type="button" id="t-bug" aria-controls="p-bug" aria-selected="false">Типові проблеми</button>
+        </div>
+
+        <!-- Catalyst -->
+        <div class="panel" role="tabpanel" id="p-cat" aria-labelledby="t-cat">
+          <p class="muted">Catalyst перетворює SQL або DataFrame-код на фізичний план за чотири етапи. Подивіться, як змінюється план для запиту нижче. Його ж показує <code>df.explain(True)</code>.</p>
+<pre class="code"><span class="k">SELECT</span> user_id, <span class="f">SUM</span>(amount) <span class="k">AS</span> total
+<span class="k">FROM</span> transactions
+<span class="k">WHERE</span> status = <span class="s">'COMPLETED'</span>
+<span class="k">GROUP BY</span> user_id</pre>
+          <div class="stepper" id="catSteps"></div>
+          <div class="explain"><h3 id="catTitle"></h3><p id="catDesc"></p></div>
+          <pre class="code" id="catPlan"></pre>
+        </div>
+
+        <!-- Memory -->
+        <div class="panel" role="tabpanel" id="p-mem" aria-labelledby="t-mem" hidden>
+          <p class="muted">Unified Memory Model (Spark 1.6+). Рухайте повзунки: так розподіляється пам’ять одного executor-а.</p>
+          <div class="memgrid">
+            <div class="ask">
+              <label class="range" for="mRam"><span class="rl"><code>spark.executor.memory</code><output id="oRam"></output></span><input type="range" id="mRam" min="2" max="64" step="2" value="16"></label>
+              <label class="range" for="mCores"><span class="rl"><code>spark.executor.cores</code><output id="oCores"></output></span><input type="range" id="mCores" min="1" max="8" step="1" value="4"></label>
+              <label class="range" for="mOvh"><span class="rl"><code>spark.executor.memoryOverheadFactor</code><output id="oOvh"></output></span><input type="range" id="mOvh" min="0.06" max="0.4" step="0.02" value="0.1"></label>
+              <label class="range" for="mFrac"><span class="rl"><code>spark.memory.fraction</code><output id="oFrac"></output></span><input type="range" id="mFrac" min="0.3" max="0.9" step="0.05" value="0.6"></label>
+              <label class="range" for="mSto"><span class="rl"><code>spark.memory.storageFraction</code><output id="oSto"></output></span><input type="range" id="mSto" min="0.1" max="0.9" step="0.05" value="0.5"></label>
+            </div>
+            <div class="panel">
+              <div class="membar" id="membar" aria-hidden="true"></div>
+              <div class="kv" id="memkv"></div>
+              <p class="small">Межа між Storage і Execution гнучка: якщо кешу мало, обчислення позичають його місце, і навпаки. Execution-пам’ять ділять таски: кожна отримує від 1/(2N) до 1/N, де N — кількість активних тасок. Overhead живе поза heap: там Python-воркери PySpark, мережеві буфери, metaspace. Для PySpark на Kubernetes за замовчуванням factor = 0,4.</p>
+              <p class="small">Емпіричне правило — 4–5 ядер на executor. Більше потоків в одній JVM означає довші паузи збирача сміття й конкуренцію за I/O.</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Skew -->
+        <div class="panel" role="tabpanel" id="p-skew" aria-labelledby="t-skew" hidden>
+          <p class="muted">100 000 замовлень, з них 85% мають <code>country = 'US'</code>. Після <code>groupBy</code> чи <code>join</code> за країною всі американські рядки потрапляють в одну таску. Стадія триває стільки, скільки найповільніша таска.</p>
+          <label class="range" for="salt"><span class="rl">Фактор солі N (1 = без salting)<output id="oSalt"></output></span><input type="range" id="salt" min="1" max="16" step="1" value="1"></label>
+          <div class="stat" id="skewStat"></div>
+          <div class="bars" id="skewBars"></div>
+          <pre class="code" id="saltCode"></pre>
+          <p class="small">Спершу увімкніть AQE з <code>spark.sql.adaptive.skewJoin.enabled=true</code> (у Spark 3.2+ увімкнено за замовчуванням): для join-ів Spark сам розріже перекошену партицію. Ручний salting потрібен, коли AQE не допомагає, наприклад для агрегацій.</p>
+        </div>
+
+        <!-- Joins & AQE -->
+        <div class="panel" role="tabpanel" id="p-join" aria-labelledby="t-join" hidden>
+          <div class="tbl">
+            <table>
+              <thead><tr><th>Стратегія</th><th>Коли обирається</th><th>Що відбувається</th><th>Shuffle</th></tr></thead>
+              <tbody>
+                <tr><td><b>Broadcast Hash Join</b></td><td>Одна таблиця менша за <code>spark.sql.autoBroadcastJoinThreshold</code> (10 МБ за замовчуванням) або є хінт <code>broadcast()</code></td><td>Маленьку таблицю копіюють на кожен executor, велика лишається на місці</td><td><span class="tag ok">немає</span></td></tr>
+                <tr><td><b>Sort Merge Join</b></td><td>Дві великі таблиці, стратегія за замовчуванням</td><td>Обидві таблиці перерозподіляють за ключем, сортують і зливають</td><td><span class="tag bad">обидві таблиці + сортування</span></td></tr>
+                <tr><td><b>Shuffle Hash Join</b></td><td>Одна сторона завелика для broadcast, але помітно менша за другу</td><td>Перерозподіл за ключем, далі хеш-таблиця в пам’яті без сортування</td><td><span class="tag warn">обидві, без сортування</span></td></tr>
+              </tbody>
+            </table>
+          </div>
+          <h3>Adaptive Query Execution</h3>
+          <div class="grid3">
+            <div class="cell"><h3>Злиття партицій</h3><p>Після shuffle об’єднує дрібні партиції, щоб не запускати тисячі майже порожніх тасок замість стандартних 200.</p></div>
+            <div class="cell"><h3>Зміна стратегії join</h3><p>Якщо після фільтрів таблиця виявилась маленькою, Sort Merge Join на ходу замінюється на Broadcast.</p></div>
+            <div class="cell"><h3>Розрізання перекосу</h3><p>За статистикою виконання знаходить завеликі партиції в join-і та ділить їх на менші.</p></div>
+          </div>
+          <p class="small">AQE увімкнено за замовчуванням з версії 3.2 (<code>spark.sql.adaptive.enabled=true</code>).</p>
+        </div>
+
+        <!-- Problems -->
+        <div class="panel" role="tabpanel" id="p-bug" aria-labelledby="t-bug" hidden>
+          <div class="grid2">
+            <div class="cell"><h3>Driver OutOfMemoryError</h3><p><b>Причина:</b> <code>collect()</code> або <code>toPandas()</code> на великому датасеті, завеликий broadcast.</p><p><b>Що робити:</b> писати результат через <code>write</code>, дивитись через <code>take(n)</code>, перевірити розмір broadcast-таблиць.</p></div>
+            <div class="cell"><h3>Spill на диск і OOM executor-а</h3><p><b>Причина:</b> завеликі партиції (понад ~1 ГБ), перекіс, звичайні Python UDF.</p><p><b>Що робити:</b> більше партицій, salting, вбудовані функції <code>F.*</code> або pandas UDF на Arrow замість рядкових UDF.</p></div>
+            <div class="cell"><h3>Тисячі дрібних файлів</h3><p><b>Причина:</b> запис після <code>repartition(5000)</code> або <code>partitionBy</code> за колонкою з високою кардинальністю, як-от <code>user_id</code>.</p><p><b>Що робити:</b> <code>coalesce</code> перед записом, партиціювання за датою, <code>OPTIMIZE</code> у Delta Lake.</p></div>
+            <div class="cell"><h3>Застрягло на 199/200</h3><p><b>Причина:</b> перекіс ключів: одна таска обробляє більшість даних.</p><p><b>Що робити:</b> перевірити розподіл <code>groupBy(key).count()</code>, AQE skew join, salting, окрема обробка «гарячого» ключа.</p></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ 11. QUIZ ============ -->
+    <section id="quiz" data-title="Перевір себе">
+      <div class="sec-head">
+        <span class="eyebrow">Тест</span>
+        <h2>Перевір себе</h2>
+        <p class="lead">Вісім питань від базових до інженерних. Відповідь і пояснення з’являються одразу.</p>
+      </div>
+      <div class="quiz" id="quizBox"></div>
+      <div class="score" id="score"></div>
+    </section>
+
+    <!-- ============ 12. GLOSSARY ============ -->
+    <section id="gloss" data-title="Словник">
+      <div class="sec-head">
+        <span class="eyebrow">Терміни</span>
+        <h2>Короткий словник</h2>
+      </div>
+      <dl class="gloss">
+        <div><dt>Partition</dt><dd>Шматок даних, який обробляє одна таска. Від кількості партицій залежить паралелізм.</dd></div>
+        <div><dt>DataFrame</dt><dd>Розподілена таблиця з іменованими колонками і схемою. Основний API.</dd></div>
+        <div><dt>RDD</dt><dd>Низькорівнева розподілена колекція об’єктів. Основа Spark, але оптимізатор її не бачить.</dd></div>
+        <div><dt>Transformation</dt><dd>Лінива операція, що описує новий DataFrame: filter, select, join.</dd></div>
+        <div><dt>Action</dt><dd>Операція, яка запускає обчислення і повертає або записує результат.</dd></div>
+        <div><dt>DAG</dt><dd>Граф кроків обчислення без циклів. Driver ділить його на стадії.</dd></div>
+        <div><dt>Shuffle</dt><dd>Перерозподіл даних між вузлами за ключем. Межа між стадіями.</dd></div>
+        <div><dt>Catalyst</dt><dd>Оптимізатор запитів: переписує логічний план і обирає фізичний.</dd></div>
+        <div><dt>Tungsten</dt><dd>Рушій виконання: компактний бінарний формат рядків і генерація байткоду для цілої стадії.</dd></div>
+        <div><dt>Lakehouse</dt><dd>Таблиці у форматі Delta Lake або Iceberg поверх файлів у S3: транзакції й версії як у базі.</dd></div>
+        <div><dt>Watermark</dt><dd>У стрімінгу — скільки чекати запізнілі події, перш ніж закрити вікно.</dd></div>
+        <div><dt>Checkpoint</dt><dd>Збережені офсети і стан стрімінгу, щоб після падіння продовжити з того самого місця.</dd></div>
+      </dl>
+    </section>
+  </main>
+</div>
+
+<footer>© <span id="year"></span> AI Pages · <a href="https://spark.apache.org/docs/latest/" target="_blank" rel="noopener">офіційна документація Spark</a></footer>
+
+<script>
+(function(){
+  "use strict";
+  var $ = function(s, r){ return (r || document).querySelector(s); };
+  var $$ = function(s, r){ return Array.prototype.slice.call((r || document).querySelectorAll(s)); };
+  var reduceMotion = window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches;
+  $("#year").textContent = new Date().getFullYear();
+
+  /* ---------- theme ---------- */
+  var root = document.documentElement, themeBtn = $("#themeBtn");
+  var modes = ["auto", "light", "dark"], names = {auto: "авто", light: "світла", dark: "темна"};
+  var mode = "auto";
+  try { mode = localStorage.getItem("spark-theme") || "auto"; } catch (e) {}
+  function applyTheme(){
+    if (mode === "auto") root.removeAttribute("data-theme"); else root.setAttribute("data-theme", mode);
+    themeBtn.textContent = "Тема: " + names[mode];
+  }
+  themeBtn.addEventListener("click", function(){
+    mode = modes[(modes.indexOf(mode) + 1) % 3];
+    try { localStorage.setItem("spark-theme", mode); } catch (e) {}
+    applyTheme();
+  });
+  applyTheme();
+
+  /* ---------- TOC + scrollspy ---------- */
+  var secs = $$("main > section[data-title]");
+  var toc = $("#toc"), chips = $("#chips");
+  secs.forEach(function(s){
+    var li = document.createElement("li");
+    li.innerHTML = '<a href="#' + s.id + '">' + s.dataset.title + "</a>";
+    toc.appendChild(li);
+    var c = document.createElement("a");
+    c.href = "#" + s.id; c.textContent = s.dataset.title;
+    chips.appendChild(c);
+  });
+  if ("IntersectionObserver" in window) {
+    var io = new IntersectionObserver(function(entries){
+      entries.forEach(function(en){
+        if (!en.isIntersecting) return;
+        $$('a[href^="#"]', toc).concat($$("a", chips)).forEach(function(a){
+          var on = a.getAttribute("href") === "#" + en.target.id;
+          a.classList.toggle("on", on);
+          if (on && a.parentNode === chips) chips.scrollTo({left: a.offsetLeft - 16, behavior: reduceMotion ? "auto" : "smooth"});
+        });
+      });
+    }, {rootMargin: "-30% 0px -60% 0px"});
+    secs.forEach(function(s){ io.observe(s); });
+  }
+
+  /* ---------- FLIP helper ---------- */
+  function flip(container, build){
+    var before = {};
+    $$("[data-id]", container).forEach(function(el){ before[el.dataset.id] = el.getBoundingClientRect(); });
+    build();
+    if (reduceMotion || !Element.prototype.animate) return;
+    $$("[data-id]", container).forEach(function(el){
+      var b = before[el.dataset.id], a = el.getBoundingClientRect();
+      if (b) {
+        var dx = b.left - a.left, dy = b.top - a.top;
+        if (dx || dy) el.animate([{transform: "translate(" + dx + "px," + dy + "px)"}, {transform: "none"}], {duration: 650, easing: "cubic-bezier(.2,.7,.2,1)"});
+      } else {
+        el.animate([{opacity: 0, transform: "scale(.9)"}, {opacity: 1, transform: "none"}], {duration: 380, easing: "ease-out"});
+      }
+    });
+  }
+
+  /* ---------- simulator ---------- */
+  var CITY = {"Київ": {c: "kyiv", ex: 0}, "Львів": {c: "lviv", ex: 1}, "Одеса": {c: "odesa", ex: 2}};
+  var ROWS = [
+    {id: "a1", p: 0, city: "Київ", amt: 120, ok: true}, {id: "a2", p: 0, city: "Львів", amt: 80, ok: true},
+    {id: "a3", p: 0, city: "Київ", amt: 50, ok: false}, {id: "a4", p: 0, city: "Одеса", amt: 200, ok: true},
+    {id: "b1", p: 1, city: "Львів", amt: 60, ok: true}, {id: "b2", p: 1, city: "Київ", amt: 90, ok: true},
+    {id: "b3", p: 1, city: "Одеса", amt: 40, ok: false}, {id: "b4", p: 1, city: "Львів", amt: 30, ok: true},
+    {id: "c1", p: 2, city: "Одеса", amt: 70, ok: true}, {id: "c2", p: 2, city: "Київ", amt: 30, ok: true},
+    {id: "c3", p: 2, city: "Львів", amt: 100, ok: false}, {id: "c4", p: 2, city: "Одеса", amt: 110, ok: true}
+  ];
+  function partials(){
+    var out = [[], [], []];
+    [0, 1, 2].forEach(function(p){
+      var acc = {}, order = [];
+      ROWS.forEach(function(r){ if (r.p === p && r.ok) { if (!(r.city in acc)) { acc[r.city] = 0; order.push(r.city); } acc[r.city] += r.amt; } });
+      order.forEach(function(c){ out[p].push({id: "p" + p + "-" + c, city: c, amt: acc[c], from: p}); });
+    });
+    return out;
+  }
+  var PART = partials();
+  var TOTAL = {};
+  ROWS.forEach(function(r){ if (r.ok) TOTAL[r.city] = (TOTAL[r.city] || 0) + r.amt; });
+  function chip(id, city, html, extra){ return '<div class="chip ' + (city ? CITY[city].c : "") + " " + (extra || "") + '" data-id="' + id + '">' + html + "</div>"; }
+  function rowChip(r, dropMode){
+    var cls = !r.ok && dropMode ? "drop" : "";
+    return chip(r.id, r.city, "<span>" + r.city + "</span><span>" + r.amt + (r.ok ? "" : " ✕") + "</span>", cls);
+  }
+  var hdrPart = function(i){ return "Executor " + (i + 1) + "<small>партиція " + i + "</small>"; };
+  var hdrKey = function(i){ return "Executor " + (i + 1) + "<small>ключ «" + Object.keys(CITY)[i] + "»</small>"; };
+  var cityNames = Object.keys(CITY);
+
+  var STEPS = [
+    {lines: [0, 1, 2], stage: "plan", title: "Код написано, але нічого не сталося",
+     text: "Три рядки — це трансформації. Spark лише записав їх у план (DAG). Executors ще не прочитали жодного байта. Це ліниві обчислення.",
+     driver: '<span class="tag">план: read → filter → groupBy → sum</span>',
+     hdr: hdrPart, cols: function(){ return [[], [], []]; }},
+    {lines: [3], stage: "plan", title: "Дія show() запускає job",
+     text: "Driver передає план оптимізатору Catalyst і бачить межу shuffle перед groupBy. Тому job ділиться на дві стадії, а Stage 0 — на 3 таски, по одній на партицію.",
+     driver: '<span class="tag acc">Job 0</span><span class="tag">Stage 0: 3 таски</span><span class="tag">Stage 1: 3 таски</span>',
+     hdr: hdrPart, cols: function(){ return [0, 1, 2].map(function(i){ return [chip("t" + i, null, "Task 0." + i, "task")]; }); }},
+    {lines: [0], stage: "0", title: "Читання: кожен executor бере свою партицію",
+     text: "Три таски паралельно читають свої шматки файлу зі сховища. Жоден executor не бачить даних сусіда.",
+     driver: '<span class="small">чекає, поки таски Stage 0 завершаться</span>',
+     hdr: hdrPart, cols: function(){ return [0, 1, 2].map(function(p){ return ROWS.filter(function(r){ return r.p === p; }).map(function(r){ return rowChip(r, false); }); }); }},
+    {lines: [1], stage: "0", title: "Фільтр — вузька трансформація",
+     text: "Скасовані замовлення відкидаються прямо на місці. Мережа не потрібна, тому фільтр виконується в тому ж проході, що й читання.",
+     driver: '<span class="small">чекає</span>',
+     hdr: hdrPart, cols: function(){ return [0, 1, 2].map(function(p){ return ROWS.filter(function(r){ return r.p === p; }).map(function(r){ return rowChip(r, true); }); }); }},
+    {lines: [2], stage: "0", title: "Часткова агрегація до shuffle",
+     text: "Перш ніж щось відправляти, кожен executor підсумовує свої рядки по містах. Мережею піде 7 маленьких записів замість 9 рядків. На мільярдах рядків ця різниця величезна. У фізичному плані це крок partial_sum.",
+     driver: '<span class="small">Stage 0 завершено</span>',
+     hdr: hdrPart, cols: function(){ return PART.map(function(list){ return list.map(function(x){ return chip(x.id, x.city, "<span>Σ " + x.city + "</span><span>" + x.amt + "</span>", "sum"); }); }); }},
+    {lines: [2], stage: "x", title: "Shuffle: дані з однаковим ключем збираються разом",
+     text: "Кожне місто закріплене за одним executor-ом через hash(city) % 3. Часткові суми записуються на диск і йдуть мережею до свого власника. Це найдорожчий момент усього запиту.",
+     driver: '<span class="small">координує обмін</span>', net: true,
+     hdr: hdrKey, cols: function(){
+       var out = [[], [], []];
+       PART.forEach(function(list){ list.forEach(function(x){ out[CITY[x.city].ex].push(chip(x.id, x.city, "<span>Σ " + x.city + "</span><span>" + x.amt + "</span>", "sum")); }); });
+       return out; }},
+    {lines: [2], stage: "1", title: "Фінальна агрегація (Stage 1)",
+     text: "Тепер усі суми одного міста на одному executor-і, тож лишилось їх додати. Кожен executor рахує своє місто незалежно від інших.",
+     driver: '<span class="small">чекає таски Stage 1</span>',
+     hdr: hdrKey, cols: function(){ return cityNames.map(function(c){ return [chip("f-" + c, c, "<span>" + c + "</span><span>= " + TOTAL[c] + "</span>", "sum big")]; }); }},
+    {lines: [3], stage: "res", title: "Результат повертається на driver",
+     text: "Для show() driver забирає лише перші 20 рядків. Тут їх три. Великий результат краще не тягнути на driver, а записати у сховище через write.",
+     driver: cityNames.map(function(c){ return chip("f-" + c, c, "<span>" + c + "</span><span>" + TOTAL[c] + " ₴</span>", "sum"); }).join(""),
+     hdr: hdrKey, cols: function(){ return [[], [], []]; }}
+  ];
+  var step = 0, playing = null;
+  var execs = $("#execs"), sim = $(".cluster");
+  var dots = $("#simDots");
+  STEPS.forEach(function(_, i){
+    var b = document.createElement("button");
+    b.type = "button"; b.textContent = i + 1; b.setAttribute("aria-label", "Крок " + (i + 1));
+    b.addEventListener("click", function(){ stop(); go(i); });
+    dots.appendChild(b);
+  });
+  function go(i){
+    step = Math.max(0, Math.min(STEPS.length - 1, i));
+    var s = STEPS[step];
+    $$("#simCode .ln").forEach(function(l){ l.classList.toggle("hl", s.lines.indexOf(+l.dataset.l) > -1); });
+    $$("#stagebar span").forEach(function(sp){ sp.classList.toggle("on", sp.dataset.s === s.stage); });
+    $("#simTitle").textContent = (step + 1) + ". " + s.title;
+    $("#simText").textContent = s.text;
+    $("#net").classList.toggle("on", !!s.net);
+    $("#net").textContent = s.net ? "shuffle: обмін даними мережею" : "мережа між вузлами";
+    flip(sim, function(){
+      $("#drvBody").innerHTML = s.driver;
+      var cols = s.cols();
+      execs.innerHTML = cols.map(function(list, i){ return '<div class="ex"><div class="ex-h">' + s.hdr(i) + "</div>" + list.join("") + "</div>"; }).join("");
+    });
+    $$("button", dots).forEach(function(b, k){ b.classList.toggle("on", k === step); b.setAttribute("aria-current", k === step ? "step" : "false"); });
+    $("#simPrev").disabled = step === 0;
+    $("#simNext").disabled = step === STEPS.length - 1;
+  }
+  function stop(){ if (playing) { clearInterval(playing); playing = null; $("#simPlay").textContent = "▶ Програти все"; } }
+  $("#simPrev").addEventListener("click", function(){ stop(); go(step - 1); });
+  $("#simNext").addEventListener("click", function(){ stop(); go(step + 1); });
+  $("#simPlay").addEventListener("click", function(){
+    if (playing) { stop(); return; }
+    if (step === STEPS.length - 1) go(0);
+    $("#simPlay").textContent = "⏸ Пауза";
+    playing = setInterval(function(){ if (step >= STEPS.length - 1) stop(); else go(step + 1); }, 3200);
+  });
+  go(0);
+
+  /* ---------- decision helper ---------- */
+  var ans = {size: "l", work: "etl", lat: "hours"};
+  function bindSeg(id, key){
+    var box = $("#" + id);
+    $$("button", box).forEach(function(b){
+      if (!b.hasAttribute("aria-pressed")) b.setAttribute("aria-pressed", "false");
+      b.addEventListener("click", function(){
+        $$("button", box).forEach(function(x){ x.setAttribute("aria-pressed", String(x === b)); });
+        ans[key] = b.dataset.v; decide();
+      });
+    });
+  }
+  bindSeg("qSize", "size"); bindSeg("qWork", "work"); bindSeg("qLat", "lat");
+  function decide(){
+    var v, t, p, alt;
+    var big = ans.size === "l" || ans.size === "xl";
+    if (ans.work === "oltp") { v = "no"; t = "Spark тут не підходить"; p = "Транзакції застосунку — це читання й оновлення окремих рядків за мілісекунди. Spark призначений для масової обробки, а не для обслуговування запитів користувачів."; alt = "Візьміть PostgreSQL або MySQL. Spark може потім забирати з них дані для аналітики через CDC."; }
+    else if (ans.lat === "ms") { v = "no"; t = "Затримка завелика"; p = "Навіть стрімінг у Spark працює мікробатчами: типова затримка — від долі секунди до кількох секунд. Мілісекунд він не дасть."; alt = ans.work === "stream" ? "Для подій із мілісекундною реакцією — Apache Flink або Kafka Streams." : "Для швидких відповідей — попередньо пораховані агрегати в Redis, ClickHouse або базі. Spark може їх готувати."; }
+    else if (ans.size === "s") { v = "no"; t = "Spark буде зайвим"; p = "Такий обсяг уміщується в пам’ять ноутбука. Запуск кластера і накладні витрати займуть більше часу, ніж сама обробка."; alt = ans.work === "stream" ? "Для невеликого потоку вистачить звичайного консюмера Kafka або легкого Flink-джобу." : "pandas, Polars або DuckDB зроблять це швидше й простіше."; }
+    else if (ans.size === "m") {
+      v = "maybe"; t = "Можливо, але є простіші варіанти";
+      p = "DuckDB чи Polars на потужній машині часто впораються з сотнями гігабайт. Spark вартий уваги, якщо дані швидко ростуть, потрібна стійкість до збоїв або у команди вже є Databricks чи EMR.";
+      alt = ans.work === "stream" ? "Для потоку Structured Streaming уже доречний, якщо важливі exactly-once і стан між подіями." : ans.work === "sql" ? "Для SQL-аналітики подивіться також на ClickHouse або хмарне сховище." : "Почніть з однієї машини й переходьте на Spark, коли впретесь у ліміти.";
+    } else {
+      v = "yes";
+      var txt = {
+        etl: ["Класичний юзкейс Spark", "Масові перетворення терабайтів — саме те, для чого Spark створено: паралельне читання, оптимізатор, повтор упалих тасок."],
+        stream: ["Structured Streaming підійде", "Секундні затримки, вікна з watermark, exactly-once запис у Delta чи Iceberg завдяки чекпоінтам."],
+        sql: ["Spark SQL впорається", "Для важких запитів по сирих даних Spark добрий. Для BI-дашбордів із сотнями дрібних запитів поставте поруч сховище."],
+        ml: ["Spark для підготовки даних", "Ознаки на всьому масиві рахуються в Spark. Саму модель часто навчають окремо на вибірці."]
+      }[ans.work];
+      t = txt[0]; p = txt[1];
+      alt = ans.work === "sql" ? "Альтернативи для інтерактиву: Trino, ClickHouse, BigQuery, Snowflake." : ans.work === "ml" ? "Навчання: XGBoost, PyTorch, scikit-learn на підготовленій вибірці." : ans.size === "xl" ? "На такому обсязі зверніть увагу на формат таблиць (Delta, Iceberg) і партиціювання за датою." : "Запускати зручно в Databricks, EMR, Dataproc або на Kubernetes.";
+    }
+    if (big && ans.lat === "sec" && ans.work === "etl" && v === "yes") p += " Для результату за секунди перетворіть батч на стрімінг або готуйте агрегати заздалегідь.";
+    var label = {yes: "так", maybe: "можливо", no: "ні"}[v];
+    var box = $("#verdict");
+    box.className = "verdict " + v;
+    box.innerHTML = '<div class="vh"><span class="tag ' + (v === "yes" ? "ok" : v === "maybe" ? "warn" : "bad") + '">' + label + "</span><b>" + t + "</b></div><p>" + p + '</p><p class="alt">' + alt + "</p>";
+  }
+  decide();
+
+  /* ---------- tabs ---------- */
+  var tabs = $$("#deepTabs [role=tab]");
+  function selectTab(t){
+    tabs.forEach(function(x){ var on = x === t; x.setAttribute("aria-selected", String(on)); x.tabIndex = on ? 0 : -1; $("#" + x.getAttribute("aria-controls")).hidden = !on; });
+  }
+  tabs.forEach(function(t, i){
+    t.addEventListener("click", function(){ selectTab(t); });
+    t.addEventListener("keydown", function(e){
+      var d = e.key === "ArrowRight" ? 1 : e.key === "ArrowLeft" ? -1 : 0;
+      if (d) { var n = tabs[(i + d + tabs.length) % tabs.length]; selectTab(n); n.focus(); }
+    });
+  });
+  selectTab(tabs[0]);
+
+  /* ---------- catalyst ---------- */
+  var CAT = [
+    {t: "Розібраний план", s: "Parsed", d: "Парсер перетворив SQL на дерево операцій. Spark ще не знає, чи існує таблиця transactions і які в неї колонки: усе позначено як unresolved (апостроф перед іменем).",
+     p: "'Aggregate ['user_id], ['user_id, 'sum('amount) AS total]\n+- 'Filter ('status = COMPLETED)\n   +- 'UnresolvedRelation [transactions]"},
+    {t: "Проаналізований план", s: "Analyzed", d: "Analyzer звернувся до каталогу: знайшов таблицю, перевірив колонки, визначив їхні типи й дав кожній унікальний ідентифікатор (#1, #2…). Помилка в імені колонки з’явилася б саме тут.",
+     p: "Aggregate [user_id#1], [user_id#1, sum(amount#2) AS total#5]\n+- Filter (status#3 = COMPLETED)\n   +- SubqueryAlias spark_catalog.default.transactions\n      +- Relation default.transactions[user_id#1,amount#2,status#3,created_at#4] parquet"},
+    {t: "Оптимізований логічний план", s: "Optimized", d: "Оптимізатор застосував правила: прибрав непотрібну колонку created_at (column pruning), додав перевірку isnotnull і спустив фільтр якомога ближче до читання (predicate pushdown).",
+     p: "Aggregate [user_id#1], [user_id#1, sum(amount#2) AS total#5]\n+- Project [user_id#1, amount#2]\n   +- Filter (isnotnull(status#3) AND (status#3 = COMPLETED))\n      +- Relation default.transactions[user_id#1,amount#2,status#3,created_at#4] parquet"},
+    {t: "Фізичний план", s: "Physical", d: "Планувальник обрав конкретні алгоритми: агрегація у два кроки (partial_sum до shuffle і sum після), Exchange — це і є shuffle. Фільтр передано у читач Parquet (PushedFilters), тож зайві блоки файлу навіть не читаються. Оператори в межах стадії Tungsten компілює в один цикл байткоду (whole-stage codegen).",
+     p: "AdaptiveSparkPlan isFinalPlan=false\n+- HashAggregate(keys=[user_id#1], functions=[sum(amount#2)])\n   +- Exchange hashpartitioning(user_id#1, 200)        <- shuffle\n      +- HashAggregate(keys=[user_id#1], functions=[partial_sum(amount#2)])\n         +- Project [user_id#1, amount#2]\n            +- Filter (isnotnull(status#3) AND (status#3 = COMPLETED))\n               +- FileScan parquet [user_id#1,amount#2,status#3]\n                    PushedFilters: [IsNotNull(status), EqualTo(status,COMPLETED)]"}
+  ];
+  var catBox = $("#catSteps");
+  CAT.forEach(function(c, i){
+    var b = document.createElement("button");
+    b.type = "button"; b.innerHTML = "<small>Етап " + (i + 1) + " · " + c.s + "</small>" + c.t;
+    b.addEventListener("click", function(){ showCat(i); });
+    catBox.appendChild(b);
+  });
+  function showCat(i){
+    $$("button", catBox).forEach(function(b, k){ b.setAttribute("aria-pressed", String(k === i)); });
+    $("#catTitle").textContent = CAT[i].t;
+    $("#catDesc").textContent = CAT[i].d;
+    $("#catPlan").textContent = CAT[i].p;
+  }
+  showCat(0);
+
+  /* ---------- memory calculator ---------- */
+  var fmt = function(mb){ return mb >= 1024 ? (mb / 1024).toFixed(2) + " ГБ" : Math.round(mb) + " МБ"; };
+  function mem(){
+    var ram = +$("#mRam").value, cores = +$("#mCores").value, ovf = +$("#mOvh").value, fr = +$("#mFrac").value, sf = +$("#mSto").value;
+    $("#oRam").textContent = ram + "g"; $("#oCores").textContent = cores; $("#oOvh").textContent = ovf.toFixed(2); $("#oFrac").textContent = fr.toFixed(2); $("#oSto").textContent = sf.toFixed(2);
+    var heap = ram * 1024, reserved = 300, usable = Math.max(0, heap - reserved);
+    var unified = usable * fr, storage = unified * sf, exec = unified - storage, user = usable - unified;
+    var ovh = Math.max(384, heap * ovf), total = heap + ovh;
+    var parts = [["m-res", "Reserved", reserved], ["m-user", "User", user], ["m-sto", "Storage", storage], ["m-exe", "Execution", exec], ["m-ovh", "Overhead", ovh]];
+    $("#membar").innerHTML = parts.map(function(x){ return '<div class="' + x[0] + '" style="flex:0 0 ' + (x[2] / total * 100) + '%" title="' + x[1] + ": " + fmt(x[2]) + '"><span>' + x[1] + "</span><span>" + fmt(x[2]) + "</span></div>"; }).join("");
+    $("#memkv").innerHTML = [
+      ["Reserved (системні потреби Spark)", fmt(reserved)],
+      ["User memory (ваші структури, UDF)", fmt(user)],
+      ["Storage (кеш, broadcast)", fmt(storage)],
+      ["Execution (shuffle, join, сортування)", fmt(exec)],
+      ["Execution на одну таску, до", fmt(exec / cores)],
+      ["Overhead поза heap", fmt(ovh)]
+    ].map(function(r){ return "<span>" + r[0] + "</span><span>" + r[1] + "</span>"; }).join("") + '<span class="tot">Контейнер YARN / под Kubernetes</span><span class="tot">' + fmt(total) + "</span>";
+  }
+  $$("#p-mem input").forEach(function(i){ i.addEventListener("input", mem); });
+  mem();
+
+  /* ---------- skew & salting ---------- */
+  var TASKS = 8, US = 85000, OTHER = ["DE", "FR", "UA", "PL", "GB", "IT", "ES"];
+  function skew(){
+    var n = +$("#salt").value;
+    $("#oSalt").textContent = n === 1 ? "1 (вимкнено)" : n;
+    var load = new Array(TASKS).fill(0), hot = new Array(TASKS).fill(false);
+    for (var i = 0; i < n; i++) { load[i % TASKS] += US / n; hot[i % TASKS] = true; }
+    OTHER.forEach(function(_, k){ load[(k + 1) % TASKS] += 15000 / OTHER.length; });
+    var max = Math.max.apply(null, load), perMin = 2000;
+    $("#skewBars").innerHTML = load.map(function(l, i){
+      return '<div class="bar"><span>task ' + i + '</span><div class="track"><div class="fill' + (l === max && n < 4 ? " hot" : "") + '" style="width:' + (l / 100000 * 100) + '%"></div></div><span>' + Math.round(l).toLocaleString("uk-UA") + "</span></div>";
+    }).join("");
+    $("#skewStat").innerHTML = '<div><b>~' + Math.ceil(max / perMin) + ' хв</b><span>триває стадія (найповільніша таска)</span></div><div><b>' + Math.round(max).toLocaleString("uk-UA") + '</b><span>рядків у найбільшій тасці</span></div><div><b>×' + n + '</b><span>копій малої таблиці для join</span></div>';
+    $("#saltCode").innerHTML =
+      '<span class="k">from</span> pyspark.sql <span class="k">import</span> functions <span class="k">as</span> F\n\nSALT = <span class="f">' + n + '</span>\n\n' +
+      '<span class="c"># велика таблиця: до ключа додаємо випадкову «сіль» 0..SALT-1</span>\n' +
+      'big = orders.withColumn(<span class="s">"salt"</span>, (F.rand() * SALT).cast(<span class="s">"int"</span>))\n\n' +
+      '<span class="c"># мала таблиця: розмножуємо кожен рядок на всі значення солі</span>\n' +
+      'small = countries.withColumn(<span class="s">"salt"</span>, F.explode(F.sequence(F.lit(<span class="f">0</span>), F.lit(SALT - <span class="f">1</span>))))\n\n' +
+      '<span class="c"># join за парою (country, salt): "US" тепер розкладено на SALT тасок</span>\n' +
+      'result = big.join(small, [<span class="s">"country"</span>, <span class="s">"salt"</span>]).drop(<span class="s">"salt"</span>)';
+  }
+  $("#salt").addEventListener("input", skew);
+  skew();
+
+  /* ---------- quiz ---------- */
+  var QUIZ = [
+    {q: "Ви написали df.filter(...).select(...) і не викликали жодної дії. Що зробив Spark?", o: ["Відфільтрував дані й тримає результат у пам’яті", "Нічого не обчислив, лише додав кроки до плану", "Відправив таски на executors і чекає", "Записав проміжний результат на диск"], a: 1, w: "Трансформації ліниві. Обчислення почнеться тільки на дії: show, count, collect, write."},
+    {q: "Хто ділить програму на стадії й таски і роздає їх?", o: ["Executor", "Cluster manager", "Driver", "HDFS"], a: 2, w: "Driver будує DAG, ділить його на стадії (DAG Scheduler) і відправляє таски на executors (Task Scheduler). Cluster manager лише видає ресурси."},
+    {q: "Яка операція спричиняє shuffle?", o: ["filter", "withColumn", "select", "groupBy"], a: 3, w: "groupBy має звести всі рядки з однаковим ключем в одне місце, а вони розкидані по вузлах. Тому дані йдуть мережею."},
+    {q: "Є CSV на 3 ГБ, треба порахувати кілька агрегатів. Що розумніше?", o: ["Підняти кластер Spark на 10 вузлів", "pandas, Polars або DuckDB на ноутбуці", "Hadoop MapReduce", "Spark Structured Streaming"], a: 1, w: "3 ГБ уміщуються в пам’ять однієї машини. Spark дасть лише накладні витрати на запуск і координацію."},
+    {q: "Стадія з 200 тасок: 199 завершились за 2 хвилини, одна працює 40 хвилин. Найімовірніша причина?", o: ["Мало пам’яті на driver", "Перекіс даних: один ключ має більшість рядків", "Повільний Catalyst", "Забагато партицій"], a: 1, w: "Це класичний data skew. Допомагають AQE skew join, salting або окрема обробка «гарячого» ключа."},
+    {q: "Що зробить df.coalesce(1000), якщо в DataFrame 100 партицій?", o: ["Створить 1000 партицій через shuffle", "Залишить 100 партицій", "Кине помилку", "Створить 900 порожніх партицій"], a: 1, w: "coalesce лише об’єднує партиції без shuffle і не вміє їх збільшувати. Для збільшення потрібен repartition(1000)."},
+    {q: "Чому звичайні Python UDF у PySpark повільні?", o: ["Виконуються тільки на driver", "Кожен рядок серіалізується між JVM і процесом Python, а Catalyst не бачить, що всередині функції", "Python не вміє працювати з числами", "Вони вимикають кеш"], a: 1, w: "Вбудовані функції F.* працюють усередині JVM і оптимізуються. Якщо без власної логіки ніяк, беріть pandas UDF: вони передають дані пачками через Apache Arrow."},
+    {q: "Головна перевага Broadcast Hash Join?", o: ["Не потребує пам’яті", "Велика таблиця не пересилається мережею: маленьку копіюють на кожен executor", "Сортує дані швидше", "Працює тільки на driver"], a: 1, w: "Broadcast прибирає shuffle великої таблиці. Працює, поки мала таблиця справді мала: за замовчуванням до 10 МБ."}
+  ];
+  var answered = 0, correct = 0, qbox = $("#quizBox");
+  QUIZ.forEach(function(item, qi){
+    var d = document.createElement("div");
+    d.className = "qq";
+    d.innerHTML = "<h3>" + (qi + 1) + ". " + item.q + '</h3><div class="opts">' + item.o.map(function(o, oi){ return '<button type="button" data-i="' + oi + '">' + o + "</button>"; }).join("") + '</div><p class="why" hidden></p>';
+    $$("button", d).forEach(function(b){
+      b.addEventListener("click", function(){
+        var pick = +b.dataset.i, ok = pick === item.a;
+        $$("button", d).forEach(function(x){ x.disabled = true; if (+x.dataset.i === item.a) x.classList.add("right"); });
+        if (!ok) b.classList.add("wrong");
+        var why = $(".why", d); why.hidden = false; why.textContent = (ok ? "Правильно. " : "Не зовсім. ") + item.w;
+        answered++; if (ok) correct++;
+        renderScore();
+      });
+    });
+    qbox.appendChild(d);
+  });
+  function renderScore(){
+    var s = $("#score");
+    if (!answered) { s.innerHTML = '<span class="muted">Відповідайте на питання — рахунок з’явиться тут.</span>'; return; }
+    var msg = answered < QUIZ.length ? "" : correct === QUIZ.length ? "Чудово, ви розумієте, як працює Spark." : correct >= 5 ? "Добре. Перегляньте пояснення до помилок." : "Пройдіться ще раз по розділах «Як виконується запит» і «Ліниві обчислення».";
+    s.innerHTML = "<b>" + correct + " / " + QUIZ.length + "</b><span>правильних з " + answered + " відповідей. " + msg + '</span><button class="btn" type="button" id="qReset">Почати знову</button>';
+    $("#qReset").addEventListener("click", function(){
+      answered = 0; correct = 0;
+      $$(".qq", qbox).forEach(function(d){ $$("button", d).forEach(function(x){ x.disabled = false; x.classList.remove("right", "wrong"); }); $(".why", d).hidden = true; });
+      renderScore();
+    });
+  }
+  renderScore();
+})();
+</script>
+</body>
+</html>
