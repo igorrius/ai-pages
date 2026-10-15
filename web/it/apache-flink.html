@@ -1078,11 +1078,12 @@ HAVING COUNT(*) &gt;= 3
     {q: "Стан джоба росте з кожним днем і ніколи не зменшується. Що найперше перевірити?", o: ["Версію Java", "Чи налаштовано State TTL для ключів, що з’являються без кінця", "Кількість партицій Kafka", "Розмір логів"], a: 1, w: "Ключі на кшталт session id з’являються постійно. Без TTL їхній стан ніколи не видаляється."},
     {q: "Що потрібно для exactly-once запису в Kafka з Flink?", o: ["Нічого, Kafka робить це сама", "Транзакції, які комітяться після завершення чекпоінта, і споживачі з read_committed", "Вимкнути чекпоінти", "Писати в один потік"], a: 1, w: "Приймач пише в транзакцію і комітить її разом із чекпоінтом (двофазний коміт). Після збою незакомічена транзакція скасовується."}
   ];
+  function shuffle(a){ for (var i = a.length - 1; i > 0; i--) { var j = Math.floor(Math.random() * (i + 1)), t = a[i]; a[i] = a[j]; a[j] = t; } return a; }
   var answered = 0, correct = 0, qbox = $("#quizBox");
   QUIZ.forEach(function(item, qi){
     var d = document.createElement("div");
     d.className = "qq";
-    d.innerHTML = "<h3>" + (qi + 1) + ". " + item.q + '</h3><div class="opts">' + item.o.map(function(o, oi){ return '<button type="button" data-i="' + oi + '">' + o + "</button>"; }).join("") + '</div><p class="why" hidden></p>';
+    d.innerHTML = "<h3>" + (qi + 1) + ". " + item.q + '</h3><div class="opts">' + shuffle(item.o.map(function(o, oi){ return '<button type="button" data-i="' + oi + '">' + o + "</button>"; })).join("") + '</div><p class="why" hidden></p>';
     $$("button", d).forEach(function(b){
       b.addEventListener("click", function(){
         var ok = +b.dataset.i === item.a;

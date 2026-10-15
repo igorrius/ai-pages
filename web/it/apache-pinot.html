@@ -1,0 +1,1070 @@
+<!doctype html>
+<html lang="uk">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Apache Pinot простими словами</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<meta name="description" content="Інтерактивний посібник: що таке Apache Pinot, як він відповідає на аналітичні запити за мілісекунди, які індекси використовує, для чого його беруть і коли він не потрібен.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cpath d='M28 10h44l-4 30a18 18 0 0 1-36 0zM50 58v26M34 88h32' fill='none' stroke='%237b5cf0' stroke-width='9' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;1,400&family=JetBrains+Mono:wght@400;600&family=Unbounded:wght@500;700&display=swap">
+<style>
+/* Layout: long-read with a sticky section rail on desktop, a sticky chip bar on phones;
+   interactive "labs" are the only framed objects. Cool engineering neutrals, violet accent
+   (third in the series: Spark = flame orange, Flink = raspberry). */
+:root{
+  --bg:#f3f5f7; --surface:#ffffff; --sunk:#e9edf1; --line:#d6dde4;
+  --ink:#14202b; --muted:#56636f; --faint:#8a96a1;
+  --accent:#5b3cc4; --accent-strong:#7b5cf0; --accent-soft:#ebe5fd;
+  --ok:#0f7a5a; --ok-soft:#dcf2ea; --warn:#a15c00; --warn-soft:#fbefd9; --bad:#b4233a; --bad-soft:#fae1e5;
+  --c1:#0d857a; --c1-soft:#d9f1ee; --c2:#a15c00; --c2-soft:#fbefd9; --c3:#2c64c9; --c3-soft:#dfe8f8;
+  --code-bg:#14202b; --code-ink:#dfe6ec; --code-kw:#b9a6ff; --code-str:#9fd7a8; --code-cm:#7f8f9c; --code-fn:#8cc4ff;
+  --f-display:"Unbounded","Arial Black",system-ui,sans-serif;
+  --f-body:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;
+  --f-mono:"JetBrains Mono",ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+  --r:10px;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0e1318; --surface:#151c23; --sunk:#1b242d; --line:#283440;
+  --ink:#e6ecf1; --muted:#9aa8b4; --faint:#6c7a86;
+  --accent:#b4a2ff; --accent-strong:#9a83ff; --accent-soft:#241c45;
+  --ok:#4cc79a; --ok-soft:#14322a; --warn:#f0b357; --warn-soft:#3a2c14; --bad:#ff7d8f; --bad-soft:#3d1b22;
+  --c1:#4fd1c2; --c1-soft:#13332f; --c2:#f0b357; --c2-soft:#3a2c14; --c3:#7aa7ff; --c3-soft:#1c2a45;
+  --code-bg:#0a0f13; --code-ink:#dfe6ec;
+  color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0e1318; --surface:#151c23; --sunk:#1b242d; --line:#283440;
+  --ink:#e6ecf1; --muted:#9aa8b4; --faint:#6c7a86;
+  --accent:#b4a2ff; --accent-strong:#9a83ff; --accent-soft:#241c45;
+  --ok:#4cc79a; --ok-soft:#14322a; --warn:#f0b357; --warn-soft:#3a2c14; --bad:#ff7d8f; --bad-soft:#3d1b22;
+  --c1:#4fd1c2; --c1-soft:#13332f; --c2:#f0b357; --c2-soft:#3a2c14; --c3:#7aa7ff; --c3-soft:#1c2a45;
+  --code-bg:#0a0f13; --code-ink:#dfe6ec;
+  color-scheme:dark}
+
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html{scroll-behavior:smooth;scroll-padding-top:72px}
+@media (prefers-reduced-motion: reduce){html{scroll-behavior:auto}*{animation:none!important;transition:none!important}}
+body{margin:0;background:var(--bg);color:var(--ink);font:400 16px/1.65 var(--f-body);-webkit-font-smoothing:antialiased}
+a{color:var(--accent)}
+a:hover{text-decoration-thickness:2px}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:4px}
+code,kbd{font-family:var(--f-mono);font-size:.88em}
+p code,li code,td code,dd code{background:var(--sunk);padding:.08em .35em;border-radius:4px}
+h1,h2,h3{text-wrap:balance;margin:0}
+h2{font:700 clamp(1.45rem,1.1rem + 1.4vw,2rem)/1.2 var(--f-display);letter-spacing:-.01em}
+h3{font:600 1.15rem/1.35 var(--f-body)}
+p{margin:0}
+.muted{color:var(--muted)}
+.mono{font-family:var(--f-mono)}
+.eyebrow{font:600 .72rem/1 var(--f-mono);letter-spacing:.12em;text-transform:uppercase;color:var(--accent)}
+
+/* ---------- top bar ---------- */
+.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:20;background:color-mix(in srgb,var(--bg) 88%,transparent);backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}
+.top-in{max-width:1180px;margin:0 auto;display:flex;align-items:center;gap:12px;padding-block:10px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.crumbs{display:flex;gap:8px;align-items:center;font-size:.9rem;min-width:0;white-space:nowrap;overflow:hidden}
+.crumbs a{color:var(--muted);text-decoration:none}
+.crumbs a:hover{color:var(--accent)}
+.crumbs span{color:var(--faint)}
+.crumbs b{font-weight:600;overflow:hidden;text-overflow:ellipsis}
+.theme{margin-left:auto;flex:none;border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:999px;padding:6px 12px;font:500 .82rem var(--f-body);cursor:pointer}
+.theme:hover{border-color:var(--accent)}
+.chips{display:none}
+@media (max-width:1023px){
+  .chips{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;padding-bottom:10px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+  .chips::-webkit-scrollbar{display:none}
+  .chips a{flex:none;font-size:.8rem;text-decoration:none;color:var(--muted);border:1px solid var(--line);border-radius:999px;padding:4px 10px;background:var(--surface)}
+  .chips a.on{color:var(--accent);border-color:var(--accent)}
+}
+
+/* ---------- page grid ---------- */
+.wrap{max-width:1180px;margin:0 auto;padding-block:0 64px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));display:grid;grid-template-columns:1fr;gap:40px}
+@media (min-width:1024px){.wrap{grid-template-columns:220px minmax(0,1fr);gap:56px}}
+.rail{display:none}
+@media (min-width:1024px){
+  .rail{display:block;position:sticky;top:calc(env(safe-area-inset-top,0px) + 76px);align-self:start;padding-top:40px}
+  .rail ol{list-style:none;margin:0;padding:0;display:grid;gap:2px;counter-reset:s}
+  .rail a{display:flex;gap:10px;align-items:baseline;padding:6px 10px;border-radius:8px;text-decoration:none;color:var(--muted);font-size:.9rem;line-height:1.35}
+  .rail a::before{counter-increment:s;content:counter(s,decimal-leading-zero);font:500 .7rem var(--f-mono);color:var(--faint)}
+  .rail a:hover{color:var(--ink);background:var(--sunk)}
+  .rail a.on{color:var(--ink);background:var(--surface);box-shadow:inset 2px 0 0 var(--accent)}
+  .rail a.on::before{color:var(--accent)}
+}
+main{min-width:0;display:grid;gap:88px;padding-top:40px}
+section{display:grid;gap:22px;min-width:0}
+.sec-head{display:grid;gap:10px}
+.lead{font-size:1.08rem;color:var(--muted);max-width:66ch}
+.prose{display:grid;gap:14px;max-width:68ch}
+
+/* ---------- hero ---------- */
+.hero{display:grid;gap:28px;padding-top:8px}
+.hero h1{font:700 clamp(2.1rem,1.3rem + 3.6vw,3.6rem)/1.05 var(--f-display);letter-spacing:-.02em}
+.hero h1 em{font-style:normal;color:var(--accent-strong)}
+.hero .def{font-size:clamp(1.08rem,1rem + .4vw,1.3rem);max-width:60ch;line-height:1.55}
+.facts{display:flex;flex-wrap:wrap;gap:8px}
+.facts span{font:500 .8rem var(--f-mono);border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:5px 11px;color:var(--muted)}
+.analogy{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:1px;background:var(--line);border:1px solid var(--line);border-radius:var(--r);overflow:hidden}
+.analogy div{background:var(--surface);padding:16px 18px;display:grid;gap:4px;align-content:start}
+.analogy b{font:600 .95rem var(--f-body)}
+.analogy .mono{font-size:.75rem;color:var(--accent)}
+.analogy p{font-size:.92rem;color:var(--muted)}
+
+/* ---------- generic blocks ---------- */
+.lab{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:clamp(16px,2.5vw,26px);display:grid;gap:18px;min-width:0}
+.lab-head{display:flex;flex-wrap:wrap;gap:8px 16px;align-items:baseline;justify-content:space-between}
+.lab-head .eyebrow{color:var(--muted)}
+.grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr));gap:16px}
+.grid4{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,190px),1fr));gap:16px}
+.grid3{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,240px),1fr));gap:16px}
+.cell{border-top:2px solid var(--line);padding-top:14px;display:grid;gap:6px;align-content:start;min-width:0}
+.cell h3{font-size:1.02rem}
+.cell p{font-size:.94rem;color:var(--muted)}
+.cell.hot{border-top-color:var(--accent)}
+.tag{display:inline-block;font:600 .68rem/1 var(--f-mono);letter-spacing:.06em;text-transform:uppercase;padding:4px 7px;border-radius:5px;background:var(--sunk);color:var(--muted);vertical-align:middle}
+.tag.ok{background:var(--ok-soft);color:var(--ok)}
+.tag.bad{background:var(--bad-soft);color:var(--bad)}
+.tag.warn{background:var(--warn-soft);color:var(--warn)}
+.tag.acc{background:var(--accent-soft);color:var(--accent)}
+.small{font-size:.8rem;color:var(--muted)}
+
+pre.code{margin:0;background:var(--code-bg);color:var(--code-ink);border-radius:var(--r);padding:16px 18px;overflow-x:auto;font:400 .84rem/1.7 var(--f-mono);tab-size:4}
+pre.code .k{color:var(--code-kw)} pre.code .s{color:var(--code-str)} pre.code .c{color:var(--code-cm);font-style:italic} pre.code .f{color:var(--code-fn)}
+.tbl{overflow-x:auto;border:1px solid var(--line);border-radius:var(--r)}
+table{border-collapse:collapse;width:100%;font-size:.9rem;min-width:620px}
+th,td{text-align:left;padding:10px 14px;border-bottom:1px solid var(--line);vertical-align:top}
+th{font:600 .74rem var(--f-mono);letter-spacing:.06em;text-transform:uppercase;color:var(--muted);background:var(--sunk)}
+tr:last-child td{border-bottom:0}
+
+.btn{font:600 .88rem var(--f-body);border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:8px;padding:8px 14px;cursor:pointer;display:inline-flex;gap:6px;align-items:center}
+.btn:hover:not(:disabled){border-color:var(--accent);color:var(--accent)}
+.btn:disabled{opacity:.4;cursor:default}
+.btn.primary{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.btn.primary:hover:not(:disabled){background:var(--accent-strong);border-color:var(--accent-strong);color:#fff}
+.seg{display:inline-flex;flex-wrap:wrap;gap:6px}
+.seg button{font:500 .85rem var(--f-body);border:1px solid var(--line);background:var(--surface);color:var(--muted);border-radius:999px;padding:6px 12px;cursor:pointer;text-align:left}
+.seg button:hover{color:var(--ink);border-color:var(--faint)}
+.seg button[aria-pressed="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+
+/* ---------- why: who asks ---------- */
+.flow{display:grid;gap:10px}
+.flow-row{display:grid;grid-template-columns:170px minmax(0,1fr) auto;gap:12px;align-items:center}
+@media (max-width:620px){.flow-row{grid-template-columns:1fr;gap:6px}}
+.flow-row .who{font-weight:600;font-size:.92rem}
+.steps{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.st{font:500 .78rem var(--f-mono);padding:6px 9px;border-radius:6px;background:var(--c3-soft);color:var(--c3)}
+.wait{font:500 .72rem var(--f-mono);padding:5px 7px;border-radius:6px;background:var(--bad-soft);color:var(--bad)}
+.fast{font:500 .72rem var(--f-mono);padding:5px 7px;border-radius:6px;background:var(--ok-soft);color:var(--ok)}
+.arr{color:var(--faint);font-size:.8rem}
+.flow-row .t{font:600 .85rem var(--f-mono);color:var(--muted);white-space:nowrap}
+
+/* ---------- architecture ---------- */
+.arch{display:grid;gap:10px;justify-items:center}
+.node{width:100%;border:1px solid var(--line);border-radius:12px;background:var(--surface);padding:14px 16px;display:grid;gap:8px}
+.node .nh{display:flex;gap:10px;align-items:baseline;flex-wrap:wrap}
+.node .nh b{font:700 1rem var(--f-display);letter-spacing:-.01em}
+.node .nh span{font-size:.85rem;color:var(--muted)}
+.node.hot{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft)}
+.node.quiet{background:var(--sunk)}
+.pills{display:flex;flex-wrap:wrap;gap:6px}
+.pills span{font:500 .74rem var(--f-mono);padding:4px 8px;border-radius:6px;background:var(--sunk);color:var(--muted)}
+.node.quiet .pills span{background:var(--surface)}
+.link{font:500 .78rem var(--f-mono);color:var(--muted);display:flex;align-items:center;gap:8px;text-align:center}
+.link::before,.link::after{content:"";flex:none;width:1px;height:14px;background:var(--faint)}
+.side{width:100%;display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,250px),1fr));gap:10px}
+.segs{display:flex;flex-wrap:wrap;gap:4px}
+.segs i{font:500 .62rem var(--f-mono);font-style:normal;padding:4px 6px;border-radius:4px;background:var(--accent-soft);color:var(--accent)}
+.segs i.live{background:var(--ok-soft);color:var(--ok)}
+
+/* ---------- simulator ---------- */
+.sim{display:grid;grid-template-columns:minmax(0,1fr);gap:18px}
+@media (min-width:1360px){.sim{grid-template-columns:minmax(0,.9fr) minmax(0,1.3fr)}}
+.sim-code{display:grid;gap:12px;align-content:start;min-width:0}
+.sim-code pre.code span.ln{display:block;padding:0 8px;margin:0 -8px;border-radius:4px;transition:background .25s}
+.sim-code pre.code span.ln.hl{background:rgba(155,131,255,.22);box-shadow:inset 3px 0 0 var(--accent-strong)}
+.explain{border-left:3px solid var(--accent);padding:4px 0 4px 14px;display:grid;gap:6px;min-height:150px}
+.explain h3{font-size:1.05rem}
+.explain p{font-size:.95rem;color:var(--muted)}
+.stagebar{display:flex;gap:6px;flex-wrap:wrap}
+.stagebar span{font:500 .72rem var(--f-mono);padding:4px 8px;border-radius:5px;border:1px solid var(--line);color:var(--faint)}
+.stagebar span.on{border-color:var(--accent);color:var(--accent);background:var(--accent-soft)}
+.cluster{display:grid;gap:10px;min-width:0}
+.box{border-radius:10px;padding:10px 12px;display:grid;gap:6px}
+.box.app{border:1px solid var(--line);background:var(--surface)}
+.box.brk{border:1px dashed var(--accent);background:color-mix(in srgb,var(--accent-soft) 45%,var(--surface))}
+.box-h{font:600 .74rem var(--f-mono);letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.box.brk .box-h{color:var(--accent)}
+.box-body{font-size:.88rem;min-height:30px;display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.net{font:500 .74rem var(--f-mono);text-align:center;color:var(--faint);border-block:1px dashed var(--line);padding:5px;transition:all .3s}
+.net.on{color:var(--accent);border-color:var(--accent);background:var(--accent-soft)}
+.row3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.ex{border:1px solid var(--line);border-radius:10px;background:var(--sunk);padding:8px;display:grid;gap:6px;align-content:start;min-width:0;min-height:200px}
+.ex-h{font:600 .7rem/1.3 var(--f-mono);color:var(--muted)}
+.chip{font:500 .72rem/1.25 var(--f-mono);padding:6px 7px;border-radius:6px;border:1px solid transparent;display:flex;justify-content:space-between;gap:4px;flex-wrap:wrap;transition:opacity .3s}
+.chip.seg{background:var(--surface);border-color:var(--line);color:var(--ink)}
+.chip.seg.on{border-color:var(--accent);box-shadow:inset 3px 0 0 var(--accent)}
+.chip.seg.live{border-color:var(--ok);box-shadow:inset 3px 0 0 var(--ok)}
+.chip.seg.drop{opacity:.4;text-decoration:line-through}
+.chip.q{background:var(--accent-soft);color:var(--accent);border-color:var(--accent);justify-content:center;font-weight:600}
+.chip.idx{background:var(--surface);border:1px dashed var(--accent);color:var(--accent)}
+.chip.ok{background:var(--ok-soft);color:var(--ok);font-weight:600}
+.chip.bad{background:var(--bad-soft);color:var(--bad);font-weight:600}
+.chip.warn{background:var(--warn-soft);color:var(--warn);font-weight:600}
+.chip.ev{background:var(--ok-soft);color:var(--ok);border:1px solid var(--ok);justify-content:center}
+@media (max-width:520px){.chip{font-size:.62rem;padding:5px}.ex{padding:6px}}
+.kafka{font:500 .74rem var(--f-mono);display:flex;gap:6px;align-items:center;flex-wrap:wrap;color:var(--muted)}
+.sim-ctl{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.dots{display:flex;gap:5px;margin-left:auto;flex-wrap:wrap}
+.dots button{width:22px;height:22px;border-radius:50%;border:1px solid var(--line);background:var(--surface);font:500 .62rem var(--f-mono);color:var(--faint);cursor:pointer;padding:0}
+.dots button.on{background:var(--accent-strong);border-color:var(--accent-strong);color:#fff}
+
+/* ---------- index lab ---------- */
+.bars{display:grid;gap:8px}
+.bar{display:grid;grid-template-columns:150px minmax(0,1fr) 150px;gap:10px;align-items:center;font:500 .78rem var(--f-mono)}
+@media (max-width:620px){.bar{grid-template-columns:1fr;gap:3px}.bar span:last-child{text-align:left!important}}
+.bar .track{height:20px;background:var(--sunk);border-radius:4px;overflow:hidden}
+.bar .fill{height:100%;border-radius:4px;background:var(--accent-strong);transition:width .35s;min-width:3px}
+.bar .fill.slow{background:var(--bad)}
+.bar .fill.na{background:var(--faint);opacity:.35}
+.bar span:last-child{text-align:right;color:var(--muted);font-variant-numeric:tabular-nums}
+.bar.best span:first-child{color:var(--accent);font-weight:600}
+
+/* ---------- star-tree ---------- */
+.stree{display:grid;grid-template-columns:minmax(0,1fr);gap:18px}
+@media (min-width:900px){.stree{grid-template-columns:minmax(0,.7fr) minmax(0,1.3fr)}}
+.raw{display:grid;gap:3px;font:500 .76rem var(--f-mono)}
+.raw div{display:grid;grid-template-columns:1fr 1fr auto;gap:8px;padding:5px 8px;border-radius:5px;background:var(--bg);transition:background .25s}
+.raw div.hl{background:var(--accent-soft);color:var(--accent)}
+.raw .h{background:none;color:var(--muted);font-size:.66rem;letter-spacing:.06em;text-transform:uppercase}
+.tree{display:grid;gap:10px;font:500 .74rem var(--f-mono);overflow-x:auto}
+.lvl{display:flex;gap:8px;flex-wrap:wrap}
+.grp{display:grid;gap:4px;border:1px solid var(--line);border-radius:8px;padding:6px;background:var(--bg)}
+.grp-h{font-size:.62rem;color:var(--faint)}
+.tn{padding:5px 8px;border-radius:5px;background:var(--surface);border:1px solid var(--line);white-space:nowrap;transition:all .25s}
+.tn b{font-weight:600}
+.tn.star{border-style:dashed}
+.tn.hl{background:var(--accent-strong);border-color:var(--accent-strong);color:#fff}
+.tn.path{border-color:var(--accent);color:var(--accent)}
+.stat{display:flex;flex-wrap:wrap;gap:10px 28px}
+.stat div{display:grid}
+.stat b{font:700 1.5rem var(--f-display);font-variant-numeric:tabular-nums}
+.stat span{font-size:.8rem;color:var(--muted)}
+
+/* ---------- use cases ---------- */
+.cases{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,330px),1fr));gap:16px}
+.case{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:18px;display:grid;gap:10px;align-content:start;grid-template-rows:auto auto 1fr auto}
+.case-h{display:flex;justify-content:space-between;gap:10px;align-items:start}
+.case h3{font-size:1.05rem}
+.case p{font-size:.93rem;color:var(--muted)}
+.case p b{color:var(--ink);font-weight:600}
+.pipe{display:flex;flex-wrap:wrap;gap:4px;align-items:center;font:500 .72rem var(--f-mono)}
+.pipe span{padding:4px 7px;border-radius:5px;background:var(--sunk);color:var(--ink)}
+.pipe span.sp{background:var(--accent-soft);color:var(--accent)}
+.pipe i{font-style:normal;color:var(--faint)}
+.nope{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,260px),1fr));gap:12px}
+.nope div{border:1px solid var(--line);border-radius:10px;padding:14px;display:grid;gap:4px;background:var(--surface)}
+.nope b{font-size:.95rem}
+.nope p{font-size:.88rem;color:var(--muted)}
+
+/* ---------- decision helper ---------- */
+.ask{display:grid;gap:14px}
+.ask .q{display:grid;gap:8px}
+.ask .q > span{font:600 .74rem var(--f-mono);letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.verdict{border-radius:12px;padding:18px;display:grid;gap:8px;border:1px solid var(--line);background:var(--sunk)}
+.verdict.yes{background:var(--ok-soft);border-color:color-mix(in srgb,var(--ok) 40%,transparent)}
+.verdict.maybe{background:var(--warn-soft);border-color:color-mix(in srgb,var(--warn) 40%,transparent)}
+.verdict.no{background:var(--bad-soft);border-color:color-mix(in srgb,var(--bad) 40%,transparent)}
+.verdict .vh{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.verdict b{font:700 1.05rem var(--f-display)}
+.verdict p{font-size:.95rem}
+.verdict .alt{font-size:.88rem;color:var(--muted)}
+
+/* ---------- deep dive tabs ---------- */
+.tabs{display:flex;gap:4px;overflow-x:auto;border-bottom:1px solid var(--line);scrollbar-width:thin}
+.tabs button{flex:none;font:500 .9rem var(--f-body);background:none;border:0;border-bottom:2px solid transparent;color:var(--muted);padding:10px 12px;cursor:pointer;margin-bottom:-1px}
+.tabs button:hover{color:var(--ink)}
+.tabs button[aria-selected="true"]{color:var(--ink);border-bottom-color:var(--accent-strong);font-weight:600}
+.panel{display:grid;gap:18px;min-width:0}
+.life{display:flex;flex-wrap:wrap;gap:6px;align-items:center;font:500 .76rem var(--f-mono)}
+.life span{padding:6px 9px;border-radius:6px;background:var(--sunk)}
+.life span.on{background:var(--ok-soft);color:var(--ok)}
+.life i{font-style:normal;color:var(--faint)}
+
+/* ---------- quiz ---------- */
+.quiz{display:grid;gap:14px}
+.qq{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:18px;display:grid;gap:10px}
+.qq h3{font-size:1rem;font-weight:600}
+.qq .opts{display:grid;gap:6px}
+.qq .opts button{text-align:left;font:400 .93rem/1.45 var(--f-body);border:1px solid var(--line);background:var(--bg);color:var(--ink);border-radius:8px;padding:9px 12px;cursor:pointer}
+.qq .opts button:hover:not(:disabled){border-color:var(--faint)}
+.qq .opts button:disabled{cursor:default}
+.qq .opts button.right{border-color:var(--ok);background:var(--ok-soft)}
+.qq .opts button.wrong{border-color:var(--bad);background:var(--bad-soft)}
+.qq .why{font-size:.9rem;color:var(--muted);border-left:3px solid var(--line);padding-left:12px}
+.score{display:flex;gap:12px;align-items:center;flex-wrap:wrap;font-size:.95rem}
+.score b{font:700 1.3rem var(--f-display)}
+
+/* ---------- glossary ---------- */
+dl.gloss{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr));gap:0 28px;margin:0}
+dl.gloss div{padding:12px 0;border-bottom:1px solid var(--line);display:grid;gap:2px}
+dl.gloss dt{font:600 .92rem var(--f-mono);color:var(--accent)}
+dl.gloss dd{margin:0;font-size:.92rem;color:var(--muted)}
+
+footer{border-top:1px solid var(--line);padding-block:28px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));text-align:center;font-size:.85rem;color:var(--muted)}
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div class="top-in">
+    <nav class="crumbs" aria-label="Навігація">
+      <a href="../../index.html">AI Pages</a><span>/</span><a href="./index.html">IT</a><span>/</span><b>Apache Pinot</b>
+    </nav>
+    <button class="theme" id="themeBtn" type="button" aria-label="Перемкнути тему">Тема: авто</button>
+  </div>
+  <nav class="chips" id="chips" aria-label="Розділи"></nav>
+</header>
+
+<div class="wrap">
+  <aside class="rail" aria-label="Зміст">
+    <ol id="toc"></ol>
+  </aside>
+
+  <main>
+    <!-- ============ 1. WHAT ============ -->
+    <section id="what" data-title="Що це таке">
+      <div class="hero">
+        <span class="eyebrow">Інтерактивний посібник</span>
+        <h1>Apache Pinot: аналітика <em>за мілісекунди</em>, навіть коли питають мільйони</h1>
+        <p class="def"><b>Apache Pinot</b> — відкрита розподілена аналітична база даних реального часу. Вона забирає події з Kafka за секунди після появи і відповідає на запити на кшталт «скільки замовлень у мого ресторану сьогодні по годинах» за десятки мілісекунд. І таких запитів можуть бути тисячі за секунду, від усіх користувачів застосунку одночасно.</p>
+        <div class="facts">
+          <span>Apache License 2.0</span>
+          <span>SQL</span>
+          <span>свіжість: секунди</span>
+          <span>затримка: десятки мс</span>
+          <span>тисячі запитів/с</span>
+        </div>
+      </div>
+
+      <div class="prose">
+        <p>Уявіть величезний склад, куди безперервно привозять коробки, а сотні покупців водночас питають довідку.</p>
+      </div>
+      <div class="analogy">
+        <div><span class="mono">Broker</span><b>Довідкове віконце</b><p>Приймає питання, знає, на яких полицях що лежить, і розсилає помічників тільки туди, де є відповідь.</p></div>
+        <div><span class="mono">Servers</span><b>Відділи складу</b><p>Кожен відділ шукає у своїх коробках паралельно з іншими і повертає короткий підсумок.</p></div>
+        <div><span class="mono">Segments</span><b>Коробки з даними</b><p>Дані запаковано по днях і по колонках. На кожній коробці наклейка «що всередині», тож зайві коробки навіть не відкривають.</p></div>
+        <div><span class="mono">Indexes</span><b>Покажчики й готові підсумки</b><p>Картотека «ресторан 42 → рядки 3, 17, 58» і таблички з уже порахованими сумами. Замість перебору мільйона рядків читають кілька.</p></div>
+      </div>
+    </section>
+
+    <!-- ============ 2. WHY ============ -->
+    <section id="why" data-title="Навіщо він потрібен">
+      <div class="sec-head">
+        <span class="eyebrow">Проблема</span>
+        <h2>Аналітика не для аналітиків, а для всіх користувачів</h2>
+      </div>
+      <div class="prose">
+        <p>Класичне сховище даних (Snowflake, BigQuery, Redshift) чудово відповідає на питання десятка аналітиків: запит за кілька секунд, кілька запитів одночасно. Але коли той самий дашборд вбудовано в застосунок, його відкривають тисячі власників ресторанів, продавців чи рекламодавців одночасно. Кожен чекає відповіді миттєво, і всі хочуть бачити дані за останню хвилину, а не за вчора.</p>
+        <p>Pinot створили в LinkedIn саме для цього: функція «Хто переглядав ваш профіль» мала щосекунди відповідати мільйонам користувачів, кожному про його власні дані.</p>
+      </div>
+      <div class="lab">
+        <div class="lab-head"><span class="eyebrow">Той самий запит у різних системах</span><span class="small">«замовлення мого ресторану за сьогодні»</span></div>
+        <div class="flow">
+          <div class="flow-row">
+            <span class="who">Продакшн-база (OLTP)</span>
+            <div class="steps"><span class="st">агрегація</span><span class="arr">→</span><span class="wait">сканує таблицю замовлень</span><span class="arr">→</span><span class="wait">гальмує застосунок</span></div>
+            <span class="t">ризиковано</span>
+          </div>
+          <div class="flow-row">
+            <span class="who">Сховище даних</span>
+            <div class="steps"><span class="wait">нічний ETL</span><span class="arr">→</span><span class="st">запит</span><span class="arr">→</span><span class="wait">черга з тисяч запитів</span></div>
+            <span class="t">секунди, дані вчорашні</span>
+          </div>
+          <div class="flow-row">
+            <span class="who">Apache Pinot</span>
+            <div class="steps"><span class="fast">Kafka за секунди</span><span class="arr">→</span><span class="st">запит</span><span class="arr">→</span><span class="fast">індекс + готові підсумки</span></div>
+            <span class="t">~10–100 мс, дані свіжі</span>
+          </div>
+        </div>
+      </div>
+      <div class="grid4">
+        <div class="cell"><span class="mono small">2014</span><h3>LinkedIn</h3><p>Pinot створюють для аналітики, яку бачать користувачі: перегляди профілю, статистика публікацій, реклама.</p></div>
+        <div class="cell"><span class="mono small">2015 → 2018</span><h3>Відкритий код</h3><p>Код відкрито в 2015 році, у 2018-му проєкт переходить до Apache Incubator. Його підхоплює Uber та інші компанії.</p></div>
+        <div class="cell"><span class="mono small">2021</span><h3>Apache top-level</h3><p>Pinot стає проєктом верхнього рівня Apache. Автори засновують компанію StarTree з керованим Pinot.</p></div>
+        <div class="cell hot"><span class="mono small">2023</span><h3>Pinot 1.0</h3><p>Багатоетапний рушій запитів з join-ами, покращені upsert-и і стабільний формат сегментів.</p></div>
+      </div>
+    </section>
+
+    <!-- ============ 3. ARCHITECTURE ============ -->
+    <section id="arch" data-title="Архітектура">
+      <div class="sec-head">
+        <span class="eyebrow">Як влаштовано</span>
+        <h2>Controller, broker, servers і minion</h2>
+        <p class="lead">Ролі розділено, і кожну можна масштабувати окремо: більше запитів — більше broker-ів, більше даних — більше server-ів.</p>
+      </div>
+      <div class="arch">
+        <div class="node quiet" style="max-width:460px">
+          <div class="nh"><b>Ваш застосунок</b><span>дашборд, API, сервіс</span></div>
+          <div class="pills"><span>SQL через HTTP</span><span>JDBC</span><span>клієнти Python / Java / Go</span></div>
+        </div>
+        <span class="link">SQL-запит</span>
+        <div class="node hot" style="max-width:580px">
+          <div class="nh"><b>Broker</b><span>приймає запити, розсилає і збирає</span></div>
+          <div class="pills"><span>таблиця маршрутизації</span><span>відсікання сегментів</span><span>scatter-gather</span><span>злиття результатів</span></div>
+        </div>
+        <span class="link">підзапити лише до потрібних сегментів</span>
+        <div class="side">
+          <div class="node"><div class="nh"><b>Server · real-time</b><span>споживає Kafka</span></div><div class="segs"><i class="live">orders__live ●</i><i>orders__15жовт_0</i></div><span class="small">кожен server сам читає свої партиції топіка</span></div>
+          <div class="node"><div class="nh"><b>Server · offline</b><span>історичні сегменти</span></div><div class="segs"><i>orders__13жовт</i><i>orders__14жовт</i><i>orders__вер</i></div><span class="small">сегменти з батч-завантаження або від minion</span></div>
+        </div>
+        <span class="link">метадані, призначення сегментів · копії сегментів</span>
+        <div class="side">
+          <div class="node quiet"><div class="nh"><b>Controller</b><span>керує кластером</span></div><div class="pills"><span>схеми й таблиці</span><span>розподіл сегментів</span><span>Apache Helix + ZooKeeper</span></div></div>
+          <div class="node quiet"><div class="nh"><b>Minion</b><span>фонові задачі</span></div><div class="pills"><span>злиття дрібних сегментів</span><span>real-time → offline</span><span>видалення даних</span></div></div>
+          <div class="node quiet"><div class="nh"><b>Deep store</b><span>S3 · GCS · HDFS</span></div><div class="pills"><span>резервні копії сегментів</span><span>відновлення server-ів</span></div></div>
+        </div>
+      </div>
+      <div class="grid2">
+        <div class="cell"><h3>Сегмент — одиниця всього</h3><p>Таблиця розрізана на сегменти по сотні мегабайт. Усередині дані зберігаються по колонках, стиснуті словником, разом з індексами і метаданими: мінімальний і максимальний час, діапазони значень. Готовий сегмент незмінний, тому його легко копіювати й кешувати.</p></div>
+        <div class="cell"><h3>Real-time без проміжного ETL</h3><p>Server напряму читає партиції Kafka і складає події у сегмент, що споживається. Запити бачать його вже через секунди. Коли сегмент досягає ліміту, його запечатують, копіюють у deep store і починають новий.</p></div>
+      </div>
+    </section>
+
+    <!-- ============ 4. SIMULATOR ============ -->
+    <section id="run" data-title="Як виконується запит">
+      <div class="sec-head">
+        <span class="eyebrow">Покроково</span>
+        <h2>Дашборд ресторану: шлях одного запиту</h2>
+        <p class="lead">Власник ресторану №42 відкриває застосунок доставки і бачить статистику замовлень за сьогодні. Такий запит Pinot отримує тисячі разів за секунду від різних ресторанів. Пройдіть кроки.</p>
+      </div>
+      <div class="lab">
+        <div class="sim">
+          <div class="sim-code">
+<pre class="code" id="simCode"><span class="ln" data-l="0"><span class="k">SELECT</span> status, <span class="f">COUNT</span>(*) <span class="k">AS</span> orders</span><span class="ln" data-l="1"><span class="k">FROM</span> orders</span><span class="ln" data-l="2"><span class="k">WHERE</span> restaurant_id = <span class="f">42</span></span><span class="ln" data-l="3">  <span class="k">AND</span> order_date = <span class="s">'2026-10-15'</span></span><span class="ln" data-l="4"><span class="k">GROUP BY</span> status</span></pre>
+            <div class="stagebar" id="stagebar"><span data-s="route">маршрутизація</span><span data-s="scatter">scatter</span><span data-s="server">на server-ах</span><span data-s="gather">gather</span><span data-s="fresh">свіжість</span></div>
+            <div class="explain" aria-live="polite"><h3 id="simTitle"></h3><p id="simText"></p></div>
+          </div>
+          <div class="cluster" id="cluster">
+            <div class="box app"><div class="box-h">Застосунок ресторану №42</div><div class="box-body" id="appBody"></div></div>
+            <div class="box brk"><div class="box-h">Broker</div><div class="box-body" id="brkBody"></div></div>
+            <div class="net" id="net">мережа</div>
+            <div class="row3" id="servers"></div>
+            <div class="kafka" id="kafka"></div>
+          </div>
+        </div>
+        <div class="sim-ctl">
+          <button class="btn" id="simPrev" type="button">← Назад</button>
+          <button class="btn primary" id="simNext" type="button">Далі →</button>
+          <button class="btn" id="simPlay" type="button">▶ Програти все</button>
+          <div class="dots" id="simDots" role="group" aria-label="Кроки"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ 5. INDEXES ============ -->
+    <section id="idx" data-title="Індекси">
+      <div class="sec-head">
+        <span class="eyebrow">Головний секрет швидкості</span>
+        <h2>Індекси: прочитати якомога менше</h2>
+        <p class="lead">Швидкість Pinot береться не з потужного заліза, а з того, що більшість даних не читається взагалі. Для кожної колонки можна обрати індекс під тип запиту.</p>
+      </div>
+      <div class="grid3">
+        <div class="cell hot"><h3>Inverted</h3><p>Для кожного значення — бітова мапа рядків, де воно трапляється. <code>restaurant_id = 42</code> одразу дає список рядків.</p></div>
+        <div class="cell"><h3>Sorted</h3><p>Сегмент відсортовано за однією колонкою, і потрібні рядки лежать суцільним шматком. Найкомпактніший варіант, але така колонка в таблиці лише одна.</p></div>
+        <div class="cell"><h3>Range</h3><p>Для умов «більше-менше»: <code>amount BETWEEN 100 AND 500</code>, діапазони часу.</p></div>
+        <div class="cell hot"><h3>Star-tree</h3><p>Заздалегідь пораховані агрегати для комбінацій вимірів. Фірмова фішка Pinot. Детальніше в розділі «Поглиблено».</p></div>
+        <div class="cell"><h3>Text і JSON</h3><p>Повнотекстовий пошук на Lucene і пошук усередині JSON-полів без їх розбору під час запиту.</p></div>
+        <div class="cell"><h3>Bloom filter і geo</h3><p>Bloom-фільтр швидко відкидає сегменти без потрібного значення, гео-індекс H3 шукає точки поруч.</p></div>
+      </div>
+
+      <div class="lab">
+        <div class="lab-head"><span class="eyebrow">Лабораторія індексів</span><span class="small">сегмент на 10 млн рядків · оцінки орієнтовні</span></div>
+        <div class="seg" id="qIdx">
+          <button type="button" data-v="eq" aria-pressed="true">WHERE restaurant_id = 42</button>
+          <button type="button" data-v="range">WHERE amount BETWEEN 100 AND 200</button>
+          <button type="button" data-v="agg">SUM(amount) GROUP BY city</button>
+          <button type="button" data-v="text">коментар містить «холодна»</button>
+        </div>
+        <div class="bars" id="idxBars"></div>
+        <p class="small" id="idxNote"></p>
+      </div>
+    </section>
+
+    <!-- ============ 6. TABLES ============ -->
+    <section id="tables" data-title="Таблиці й дані">
+      <div class="sec-head">
+        <span class="eyebrow">Модель даних</span>
+        <h2>Real-time, offline і hybrid таблиці</h2>
+      </div>
+      <div class="grid3">
+        <div class="cell"><h3>REALTIME</h3><p>Дані йдуть потоком з Kafka, Kinesis чи Pulsar. Доступні для запитів за секунди.</p></div>
+        <div class="cell"><h3>OFFLINE</h3><p>Сегменти будуються з файлів у S3 чи HDFS батч-джобом (Spark, minion) і завантажуються в кластер.</p></div>
+        <div class="cell hot"><h3>HYBRID</h3><p>Обидві частини під одним ім’ям. Broker сам ділить запит за часовою межею: старі дні з offline, останні години з real-time.</p></div>
+      </div>
+      <div class="grid2">
+        <div class="cell"><h3>Схема: виміри, метрики, час</h3><p>Колонки поділено на виміри (місто, статус, платформа), метрики (сума, кількість) і колонку часу. Від цього залежать індекси, зберігання і відсікання сегментів за датою.</p></div>
+        <div class="cell"><h3>Upsert і дедуплікація</h3><p>Real-time таблиця може тримати лише останню версію запису за первинним ключем: статус замовлення змінюється з «готується» на «доставлено», а в запитах видно тільки поточний стан. Так у Pinot приходять CDC-потоки з баз даних.</p></div>
+      </div>
+    </section>
+
+    <!-- ============ 7. USE CASES ============ -->
+    <section id="cases" data-title="Для чого використовують">
+      <div class="sec-head">
+        <span class="eyebrow">Юзкейси</span>
+        <h2>Де Pinot справді на своєму місці</h2>
+        <p class="lead">Спільна формула: багато запитів одночасно, кожен — агрегація з фільтрами, дані мають бути свіжими, відповідь потрібна за мілісекунди.</p>
+      </div>
+      <div class="cases">
+        <article class="case">
+          <div class="case-h"><h3>Аналітика всередині продукту</h3><span class="tag acc">user-facing</span></div>
+          <p><b>Задача:</b> кожен продавець маркетплейсу бачить продажі, перегляди й конверсію своїх товарів за останню годину.</p>
+          <p><b>Чому Pinot:</b> сотні тисяч користувачів, кожен фільтрує за своїм id, а inverted і star-tree індекси роблять такі запити дешевими.</p>
+          <div class="pipe"><span>Kafka</span><i>→</i><span class="sp">Pinot real-time</span><i>→</i><span>API</span><i>→</i><span>кабінет продавця</span></div>
+        </article>
+        <article class="case">
+          <div class="case-h"><h3>Операційні дашборди</h3><span class="tag acc">реальний час</span></div>
+          <p><b>Задача:</b> служба доставки бачить замовлення, час очікування і нестачу кур’єрів по районах міста щохвилини.</p>
+          <p><b>Чому Pinot:</b> свіжість у секунди і стабільна затримка навіть у пікові години.</p>
+          <div class="pipe"><span>події замовлень</span><i>→</i><span class="sp">Pinot</span><i>→</i><span>Grafana / Superset</span></div>
+        </article>
+        <article class="case">
+          <div class="case-h"><h3>Рекламна статистика</h3><span class="tag acc">висока конкурентність</span></div>
+          <p><b>Задача:</b> рекламодавець бачить покази, кліки й витрати кампанії в режимі реального часу і зупиняє невдалу кампанію вчасно.</p>
+          <p><b>Чому Pinot:</b> мільярди подій на добу, тисячі рекламодавців одночасно, агрегації за кампанією та датою.</p>
+          <div class="pipe"><span>покази і кліки</span><i>→</i><span class="sp">star-tree агрегати</span><i>→</i><span>кабінет рекламодавця</span></div>
+        </article>
+        <article class="case">
+          <div class="case-h"><h3>Метрики й аномалії</h3><span class="tag acc">моніторинг</span></div>
+          <p><b>Задача:</b> помітити, що конверсія оплати в одному банку впала на 30% за останні 10 хвилин.</p>
+          <p><b>Чому Pinot:</b> швидкі агрегації за часом і вимірами, які детектор аномалій опитує постійно.</p>
+          <div class="pipe"><span>бізнес-події</span><i>→</i><span class="sp">Pinot</span><i>→</i><span>детектор аномалій</span><i>→</i><span>алерт</span></div>
+        </article>
+        <article class="case">
+          <div class="case-h"><h3>Ризики і фрод-моніторинг</h3><span class="tag acc">upsert</span></div>
+          <p><b>Задача:</b> аналітик ризиків у реальному часі бачить поточний стан транзакцій і підозрілі патерни по мерчантах.</p>
+          <p><b>Чому Pinot:</b> upsert тримає останній стан кожної транзакції з CDC-потоку, а запити йдуть одразу по свіжих даних.</p>
+          <div class="pipe"><span>CDC з бази</span><i>→</i><span>Kafka</span><i>→</i><span class="sp">upsert-таблиця</span><i>→</i><span>дашборд ризиків</span></div>
+        </article>
+        <article class="case">
+          <div class="case-h"><h3>Ознаки для персоналізації</h3><span class="tag acc">serving</span></div>
+          <p><b>Задача:</b> сервіс рекомендацій питає «що популярне в цьому місті за останні 30 хвилин» на кожен запит користувача.</p>
+          <p><b>Чому Pinot:</b> агрегат рахується в момент запиту за мілісекунди, і його не треба заздалегідь класти в кеш.</p>
+          <div class="pipe"><span>кліки</span><i>→</i><span class="sp">Pinot</span><i>→</i><span>сервіс рекомендацій</span></div>
+        </article>
+      </div>
+
+      <div class="sec-head"><h3>Коли Pinot — поганий вибір</h3></div>
+      <div class="nope">
+        <div><b>Основна база застосунку</b><p>Pinot не замінює PostgreSQL: немає транзакцій, а оновлення окремих рядків працюють лише через upsert у real-time таблицях.</p></div>
+        <div><b>Важкі join-и великих таблиць</b><p>Багатоетапний рушій уміє join-и, але для складних звітів по десятку таблиць зручніше сховище даних або Trino.</p></div>
+        <div><b>Кілька аналітиків і мало запитів</b><p>Якщо дашборд дивляться 20 людей раз на день, Pinot-кластер — зайва складність. Вистачить сховища або навіть PostgreSQL.</p></div>
+        <div><b>Довільне дослідження сирих даних</b><p>Pinot швидкий, коли запити передбачувані і індекси під них налаштовано. Для вільного дослідження озера даних беріть Spark або Trino.</p></div>
+      </div>
+
+      <div class="sec-head"><h3>Де запускають</h3></div>
+      <div class="facts">
+        <span>Docker QuickStart локально</span><span>Kubernetes + Helm chart</span><span>StarTree Cloud (керований Pinot)</span><span>власні VM</span>
+      </div>
+    </section>
+
+    <!-- ============ 8. DECIDE ============ -->
+    <section id="decide" data-title="Pinot чи щось інше">
+      <div class="sec-head">
+        <span class="eyebrow">Вибір</span>
+        <h2>Pinot, ClickHouse, Druid чи сховище?</h2>
+        <p class="lead">Оберіть параметри задачі. Це грубе правило: на практиці вирішує ще й досвід команди.</p>
+      </div>
+      <div class="lab">
+        <div class="ask">
+          <div class="q"><span>Хто робить запити</span><div class="seg" id="qWho"><button type="button" data-v="users" aria-pressed="true">тисячі користувачів продукту</button><button type="button" data-v="team">внутрішня команда, десятки людей</button><button type="button" data-v="svc">сервіси автоматично</button></div></div>
+          <div class="q"><span>Наскільки свіжі мають бути дані</span><div class="seg" id="qFresh"><button type="button" data-v="sec" aria-pressed="true">секунди</button><button type="button" data-v="min">хвилини</button><button type="button" data-v="day">доба</button></div></div>
+          <div class="q"><span>Які запити</span><div class="seg" id="qKind"><button type="button" data-v="agg" aria-pressed="true">агрегації з фільтрами</button><button type="button" data-v="join">складні join-и і звіти</button><button type="button" data-v="search">повнотекстовий пошук</button><button type="button" data-v="rows">читання й оновлення окремих записів</button></div></div>
+        </div>
+        <div class="verdict" id="verdict" aria-live="polite"></div>
+      </div>
+      <div class="tbl">
+        <table>
+          <thead><tr><th></th><th>Apache Pinot</th><th>Apache Druid</th><th>ClickHouse</th><th>Snowflake / BigQuery</th></tr></thead>
+          <tbody>
+            <tr><td><b>Головна сила</b></td><td>багато одночасних запитів з низькою затримкою</td><td>часові ряди, агрегація при завантаженні</td><td>дуже швидке сканування, багатий SQL</td><td>гнучкий SQL для аналітиків</td></tr>
+            <tr><td><b>Типова затримка</b></td><td>десятки мс</td><td>десятки–сотні мс</td><td>десятки мс – секунди</td><td>секунди</td></tr>
+            <tr><td><b>Запитів одночасно</b></td><td>тисячі і більше</td><td>тисячі</td><td>сотні, залежить від запитів</td><td>десятки</td></tr>
+            <tr><td><b>Потік з Kafka</b></td><td>вбудовано, по партиціях</td><td>вбудовано</td><td>Kafka engine або коннектори</td><td>через окремі сервіси</td></tr>
+            <tr><td><b>Оновлення записів</b></td><td>upsert за ключем</td><td>обмежено</td><td>через злиття (ReplacingMergeTree)</td><td>повний SQL UPDATE</td></tr>
+            <tr><td><b>Join-и</b></td><td>багатоетапний рушій, обмежено</td><td>обмежено</td><td>так</td><td>повністю</td></tr>
+            <tr><td><b>Експлуатація</b></td><td>кілька ролей, ZooKeeper</td><td>кілька ролей, ZooKeeper</td><td>один бінарник, кластер складніший</td><td>керований сервіс</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="small">Pinot часто стоїть у парі з потоковим рушієм: <a href="./apache-flink.html">Flink</a> збагачує і чистить події, Pinot їх зберігає й відповідає на запити. Історію перераховує <a href="./apache-spark.html">Spark</a>.</p>
+    </section>
+
+    <!-- ============ 9. START ============ -->
+    <section id="start" data-title="Перший запуск">
+      <div class="sec-head">
+        <span class="eyebrow">Спробувати</span>
+        <h2>Pinot на ноутбуці за одну команду</h2>
+        <p class="lead">QuickStart піднімає весь кластер в одному контейнері: ZooKeeper, controller, broker, server, Kafka з потоком демо-подій і готові таблиці.</p>
+      </div>
+<pre class="code"><span class="c"># Hybrid-демо: offline-таблиця + real-time потік із Kafka</span>
+docker run -it -p <span class="f">9000</span>:<span class="f">9000</span> -p <span class="f">8099</span>:<span class="f">8099</span> apachepinot/pinot:latest QuickStart -type hybrid
+
+<span class="c"># Query Console:  http://localhost:9000</span>
+<span class="c"># Broker API:     http://localhost:8099/query/sql</span></pre>
+<pre class="code"><span class="c"># pip install pinotdb</span>
+<span class="k">from</span> pinotdb <span class="k">import</span> connect
+
+conn = connect(host=<span class="s">"localhost"</span>, port=<span class="f">8099</span>, path=<span class="s">"/query/sql"</span>, scheme=<span class="s">"http"</span>)
+cur = conn.cursor()
+cur.execute(<span class="s">"SELECT COUNT(*) FROM airlineStats"</span>)   <span class="c"># таблиця з демо</span>
+<span class="k">print</span>(cur.fetchone())</pre>
+      <p class="small">Real-time таблиця з Kafka описується JSON-конфігом. Ключове в ньому — звідки читати і які індекси будувати (фрагмент):</p>
+<pre class="code">{
+  <span class="s">"tableName"</span>: <span class="s">"orders"</span>,
+  <span class="s">"tableType"</span>: <span class="s">"REALTIME"</span>,
+  <span class="s">"segmentsConfig"</span>: { <span class="s">"timeColumnName"</span>: <span class="s">"ts"</span>, <span class="s">"replication"</span>: <span class="s">"2"</span> },
+  <span class="s">"tableIndexConfig"</span>: {
+    <span class="s">"invertedIndexColumns"</span>: [<span class="s">"restaurant_id"</span>, <span class="s">"status"</span>],
+    <span class="s">"rangeIndexColumns"</span>: [<span class="s">"amount"</span>]
+  },
+  <span class="s">"ingestionConfig"</span>: {
+    <span class="s">"streamIngestionConfig"</span>: {
+      <span class="s">"streamConfigMaps"</span>: [{
+        <span class="s">"streamType"</span>: <span class="s">"kafka"</span>,
+        <span class="s">"stream.kafka.topic.name"</span>: <span class="s">"orders"</span>,
+        <span class="s">"stream.kafka.broker.list"</span>: <span class="s">"kafka:9092"</span>,
+        <span class="s">"stream.kafka.consumer.factory.class.name"</span>: <span class="s">"org.apache.pinot.plugin.stream.kafka20.KafkaConsumerFactory"</span>,
+        <span class="s">"stream.kafka.decoder.class.name"</span>: <span class="s">"org.apache.pinot.plugin.stream.kafka.KafkaJSONMessageDecoder"</span>,
+        <span class="s">"realtime.segment.flush.threshold.rows"</span>: <span class="s">"0"</span>,
+        <span class="s">"realtime.segment.flush.threshold.segment.size"</span>: <span class="s">"200M"</span>
+      }]
+    }
+  }
+}</pre>
+    </section>
+
+    <!-- ============ 10. DEEP ============ -->
+    <section id="deep" data-title="Поглиблено">
+      <div class="sec-head">
+        <span class="eyebrow">Для інженерів</span>
+        <h2>Під капотом: star-tree, сегменти, upsert</h2>
+        <p class="lead">Для тих, хто проєктує таблиці й хоче розуміти, чому один запит відповідає за 5 мс, а інший за 2 секунди.</p>
+      </div>
+      <div class="lab">
+        <div class="tabs" role="tablist" id="deepTabs">
+          <button role="tab" type="button" id="t-st" aria-controls="p-st" aria-selected="true">Star-tree</button>
+          <button role="tab" type="button" id="t-seg" aria-controls="p-seg" aria-selected="false">Життя сегмента</button>
+          <button role="tab" type="button" id="t-up" aria-controls="p-up" aria-selected="false">Upsert</button>
+          <button role="tab" type="button" id="t-ms" aria-controls="p-ms" aria-selected="false">Рушії запитів</button>
+          <button role="tab" type="button" id="t-bug" aria-controls="p-bug" aria-selected="false">Типові проблеми</button>
+        </div>
+
+        <div class="panel" role="tabpanel" id="p-st" aria-labelledby="t-st">
+          <p class="muted">Star-tree заздалегідь агрегує метрики по дереву вимірів у заданому порядку (тут місто → платформа). Вузол «*» означає «усі значення цього виміру». Оберіть запит і подивіться, який вузол дає відповідь.</p>
+          <div class="seg" id="stQ">
+            <button type="button" data-v="all" aria-pressed="true">SUM(orders)</button>
+            <button type="button" data-v="kyiv">WHERE city = 'Київ'</button>
+            <button type="button" data-v="lviv-and">WHERE city = 'Львів' AND platform = 'Android'</button>
+            <button type="button" data-v="web">WHERE platform = 'Web'</button>
+          </div>
+          <div class="stree">
+            <div class="raw" id="stRaw"></div>
+            <div class="tree" id="stTree"></div>
+          </div>
+          <div class="stat" id="stStat"></div>
+          <p class="small">На 8 рядках виграш невеликий. На мільярді рядків це різниця між скануванням і читанням одного числа. Ціна — додаткове місце на диску й час на побудову, а <code>maxLeafRecords</code> обмежує, скільки сирих рядків можна дочитати у листі.</p>
+        </div>
+
+        <div class="panel" role="tabpanel" id="p-seg" aria-labelledby="t-seg" hidden>
+          <div class="life"><span class="on">CONSUMING</span><i>→</i><span>ліміт рядків, розміру або часу</span><i>→</i><span>запечатування і побудова індексів</span><i>→</i><span>копія в deep store</span><i>→</i><span>ONLINE, незмінний</span><i>→</i><span>minion: злиття або перенесення в offline</span><i>→</i><span>видалення за retention</span></div>
+          <div class="grid2">
+            <div class="cell hot"><h3>Розмір має значення</h3><p>Тисячі дрібних сегментів дають великі накладні витрати на кожен запит. Гігантські сегменти довго будуються і переносяться. Типова ціль — сотні мегабайт, її задають через <code>realtime.segment.flush.threshold.segment.size</code>.</p></div>
+            <div class="cell"><h3>Відсікання сегментів</h3><p>Broker дивиться на метадані сегментів: мінімум і максимум часу, партицію, bloom-фільтри. Запит із фільтром за датою торкається лише кількох сегментів із тисяч. Запит без фільтра за часом іде на всі.</p></div>
+            <div class="cell"><h3>Реплікація</h3><p>Кожен сегмент має кілька копій на різних server-ах. Broker розподіляє запити між копіями, а падіння server-а не зупиняє відповіді.</p></div>
+            <div class="cell"><h3>Партиціювання</h3><p>Якщо Kafka-топік партиційований за <code>restaurant_id</code> і Pinot про це знає, broker надсилає запит одного ресторану лише на server-и з потрібною партицією.</p></div>
+          </div>
+        </div>
+
+        <div class="panel" role="tabpanel" id="p-up" aria-labelledby="t-up" hidden>
+          <div class="grid2">
+            <div class="cell hot"><h3>Як це працює</h3><p>Для таблиці задається первинний ключ. Кожен server тримає мапу «ключ → де лежить остання версія» і позначає старі рядки невидимими. Запит бачить лише поточний стан кожного запису.</p></div>
+            <div class="cell"><h3>Full і partial</h3><p>Full upsert замінює весь рядок. Partial оновлює лише вказані колонки, наприклад інкрементує лічильник або дописує в список.</p></div>
+            <div class="cell"><h3>Вимога: партиції за ключем</h3><p>Усі версії одного ключа мають іти в одну партицію Kafka. Інакше вони потраплять на різні server-и, і дедуплікація зламається.</p></div>
+            <div class="cell"><h3>Ціна</h3><p>Мапа ключів займає пам’ять. На сотнях мільйонів ключів її винось на диск і обмежуй TTL для старих ключів.</p></div>
+          </div>
+        </div>
+
+        <div class="panel" role="tabpanel" id="p-ms" aria-labelledby="t-ms" hidden>
+          <div class="tbl">
+            <table>
+              <thead><tr><th></th><th>Одноетапний (v1)</th><th>Багатоетапний (v2)</th></tr></thead>
+              <tbody>
+                <tr><td><b>Схема</b></td><td>scatter-gather: broker → server-и → broker</td><td>кілька етапів з обміном даними між server-ами, як у Spark чи Trino</td></tr>
+                <tr><td><b>Що вміє</b></td><td>фільтри, агрегації, GROUP BY, ORDER BY, LIMIT по одній таблиці</td><td>JOIN, підзапити, віконні функції, ширший SQL</td></tr>
+                <tr><td><b>Для чого</b></td><td>гарячі запити продукту з жорсткою затримкою</td><td>складніші аналітичні запити, де затримка трохи менш критична</td></tr>
+                <tr><td><b>Як увімкнути</b></td><td>за замовчуванням</td><td><code>SET useMultistageEngine = true;</code> або перемикач у Query Console</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="panel" role="tabpanel" id="p-bug" aria-labelledby="t-bug" hidden>
+          <div class="grid2">
+            <div class="cell"><h3>Запит раптом повільний</h3><p><b>Причина:</b> фільтр за колонкою без індексу, і кожен сегмент сканується повністю.</p><p><b>Що робити:</b> додати inverted або range індекс і перезавантажити сегменти. У відповіді дивитись на <code>numEntriesScannedInFilter</code>.</p></div>
+            <div class="cell"><h3>GROUP BY по мільйонах значень</h3><p><b>Причина:</b> групування за колонкою з високою кардинальністю, як-от <code>user_id</code>, без обмеження.</p><p><b>Що робити:</b> фільтр, що звужує набір, star-tree або перенесення такої задачі у сховище.</p></div>
+            <div class="cell"><h3>Тисячі дрібних сегментів</h3><p><b>Причина:</b> завеликий ліміт часу або замалий поріг розміру при слабкому потоці.</p><p><b>Що робити:</b> поріг розміру замість кількості рядків, minion-задача злиття.</p></div>
+            <div class="cell"><h3>Відставання споживання</h3><p><b>Причина:</b> мало партицій у Kafka, перекіс партицій, повільна побудова індексів.</p><p><b>Що робити:</b> більше партицій і server-ів, рівномірний ключ партиціювання, метрики споживання в controller.</p></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ 11. QUIZ ============ -->
+    <section id="quiz" data-title="Перевір себе">
+      <div class="sec-head">
+        <span class="eyebrow">Тест</span>
+        <h2>Перевір себе</h2>
+        <p class="lead">Вісім питань від базових до інженерних. Відповідь і пояснення з’являються одразу.</p>
+      </div>
+      <div class="quiz" id="quizBox"></div>
+      <div class="score" id="score"></div>
+    </section>
+
+    <!-- ============ 12. GLOSSARY ============ -->
+    <section id="gloss" data-title="Словник">
+      <div class="sec-head">
+        <span class="eyebrow">Терміни</span>
+        <h2>Короткий словник</h2>
+      </div>
+      <dl class="gloss">
+        <div><dt>OLAP</dt><dd>Аналітичні запити: агрегації по багатьох рядках. На противагу OLTP — читанню й запису окремих рядків застосунком.</dd></div>
+        <div><dt>User-facing analytics</dt><dd>Аналітика, яку бачать кінцеві користувачі продукту, а не лише внутрішня команда.</dd></div>
+        <div><dt>Segment</dt><dd>Колонковий шматок таблиці з індексами й метаданими. Одиниця зберігання, реплікації й запиту.</dd></div>
+        <div><dt>Broker</dt><dd>Приймає SQL, обирає сегменти, розсилає підзапити і зливає результати.</dd></div>
+        <div><dt>Server</dt><dd>Тримає сегменти і виконує над ними запити. Real-time server ще й читає Kafka.</dd></div>
+        <div><dt>Controller</dt><dd>Керує кластером: таблиці, схеми, розподіл сегментів між server-ами.</dd></div>
+        <div><dt>Minion</dt><dd>Виконує фонові задачі: злиття, перенесення, очищення сегментів.</dd></div>
+        <div><dt>Consuming segment</dt><dd>Сегмент, у який зараз пишуться події з потоку. Вже доступний для запитів.</dd></div>
+        <div><dt>Deep store</dt><dd>Об’єктне сховище з копіями всіх запечатаних сегментів.</dd></div>
+        <div><dt>Inverted index</dt><dd>Мапа «значення → список рядків» для швидких фільтрів за рівністю.</dd></div>
+        <div><dt>Star-tree index</dt><dd>Дерево заздалегідь агрегованих метрик за комбінаціями вимірів.</dd></div>
+        <div><dt>Hybrid table</dt><dd>Real-time і offline частини однієї таблиці, які broker поєднує за часовою межею.</dd></div>
+        <div><dt>Upsert</dt><dd>Зберігання лише останньої версії запису за первинним ключем.</dd></div>
+        <div><dt>Scatter-gather</dt><dd>Розіслати частини запиту по вузлах і зібрати часткові результати.</dd></div>
+      </dl>
+    </section>
+  </main>
+</div>
+
+<footer>© <span id="year"></span> AI Pages · <a href="https://docs.pinot.apache.org/" target="_blank" rel="noopener">офіційна документація Pinot</a></footer>
+
+<script>
+(function(){
+  "use strict";
+  var $ = function(s, r){ return (r || document).querySelector(s); };
+  var $$ = function(s, r){ return Array.prototype.slice.call((r || document).querySelectorAll(s)); };
+  var reduceMotion = window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches;
+  var fmtN = function(n){ return Math.round(n).toLocaleString("uk-UA"); };
+  $("#year").textContent = new Date().getFullYear();
+
+  /* ---------- theme ---------- */
+  var root = document.documentElement, themeBtn = $("#themeBtn");
+  var modes = ["auto", "light", "dark"], names = {auto: "авто", light: "світла", dark: "темна"};
+  var mode = "auto";
+  try { mode = localStorage.getItem("pinot-theme") || "auto"; } catch (e) {}
+  function applyTheme(){
+    if (mode === "auto") root.removeAttribute("data-theme"); else root.setAttribute("data-theme", mode);
+    themeBtn.textContent = "Тема: " + names[mode];
+  }
+  themeBtn.addEventListener("click", function(){
+    mode = modes[(modes.indexOf(mode) + 1) % 3];
+    try { localStorage.setItem("pinot-theme", mode); } catch (e) {}
+    applyTheme();
+  });
+  applyTheme();
+
+  /* ---------- TOC + scrollspy ---------- */
+  var secs = $$("main > section[data-title]");
+  var toc = $("#toc"), chips = $("#chips");
+  secs.forEach(function(s){
+    var li = document.createElement("li");
+    li.innerHTML = '<a href="#' + s.id + '">' + s.dataset.title + "</a>";
+    toc.appendChild(li);
+    var c = document.createElement("a");
+    c.href = "#" + s.id; c.textContent = s.dataset.title;
+    chips.appendChild(c);
+  });
+  if ("IntersectionObserver" in window) {
+    var io = new IntersectionObserver(function(entries){
+      entries.forEach(function(en){
+        if (!en.isIntersecting) return;
+        $$("a", toc).concat($$("a", chips)).forEach(function(a){
+          var on = a.getAttribute("href") === "#" + en.target.id;
+          a.classList.toggle("on", on);
+          if (on && a.parentNode === chips) chips.scrollTo({left: a.offsetLeft - 16, behavior: reduceMotion ? "auto" : "smooth"});
+        });
+      });
+    }, {rootMargin: "-30% 0px -60% 0px"});
+    secs.forEach(function(s){ io.observe(s); });
+  }
+
+  /* ---------- segmented controls ---------- */
+  function bindSeg(id, onPick){
+    var boxEl = $("#" + id);
+    $$("button", boxEl).forEach(function(b){
+      if (!b.hasAttribute("aria-pressed")) b.setAttribute("aria-pressed", "false");
+      b.addEventListener("click", function(){
+        $$("button", boxEl).forEach(function(x){ x.setAttribute("aria-pressed", String(x === b)); });
+        onPick(b.dataset.v);
+      });
+    });
+  }
+
+  /* ---------- FLIP helper ---------- */
+  function flip(container, build){
+    var before = {};
+    $$("[data-id]", container).forEach(function(el){ before[el.dataset.id] = el.getBoundingClientRect(); });
+    build();
+    if (reduceMotion || !Element.prototype.animate) return;
+    $$("[data-id]", container).forEach(function(el){
+      var b = before[el.dataset.id], a = el.getBoundingClientRect();
+      if (b) {
+        var dx = b.left - a.left, dy = b.top - a.top;
+        if (dx || dy) el.animate([{transform: "translate(" + dx + "px," + dy + "px)"}, {transform: "none"}], {duration: 650, easing: "cubic-bezier(.2,.7,.2,1)"});
+      } else {
+        el.animate([{opacity: 0, transform: "scale(.9)"}, {opacity: 1, transform: "none"}], {duration: 380, easing: "ease-out"});
+      }
+    });
+  }
+
+  /* ---------- simulator ---------- */
+  function ch(id, cls, html){ return '<div class="chip ' + cls + '" data-id="' + id + '">' + html + "</div>"; }
+  var SEGS = [
+    [{id: "s13a", n: "orders_13жовт_0", rows: "1 млн"}, {id: "s14b", n: "orders_14жовт_1", rows: "1 млн"}],
+    [{id: "s14a", n: "orders_14жовт_0", rows: "1 млн"}, {id: "s15a", n: "orders_15жовт_0", rows: "1 млн", today: true}],
+    [{id: "s13b", n: "orders_13жовт_1", rows: "1 млн"}, {id: "s15l", n: "orders_15жовт_live", rows: "180 тис.", today: true, live: true}]
+  ];
+  function segs(srv, mode){
+    return SEGS[srv].map(function(s){
+      var cls = "seg" + (s.live ? " live" : "") + (mode === "prune" && !s.today ? " drop" : "") + (mode === "prune" && s.today ? " on" : "");
+      return ch(s.id, cls, "<span>" + s.n + (s.live ? " ●" : "") + "</span><span>" + s.rows + "</span>");
+    }).join("");
+  }
+  var P2 = [["d2", "ok", "доставлено", 40], ["c2", "bad", "скасовано", 3]];
+  var P3 = [["d3", "ok", "доставлено", 12], ["c3", "bad", "скасовано", 1], ["g3", "warn", "готується", 5]];
+  var part = function(list){ return list.map(function(p){ return ch(p[0], p[1], "<span>" + p[2] + "</span><span>" + p[3] + "</span>"); }); };
+  function result(cook){ return ch("r-d", "ok", "<span>доставлено</span><span>52</span>") + ch("r-c", "bad", "<span>скасовано</span><span>4</span>") + ch("r-g", "warn", "<span>готується</span><span>" + cook + "</span>"); }
+  var qApp = ch("q", "q", "SQL-запит");
+  var kafkaIdle = '<span class="tag">Kafka · topic orders</span><span class="small">потік нових замовлень іде в orders_15жовт_live</span>';
+
+  var STEPS = [
+    {lines: [0, 1, 2, 3, 4], ph: "", title: "Дані вже розкладено сегментами",
+     text: "Таблиця orders складається з шести сегментів на трьох server-ах. Сьогоднішні дані — у сегменті orders_15жовт_0 і в сегменті, що прямо зараз споживає Kafka.",
+     app: qApp, brk: '<span class="small">чекає запитів</span>', srv: [[segs(0)], [segs(1)], [segs(2)]], kafka: kafkaIdle},
+    {lines: [0, 1, 2, 3, 4], ph: "route", title: "Запит приходить на broker",
+     text: "Застосунок надсилає SQL на будь-який broker. Broker тримає таблицю маршрутизації: які сегменти існують, де лежать їхні копії і що про них відомо.",
+     app: '<span class="small">чекає відповіді…</span>', brk: qApp + '<span class="tag">таблиця маршрутизації: 6 сегментів</span>', srv: [[segs(0)], [segs(1)], [segs(2)]], kafka: kafkaIdle},
+    {lines: [3], ph: "route", title: "Відсікання: 4 сегменти з 6 навіть не відкриваються",
+     text: "У метаданих кожного сегмента записано мінімальну й максимальну дату. Сегменти за 13 і 14 жовтня не можуть містити сьогоднішніх замовлень, тож broker їх відкидає. Server 1 узагалі не отримає запиту.",
+     app: '<span class="small">чекає відповіді…</span>', brk: ch("q2", "q", "підзапит → Server 2") + ch("q3", "q", "підзапит → Server 3") + '<span class="tag acc">потрібно 2 сегменти з 6</span>',
+     srv: [[segs(0, "prune")], [segs(1, "prune")], [segs(2, "prune")]], kafka: kafkaIdle},
+    {lines: [1], ph: "scatter", title: "Scatter: підзапити йдуть паралельно",
+     text: "Broker розсилає підзапити лише на server-и з потрібними сегментами. Вони працюють одночасно, тож загальний час визначає найповільніший.",
+     app: '<span class="small">чекає відповіді…</span>', brk: '<span class="small">чекає часткові результати</span>', net: true,
+     srv: [[segs(0, "prune")], [segs(1, "prune"), ch("q2", "q", "підзапит")], [segs(2, "prune"), ch("q3", "q", "підзапит")]], kafka: kafkaIdle},
+    {lines: [2], ph: "server", title: "Індекс: читаємо 61 рядок замість 1 180 000",
+     text: "Колонка restaurant_id має інвертований індекс: для значення 42 одразу відомий список рядків. Server не перебирає мільйон замовлень, а бере 43 рядки в одному сегменті і 18 в іншому.",
+     app: '<span class="small">чекає відповіді…</span>', brk: '<span class="small">чекає часткові результати</span>',
+     srv: [[segs(0, "prune")], [segs(1, "prune"), ch("i2", "idx", "<span>індекс 42 →</span><span>43 з 1 млн</span>")], [segs(2, "prune"), ch("i3", "idx", "<span>індекс 42 →</span><span>18 з 180 тис.</span>")]], kafka: kafkaIdle},
+    {lines: [0, 4], ph: "server", title: "Локальна агрегація на кожному server-і",
+     text: "Кожен server одразу рахує COUNT по статусах для своїх рядків. Назад піде кілька чисел, а не самі рядки.",
+     app: '<span class="small">чекає відповіді…</span>', brk: '<span class="small">чекає часткові результати</span>',
+     srv: [[segs(0, "prune")], [segs(1, "prune")].concat(part(P2)), [segs(2, "prune")].concat(part(P3))], kafka: kafkaIdle},
+    {lines: [0, 4], ph: "gather", title: "Gather: broker зливає часткові результати",
+     text: "Часткові підсумки повертаються на broker, і він додає їх: доставлено 40 + 12, скасовано 3 + 1, готується 5.",
+     app: '<span class="small">чекає відповіді…</span>', brk: part(P2).concat(part(P3)).join(""), net: true,
+     srv: [[segs(0, "prune")], [segs(1, "prune")], [segs(2, "prune")]], kafka: kafkaIdle},
+    {lines: [0], ph: "gather", title: "Відповідь приблизно за 15 мілісекунд",
+     text: "Від запиту до відповіді минуло близько 15 мс: маршрутизація ~1 мс, робота server-ів ~8 мс, мережа та злиття — решта. Поки ви читаєте цей рядок, Pinot встиг би відповісти тисячам інших ресторанів.",
+     app: result(5), brk: '<span class="tag ok">готово · ~15 мс</span>', srv: [[segs(0)], [segs(1)], [segs(2)]], kafka: kafkaIdle},
+    {lines: [1], ph: "fresh", title: "Нове замовлення видно за секунди",
+     text: "У Kafka з’являється нове замовлення ресторану 42. Server 3 читає його і додає до сегмента, що споживається, без жодного ETL. Наступне оновлення дашборда вже покаже «готується: 6».",
+     app: result(6), brk: '<span class="small">наступний запит бачить нові дані</span>',
+     srv: [[segs(0)], [segs(1)], [segs(2), ch("ev", "ev", "+ замовлення №42 · готується")]],
+     kafka: '<span class="tag ok">Kafka · topic orders</span><span class="small">нова подія → Server 3 → orders_15жовт_live</span>'}
+  ];
+  var step = 0, playing = null, cluster = $("#cluster"), dots = $("#simDots");
+  STEPS.forEach(function(_, i){
+    var b = document.createElement("button");
+    b.type = "button"; b.textContent = i + 1; b.setAttribute("aria-label", "Крок " + (i + 1));
+    b.addEventListener("click", function(){ stop(); go(i); });
+    dots.appendChild(b);
+  });
+  function go(i){
+    step = Math.max(0, Math.min(STEPS.length - 1, i));
+    var s = STEPS[step];
+    $$("#simCode .ln").forEach(function(l){ l.classList.toggle("hl", s.lines.indexOf(+l.dataset.l) > -1); });
+    $$("#stagebar span").forEach(function(sp){ sp.classList.toggle("on", sp.dataset.s === s.ph); });
+    $("#simTitle").textContent = (step + 1) + ". " + s.title;
+    $("#simText").textContent = s.text;
+    $("#net").classList.toggle("on", !!s.net);
+    $("#net").textContent = s.net ? "мережа: обмін між broker і server-ами" : "мережа";
+    flip(cluster, function(){
+      $("#appBody").innerHTML = s.app;
+      $("#brkBody").innerHTML = s.brk;
+      $("#servers").innerHTML = s.srv.map(function(list, k){ return '<div class="ex"><div class="ex-h">Server ' + (k + 1) + "</div>" + list.join("") + "</div>"; }).join("");
+      $("#kafka").innerHTML = s.kafka;
+    });
+    $$("button", dots).forEach(function(b, k){ b.classList.toggle("on", k === step); b.setAttribute("aria-current", k === step ? "step" : "false"); });
+    $("#simPrev").disabled = step === 0;
+    $("#simNext").disabled = step === STEPS.length - 1;
+  }
+  function stop(){ if (playing) { clearInterval(playing); playing = null; $("#simPlay").textContent = "▶ Програти все"; } }
+  $("#simPrev").addEventListener("click", function(){ stop(); go(step - 1); });
+  $("#simNext").addEventListener("click", function(){ stop(); go(step + 1); });
+  $("#simPlay").addEventListener("click", function(){
+    if (playing) { stop(); return; }
+    if (step === STEPS.length - 1) go(0);
+    $("#simPlay").textContent = "⏸ Пауза";
+    playing = setInterval(function(){ if (step >= STEPS.length - 1) stop(); else go(step + 1); }, 3400);
+  });
+  go(0);
+
+  /* ---------- index lab ---------- */
+  var N = 1e7;
+  var IDX = {
+    eq: {note: "Inverted та sorted індекси дають однаковий результат, але sorted можливий лише для однієї колонки таблиці. Star-tree допоможе, якщо restaurant_id є серед його вимірів і запит — агрегація.",
+      rows: [["без індексу", N, "scan"], ["inverted", 950], ["sorted", 950], ["range", null], ["star-tree", 12]]},
+    range: {note: "Range-індекс відкидає непотрібні рядки без перебору, але 12% даних однаково доведеться прочитати. Inverted теж можна використати, але для діапазону він перебиратиме тисячі значень.",
+      rows: [["без індексу", N, "scan"], ["inverted", 1.2e6 * 1.4], ["sorted", null], ["range", 1.2e6], ["star-tree", null]]},
+    agg: {note: "Фільтра немає, тож inverted і range не допоможуть: без star-tree доведеться пройти всі рядки. Star-tree віддає готові суми за містами.",
+      rows: [["без індексу", N, "scan"], ["inverted", null], ["sorted", null], ["range", null], ["star-tree", 40]]},
+    text: {note: "Без текстового індексу кожен коментар перевіряється регулярним виразом, а це найповільніша операція. Text-індекс на Lucene знаходить слово за мілісекунди.",
+      rows: [["без індексу", N, "regex"], ["text (Lucene)", 3200], ["inverted", null], ["range", null], ["star-tree", null]]}
+  };
+  function ms(rows, kind){ return kind === "regex" ? rows / 40000 : 1 + rows / 250000; }
+  function idx(v){
+    var d = IDX[v], vals = d.rows.filter(function(r){ return r[1] !== null; }).map(function(r){ return ms(r[1], r[2]); });
+    var max = Math.max.apply(null, vals), best = Math.min.apply(null, vals);
+    $("#idxBars").innerHTML = d.rows.map(function(r){
+      if (r[1] === null) return '<div class="bar"><span>' + r[0] + '</span><div class="track"><div class="fill na" style="width:100%"></div></div><span>не допоможе</span></div>';
+      var t = ms(r[1], r[2]);
+      return '<div class="bar' + (t === best ? " best" : "") + '"><span>' + r[0] + '</span><div class="track"><div class="fill' + (r[2] ? " slow" : "") + '" style="width:' + Math.max(1, t / max * 100) + '%"></div></div><span>' + fmtN(r[1]) + " рядк. · ~" + (t < 10 ? t.toFixed(1) : Math.round(t)) + " мс</span></div>";
+    }).join("");
+    $("#idxNote").textContent = d.note;
+  }
+  bindSeg("qIdx", idx);
+  idx("eq");
+
+  /* ---------- decision helper ---------- */
+  var ans = {who: "users", fresh: "sec", kind: "agg"};
+  bindSeg("qWho", function(v){ ans.who = v; decide(); });
+  bindSeg("qFresh", function(v){ ans.fresh = v; decide(); });
+  bindSeg("qKind", function(v){ ans.kind = v; decide(); });
+  function decide(){
+    var v, t, p, alt;
+    if (ans.kind === "rows") { v = "no"; t = "Потрібна звичайна база"; p = "Читати й оновлювати окремі записи — задача OLTP-бази. Pinot створено для агрегацій по мільйонах рядків."; alt = "PostgreSQL, MySQL, а для ключ-значення — Redis чи DynamoDB. Дані з них можна стрімити в Pinot через CDC для аналітики."; }
+    else if (ans.kind === "search") { v = "no"; t = "Краще пошуковий рушій"; p = "У Pinot є текстовий індекс для фільтрів, але релевантність, підсвічування і нечіткий пошук — територія пошукових систем."; alt = "Elasticsearch або OpenSearch. Pinot доречний, якщо пошук лише фільтр, а головне — агрегації."; }
+    else if (ans.kind === "join") { v = ans.who === "users" ? "maybe" : "no"; t = ans.who === "users" ? "Можливо, якщо заздалегідь денормалізувати" : "Сховище даних зручніше"; p = "Складні звіти з join-ами багатьох таблиць — сильна сторона сховищ даних і Trino. Багатоетапний рушій Pinot уміє join-и, але в продукті краще заздалегідь склеїти дані в одну широку таблицю."; alt = ans.who === "users" ? "Денормалізуйте у Flink або Spark перед завантаженням у Pinot." : "Snowflake, BigQuery, Trino або ClickHouse."; }
+    else if (ans.who === "team" && ans.fresh === "day") { v = "no"; t = "Pinot тут зайвий"; p = "Кілька десятків аналітиків і вчорашні дані — класичний сценарій сховища даних. Кластер реального часу додасть складності без вигоди."; alt = "Snowflake, BigQuery, Redshift або ClickHouse. Для малих обсягів навіть PostgreSQL."; }
+    else if (ans.who === "team") { v = "maybe"; t = "Можливо, але порівняйте з ClickHouse"; p = "Для внутрішніх дашбордів зі свіжими даними підійде і Pinot, і ClickHouse, і Druid. Pinot розкривається саме тоді, коли запитів дуже багато."; alt = "ClickHouse простіший в експлуатації й гнучкіший в SQL. Pinot варто брати, якщо дашборди згодом відкриються клієнтам."; }
+    else if (ans.fresh === "day") { v = "maybe"; t = "Підійде, але real-time не знадобиться"; p = "Тисячі одночасних запитів — привід для Pinot навіть із добовими даними: offline-таблиця з індексами відповідатиме за мілісекунди. Але можливо, вистачить заздалегідь порахованих агрегатів у кеші."; alt = "Альтернатива: щоночі рахувати агрегати в Spark і класти в Redis чи Cassandra."; }
+    else { v = "yes"; t = "Класичний юзкейс Pinot"; p = "Багато одночасних запитів, агрегації з фільтрами і свіжі дані — саме те, для чого створено Pinot."; alt = ans.who === "svc" ? "Для сервісів налаштуйте ліміти запитів (quota) на таблицю, щоб один клієнт не забрав усі ресурси." : "Зверніть увагу також на Apache Druid і ClickHouse. Вирішальними будуть upsert-и, star-tree і досвід команди."; }
+    var label = {yes: "так", maybe: "можливо", no: "ні"}[v];
+    var boxEl = $("#verdict");
+    boxEl.className = "verdict " + v;
+    boxEl.innerHTML = '<div class="vh"><span class="tag ' + (v === "yes" ? "ok" : v === "maybe" ? "warn" : "bad") + '">' + label + "</span><b>" + t + "</b></div><p>" + p + '</p><p class="alt">' + alt + "</p>";
+  }
+  decide();
+
+  /* ---------- tabs ---------- */
+  var tabs = $$("#deepTabs [role=tab]");
+  function selectTab(t){
+    tabs.forEach(function(x){ var on = x === t; x.setAttribute("aria-selected", String(on)); x.tabIndex = on ? 0 : -1; $("#" + x.getAttribute("aria-controls")).hidden = !on; });
+  }
+  tabs.forEach(function(t, i){
+    t.addEventListener("click", function(){ selectTab(t); });
+    t.addEventListener("keydown", function(e){
+      var d = e.key === "ArrowRight" ? 1 : e.key === "ArrowLeft" ? -1 : 0;
+      if (d) { var n = tabs[(i + d + tabs.length) % tabs.length]; selectTab(n); n.focus(); }
+    });
+  });
+  selectTab(tabs[0]);
+
+  /* ---------- star-tree ---------- */
+  var RAW = [["Київ", "iOS", 120], ["Київ", "Android", 200], ["Київ", "Web", 50], ["Львів", "iOS", 60], ["Львів", "Android", 90], ["Одеса", "Android", 70], ["Одеса", "Web", 30], ["Київ", "iOS", 30]];
+  var CITIES = ["Київ", "Львів", "Одеса"], PLAT = ["iOS", "Android", "Web"];
+  function sum(f){ return RAW.filter(f).reduce(function(a, r){ return a + r[2]; }, 0); }
+  var tree = '<div class="lvl"><div class="grp"><span class="grp-h">рівень 0</span><div class="tn" data-n="root"><b>*</b> = ' + sum(function(){ return true; }) + "</div></div></div>";
+  tree += '<div class="lvl"><div class="grp"><span class="grp-h">рівень 1 · city</span><div class="lvl">' +
+    CITIES.map(function(c){ return '<div class="tn" data-n="' + c + '"><b>' + c + "</b> = " + sum(function(r){ return r[0] === c; }) + "</div>"; }).join("") +
+    '<div class="tn star" data-n="*c"><b>* усі міста</b></div></div></div></div>';
+  tree += '<div class="lvl">' + CITIES.concat(["*c"]).map(function(c){
+    var kids = PLAT.filter(function(p){ return sum(function(r){ return (c === "*c" || r[0] === c) && r[1] === p; }) > 0; });
+    return '<div class="grp"><span class="grp-h">' + (c === "*c" ? "* → platform" : c + " → platform") + "</span>" + kids.map(function(p){
+      return '<div class="tn" data-n="' + c + "/" + p + '"><b>' + p + "</b> = " + sum(function(r){ return (c === "*c" || r[0] === c) && r[1] === p; }) + "</div>";
+    }).join("") + "</div>";
+  }).join("") + "</div>";
+  $("#stTree").innerHTML = tree;
+  $("#stRaw").innerHTML = '<div class="h"><span>city</span><span>platform</span><span>orders</span></div>' + RAW.map(function(r, i){ return '<div data-r="' + i + '"><span>' + r[0] + "</span><span>" + r[1] + "</span><span>" + r[2] + "</span></div>"; }).join("");
+  var STQ = {
+    all: {path: [], hit: "root", f: function(){ return true; }},
+    kyiv: {path: ["root"], hit: "Київ", f: function(r){ return r[0] === "Київ"; }},
+    "lviv-and": {path: ["root", "Львів"], hit: "Львів/Android", f: function(r){ return r[0] === "Львів" && r[1] === "Android"; }},
+    web: {path: ["root", "*c"], hit: "*c/Web", f: function(r){ return r[1] === "Web"; }}
+  };
+  function st(v){
+    var q = STQ[v], match = 0;
+    $$(".tn", $("#stTree")).forEach(function(n){ n.classList.toggle("hl", n.dataset.n === q.hit); n.classList.toggle("path", q.path.indexOf(n.dataset.n) > -1); });
+    $$("#stRaw [data-r]").forEach(function(d){ var on = q.f(RAW[+d.dataset.r]); d.classList.toggle("hl", on); if (on) match++; });
+    $("#stStat").innerHTML = "<div><b>" + sum(q.f) + "</b><span>відповідь</span></div><div><b>1 вузол</b><span>прочитано в star-tree</span></div><div><b>" + RAW.length + " рядків</b><span>довелося б просканувати без нього (підходять " + match + ")</span></div>";
+  }
+  bindSeg("stQ", st);
+  st("all");
+
+  /* ---------- quiz ---------- */
+  var QUIZ = [
+    {q: "Для якої задачі Pinot створено насамперед?", o: ["Зберігати замовлення як основна база застосунку", "Відповідати на аналітичні запити за мілісекунди для великої кількості користувачів одночасно", "Навчати моделі машинного навчання", "Обробляти потоки подій і видавати алерти"], a: 1, w: "Pinot — OLAP-база реального часу для user-facing аналітики. Потоки подій обробляє Flink, а основну базу застосунку Pinot не замінює."},
+    {q: "Що робить broker?", o: ["Зберігає сегменти на диску", "Читає Kafka", "Приймає запит, обирає потрібні сегменти, розсилає підзапити і зливає результати", "Будує індекси"], a: 2, w: "Broker відповідає за маршрутизацію і scatter-gather. Дані зберігають і обробляють server-и."},
+    {q: "Як Pinot отримує дані з Kafka в real-time таблицю?", o: ["Нічний батч-джоб копіює топік", "Кожен server сам читає свої партиції топіка, і події доступні для запитів за секунди", "Kafka сама надсилає SQL INSERT", "Через controller, який пересилає кожну подію"], a: 1, w: "Real-time server-и споживають партиції напряму в сегмент, що споживається. Проміжного ETL немає."},
+    {q: "Запит із фільтром restaurant_id = 42 раптом сканує мільйони рядків. Що найімовірніше?", o: ["Замало broker-ів", "На колонці restaurant_id немає inverted чи sorted індексу", "Kafka відстає", "Сегменти завеликі"], a: 1, w: "Без індексу кожен сегмент перебирається повністю. Inverted індекс дає список рядків для значення одразу."},
+    {q: "Що таке star-tree індекс?", o: ["Індекс для геоданих", "Дерево заздалегідь агрегованих метрик за комбінаціями вимірів", "Спосіб реплікації сегментів", "Формат зберігання JSON"], a: 1, w: "Star-tree відповідає на агрегації, читаючи готові суми замість сирих рядків. Вузол «*» означає всі значення виміру."},
+    {q: "Чому запит із фільтром за датою торкається лише кількох сегментів із тисяч?", o: ["Pinot кешує всі результати", "Broker відкидає сегменти за метаданими мінімального й максимального часу", "Старі сегменти видаляються щогодини", "Server-и відповідають випадково"], a: 1, w: "Це відсікання сегментів (pruning). Запит без фільтра за часом піде на всі сегменти таблиці."},
+    {q: "Що потрібно для коректної upsert-таблиці?", o: ["Вимкнути індекси", "Первинний ключ, і щоб усі версії одного ключа йшли в одну партицію Kafka", "Тільки offline-таблиця", "Один server на весь кластер"], a: 1, w: "Мапа ключів зберігається на кожному server-і окремо. Якщо версії ключа потраплять у різні партиції, вони опиняться на різних server-ах."},
+    {q: "Внутрішній звіт для 15 аналітиків раз на добу з join-ами шести таблиць. Що обрати?", o: ["Apache Pinot", "Сховище даних: Snowflake, BigQuery або Trino", "Redis", "Kafka Streams"], a: 1, w: "Мало запитів, складний SQL і вчорашні дані — територія сховищ. Pinot виправданий, коли запитів тисячі і потрібна свіжість."}
+  ];
+  function shuffle(a){ for (var i = a.length - 1; i > 0; i--) { var j = Math.floor(Math.random() * (i + 1)), t = a[i]; a[i] = a[j]; a[j] = t; } return a; }
+  var answered = 0, correct = 0, qbox = $("#quizBox");
+  QUIZ.forEach(function(item, qi){
+    var d = document.createElement("div");
+    d.className = "qq";
+    d.innerHTML = "<h3>" + (qi + 1) + ". " + item.q + '</h3><div class="opts">' + shuffle(item.o.map(function(o, oi){ return '<button type="button" data-i="' + oi + '">' + o + "</button>"; })).join("") + '</div><p class="why" hidden></p>';
+    $$("button", d).forEach(function(b){
+      b.addEventListener("click", function(){
+        var ok = +b.dataset.i === item.a;
+        $$("button", d).forEach(function(x){ x.disabled = true; if (+x.dataset.i === item.a) x.classList.add("right"); });
+        if (!ok) b.classList.add("wrong");
+        var why = $(".why", d); why.hidden = false; why.textContent = (ok ? "Правильно. " : "Не зовсім. ") + item.w;
+        answered++; if (ok) correct++;
+        renderScore();
+      });
+    });
+    qbox.appendChild(d);
+  });
+  function renderScore(){
+    var s = $("#score");
+    if (!answered) { s.innerHTML = '<span class="muted">Відповідайте на питання — рахунок з’явиться тут.</span>'; return; }
+    var msg = answered < QUIZ.length ? "" : correct === QUIZ.length ? "Чудово, ви розумієте, як працює Pinot." : correct >= 5 ? "Добре. Перегляньте пояснення до помилок." : "Пройдіться ще раз по розділах «Як виконується запит» та «Індекси».";
+    s.innerHTML = "<b>" + correct + " / " + QUIZ.length + "</b><span>правильних з " + answered + " відповідей. " + msg + '</span><button class="btn" type="button" id="qReset">Почати знову</button>';
+    $("#qReset").addEventListener("click", function(){
+      answered = 0; correct = 0;
+      $$(".qq", qbox).forEach(function(d){ $$("button", d).forEach(function(x){ x.disabled = false; x.classList.remove("right", "wrong"); }); $(".why", d).hidden = true; });
+      renderScore();
+    });
+  }
+  renderScore();
+})();
+</script>
+</body>
+</html>
