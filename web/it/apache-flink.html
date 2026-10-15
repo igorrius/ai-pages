@@ -1,0 +1,1113 @@
+<!doctype html>
+<html lang="uk">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Apache Flink простими словами</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<meta name="description" content="Інтерактивний посібник: що таке Apache Flink, як він обробляє потоки подій зі станом, чекпоінтами і watermark, для чого його використовують і коли він не потрібен.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cpath d='M8 70c18 0 22-40 42-40s24 40 42 40' fill='none' stroke='%23e0336f' stroke-width='12' stroke-linecap='round'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;1,400&family=JetBrains+Mono:wght@400;600&family=Unbounded:wght@500;700&display=swap">
+<style>
+/* Layout: long-read with a sticky section rail on desktop, a sticky chip bar on phones;
+   interactive "labs" are the only framed objects. Cool engineering neutrals, Flink-raspberry accent
+   (sibling of the Spark guide, which uses flame orange). */
+:root{
+  --bg:#f3f5f7; --surface:#ffffff; --sunk:#e9edf1; --line:#d6dde4;
+  --ink:#14202b; --muted:#56636f; --faint:#8a96a1;
+  --accent:#b4235a; --accent-strong:#e0336f; --accent-soft:#fbe3ec;
+  --ok:#0f7a5a; --ok-soft:#dcf2ea; --warn:#a15c00; --warn-soft:#fbefd9; --bad:#b4233a; --bad-soft:#fae1e5;
+  --c1:#2c64c9; --c1-soft:#dfe8f8; --c2:#0d857a; --c2-soft:#d9f1ee; --c3:#a15c00; --c3-soft:#fbefd9;
+  --code-bg:#14202b; --code-ink:#dfe6ec; --code-kw:#ff86ad; --code-str:#9fd7a8; --code-cm:#7f8f9c; --code-fn:#8cc4ff;
+  --f-display:"Unbounded","Arial Black",system-ui,sans-serif;
+  --f-body:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;
+  --f-mono:"JetBrains Mono",ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+  --r:10px;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0e1318; --surface:#151c23; --sunk:#1b242d; --line:#283440;
+  --ink:#e6ecf1; --muted:#9aa8b4; --faint:#6c7a86;
+  --accent:#ff86ad; --accent-strong:#ff5c8f; --accent-soft:#3a1826;
+  --ok:#4cc79a; --ok-soft:#14322a; --warn:#f0b357; --warn-soft:#3a2c14; --bad:#ff7d8f; --bad-soft:#3d1b22;
+  --c1:#7aa7ff; --c1-soft:#1c2a45; --c2:#4fd1c2; --c2-soft:#13332f; --c3:#f0b357; --c3-soft:#3a2c14;
+  --code-bg:#0a0f13; --code-ink:#dfe6ec;
+  color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0e1318; --surface:#151c23; --sunk:#1b242d; --line:#283440;
+  --ink:#e6ecf1; --muted:#9aa8b4; --faint:#6c7a86;
+  --accent:#ff86ad; --accent-strong:#ff5c8f; --accent-soft:#3a1826;
+  --ok:#4cc79a; --ok-soft:#14322a; --warn:#f0b357; --warn-soft:#3a2c14; --bad:#ff7d8f; --bad-soft:#3d1b22;
+  --c1:#7aa7ff; --c1-soft:#1c2a45; --c2:#4fd1c2; --c2-soft:#13332f; --c3:#f0b357; --c3-soft:#3a2c14;
+  --code-bg:#0a0f13; --code-ink:#dfe6ec;
+  color-scheme:dark}
+
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html{scroll-behavior:smooth;scroll-padding-top:72px}
+@media (prefers-reduced-motion: reduce){html{scroll-behavior:auto}*{animation:none!important;transition:none!important}}
+body{margin:0;background:var(--bg);color:var(--ink);font:400 16px/1.65 var(--f-body);-webkit-font-smoothing:antialiased}
+a{color:var(--accent)}
+a:hover{text-decoration-thickness:2px}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:4px}
+code,kbd{font-family:var(--f-mono);font-size:.88em}
+p code,li code,td code,dd code{background:var(--sunk);padding:.08em .35em;border-radius:4px}
+h1,h2,h3{text-wrap:balance;margin:0}
+h2{font:700 clamp(1.45rem,1.1rem + 1.4vw,2rem)/1.2 var(--f-display);letter-spacing:-.01em}
+h3{font:600 1.15rem/1.35 var(--f-body)}
+p{margin:0}
+.muted{color:var(--muted)}
+.mono{font-family:var(--f-mono)}
+.eyebrow{font:600 .72rem/1 var(--f-mono);letter-spacing:.12em;text-transform:uppercase;color:var(--accent)}
+
+/* ---------- top bar ---------- */
+.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:20;background:color-mix(in srgb,var(--bg) 88%,transparent);backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}
+.top-in{max-width:1180px;margin:0 auto;display:flex;align-items:center;gap:12px;padding-block:10px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.crumbs{display:flex;gap:8px;align-items:center;font-size:.9rem;min-width:0;white-space:nowrap;overflow:hidden}
+.crumbs a{color:var(--muted);text-decoration:none}
+.crumbs a:hover{color:var(--accent)}
+.crumbs span{color:var(--faint)}
+.crumbs b{font-weight:600;overflow:hidden;text-overflow:ellipsis}
+.theme{margin-left:auto;flex:none;border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:999px;padding:6px 12px;font:500 .82rem var(--f-body);cursor:pointer}
+.theme:hover{border-color:var(--accent)}
+.chips{display:none}
+@media (max-width:1023px){
+  .chips{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;padding-bottom:10px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+  .chips::-webkit-scrollbar{display:none}
+  .chips a{flex:none;font-size:.8rem;text-decoration:none;color:var(--muted);border:1px solid var(--line);border-radius:999px;padding:4px 10px;background:var(--surface)}
+  .chips a.on{color:var(--accent);border-color:var(--accent)}
+}
+
+/* ---------- page grid ---------- */
+.wrap{max-width:1180px;margin:0 auto;padding-block:0 64px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));display:grid;grid-template-columns:1fr;gap:40px}
+@media (min-width:1024px){.wrap{grid-template-columns:220px minmax(0,1fr);gap:56px}}
+.rail{display:none}
+@media (min-width:1024px){
+  .rail{display:block;position:sticky;top:calc(env(safe-area-inset-top,0px) + 76px);align-self:start;padding-top:40px}
+  .rail ol{list-style:none;margin:0;padding:0;display:grid;gap:2px;counter-reset:s}
+  .rail a{display:flex;gap:10px;align-items:baseline;padding:6px 10px;border-radius:8px;text-decoration:none;color:var(--muted);font-size:.9rem;line-height:1.35}
+  .rail a::before{counter-increment:s;content:counter(s,decimal-leading-zero);font:500 .7rem var(--f-mono);color:var(--faint)}
+  .rail a:hover{color:var(--ink);background:var(--sunk)}
+  .rail a.on{color:var(--ink);background:var(--surface);box-shadow:inset 2px 0 0 var(--accent)}
+  .rail a.on::before{color:var(--accent)}
+}
+main{min-width:0;display:grid;gap:88px;padding-top:40px}
+section{display:grid;gap:22px;min-width:0}
+.sec-head{display:grid;gap:10px}
+.lead{font-size:1.08rem;color:var(--muted);max-width:66ch}
+.prose{display:grid;gap:14px;max-width:68ch}
+
+/* ---------- hero ---------- */
+.hero{display:grid;gap:28px;padding-top:8px}
+.hero h1{font:700 clamp(2.1rem,1.3rem + 3.6vw,3.6rem)/1.05 var(--f-display);letter-spacing:-.02em}
+.hero h1 em{font-style:normal;color:var(--accent-strong)}
+.hero .def{font-size:clamp(1.08rem,1rem + .4vw,1.3rem);max-width:60ch;line-height:1.55}
+.facts{display:flex;flex-wrap:wrap;gap:8px}
+.facts span{font:500 .8rem var(--f-mono);border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:5px 11px;color:var(--muted)}
+.analogy{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:1px;background:var(--line);border:1px solid var(--line);border-radius:var(--r);overflow:hidden}
+.analogy div{background:var(--surface);padding:16px 18px;display:grid;gap:4px;align-content:start}
+.analogy b{font:600 .95rem var(--f-body)}
+.analogy .mono{font-size:.75rem;color:var(--accent)}
+.analogy p{font-size:.92rem;color:var(--muted)}
+
+/* ---------- generic blocks ---------- */
+.lab{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:clamp(16px,2.5vw,26px);display:grid;gap:18px;min-width:0}
+.lab-head{display:flex;flex-wrap:wrap;gap:8px 16px;align-items:baseline;justify-content:space-between}
+.lab-head .eyebrow{color:var(--muted)}
+.grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr));gap:16px}
+.grid4{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,190px),1fr));gap:16px}
+.grid3{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,240px),1fr));gap:16px}
+.cell{border-top:2px solid var(--line);padding-top:14px;display:grid;gap:6px;align-content:start;min-width:0}
+.cell h3{font-size:1.02rem}
+.cell p{font-size:.94rem;color:var(--muted)}
+.cell.hot{border-top-color:var(--accent)}
+.tag{display:inline-block;font:600 .68rem/1 var(--f-mono);letter-spacing:.06em;text-transform:uppercase;padding:4px 7px;border-radius:5px;background:var(--sunk);color:var(--muted);vertical-align:middle}
+.tag.ok{background:var(--ok-soft);color:var(--ok)}
+.tag.bad{background:var(--bad-soft);color:var(--bad)}
+.tag.warn{background:var(--warn-soft);color:var(--warn)}
+.tag.acc{background:var(--accent-soft);color:var(--accent)}
+
+pre.code{margin:0;background:var(--code-bg);color:var(--code-ink);border-radius:var(--r);padding:16px 18px;overflow-x:auto;font:400 .84rem/1.7 var(--f-mono);tab-size:4}
+pre.code .k{color:var(--code-kw)} pre.code .s{color:var(--code-str)} pre.code .c{color:var(--code-cm);font-style:italic} pre.code .f{color:var(--code-fn)}
+.tbl{overflow-x:auto;border:1px solid var(--line);border-radius:var(--r)}
+table{border-collapse:collapse;width:100%;font-size:.9rem;min-width:620px}
+th,td{text-align:left;padding:10px 14px;border-bottom:1px solid var(--line);vertical-align:top}
+th{font:600 .74rem var(--f-mono);letter-spacing:.06em;text-transform:uppercase;color:var(--muted);background:var(--sunk)}
+tr:last-child td{border-bottom:0}
+
+.btn{font:600 .88rem var(--f-body);border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:8px;padding:8px 14px;cursor:pointer;display:inline-flex;gap:6px;align-items:center}
+.btn:hover:not(:disabled){border-color:var(--accent);color:var(--accent)}
+.btn:disabled{opacity:.4;cursor:default}
+.btn.primary{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.btn.primary:hover:not(:disabled){background:var(--accent-strong);border-color:var(--accent-strong);color:#fff}
+.seg{display:inline-flex;flex-wrap:wrap;gap:6px}
+.seg button{font:500 .85rem var(--f-body);border:1px solid var(--line);background:var(--surface);color:var(--muted);border-radius:999px;padding:6px 12px;cursor:pointer}
+.seg button:hover{color:var(--ink);border-color:var(--faint)}
+.seg button[aria-pressed="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.small{font-size:.8rem;color:var(--muted)}
+
+/* ---------- why: latency rows ---------- */
+.flow{display:grid;gap:10px}
+.flow-row{display:grid;grid-template-columns:150px minmax(0,1fr) auto;gap:12px;align-items:center}
+@media (max-width:620px){.flow-row{grid-template-columns:1fr;gap:6px}}
+.flow-row .who{font-weight:600;font-size:.92rem}
+.steps{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.st{font:500 .78rem var(--f-mono);padding:6px 9px;border-radius:6px;background:var(--c1-soft);color:var(--c1)}
+.wait{font:500 .72rem var(--f-mono);padding:5px 7px;border-radius:6px;background:var(--bad-soft);color:var(--bad)}
+.fast{font:500 .72rem var(--f-mono);padding:5px 7px;border-radius:6px;background:var(--ok-soft);color:var(--ok)}
+.arr{color:var(--faint);font-size:.8rem}
+.flow-row .t{font:600 .85rem var(--f-mono);color:var(--muted);white-space:nowrap}
+
+/* ---------- architecture ---------- */
+.arch{display:grid;gap:10px;justify-items:center}
+.node{width:100%;border:1px solid var(--line);border-radius:12px;background:var(--surface);padding:14px 16px;display:grid;gap:8px}
+.node .nh{display:flex;gap:10px;align-items:baseline;flex-wrap:wrap}
+.node .nh b{font:700 1rem var(--f-display);letter-spacing:-.01em}
+.node .nh span{font-size:.85rem;color:var(--muted)}
+.node.jm{max-width:600px;border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft)}
+.node.client{max-width:420px;background:var(--sunk)}
+.pills{display:flex;flex-wrap:wrap;gap:6px}
+.pills span{font:500 .74rem var(--f-mono);padding:4px 8px;border-radius:6px;background:var(--sunk);color:var(--muted)}
+.node.client .pills span{background:var(--surface)}
+.link{font:500 .78rem var(--f-mono);color:var(--muted);display:flex;align-items:center;gap:8px;text-align:center}
+.link::before,.link::after{content:"";flex:none;width:1px;height:14px;background:var(--faint)}
+.workers{width:100%;display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,230px),1fr));gap:10px}
+.slots{display:grid;grid-template-columns:repeat(3,1fr);gap:4px}
+.slots i{min-height:30px;border-radius:4px;background:var(--c1-soft);border:1px solid color-mix(in srgb,var(--c1) 35%,transparent);font:500 .6rem/1.2 var(--f-mono);text-align:center;color:var(--c1);font-style:normal;display:grid;place-items:center;padding:2px}
+.statebox{font:500 .7rem var(--f-mono);border:1px dashed var(--faint);border-radius:6px;padding:5px 8px;color:var(--muted)}
+.node.store{max-width:520px;background:var(--sunk)}
+
+/* ---------- simulator ---------- */
+.sim{display:grid;grid-template-columns:minmax(0,1fr);gap:18px}
+@media (min-width:1360px){.sim{grid-template-columns:minmax(0,.9fr) minmax(0,1.3fr)}}
+.sim-code{display:grid;gap:12px;align-content:start;min-width:0}
+.sim-code pre.code span.ln{display:block;padding:0 8px;margin:0 -8px;border-radius:4px;transition:background .25s}
+.sim-code pre.code span.ln.hl{background:rgba(255,92,143,.2);box-shadow:inset 3px 0 0 var(--accent-strong)}
+.explain{border-left:3px solid var(--accent);padding:4px 0 4px 14px;display:grid;gap:6px;min-height:150px}
+.explain h3{font-size:1.05rem}
+.explain p{font-size:.95rem;color:var(--muted)}
+.stagebar{display:flex;gap:6px;flex-wrap:wrap}
+.stagebar span{font:500 .72rem var(--f-mono);padding:4px 8px;border-radius:5px;border:1px solid var(--line);color:var(--faint)}
+.stagebar span.on{border-color:var(--accent);color:var(--accent);background:var(--accent-soft)}
+.stagebar span.on.f{border-color:var(--bad);color:var(--bad);background:var(--bad-soft)}
+.cluster{display:grid;gap:10px;min-width:0}
+.drv{border:1px dashed var(--accent);border-radius:10px;padding:10px 12px;display:grid;gap:6px;background:color-mix(in srgb,var(--accent-soft) 45%,var(--surface))}
+.drv-h{font:600 .74rem var(--f-mono);letter-spacing:.06em;text-transform:uppercase;color:var(--accent)}
+.drv-body{font-size:.88rem;min-height:30px;display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.net{font:500 .74rem var(--f-mono);text-align:center;color:var(--faint);border-block:1px dashed var(--line);padding:5px;transition:all .3s}
+.net.on{color:var(--accent);border-color:var(--accent);background:var(--accent-soft)}
+.row2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.row3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.ex{border:1px solid var(--line);border-radius:10px;background:var(--sunk);padding:8px;display:grid;gap:6px;align-content:start;min-width:0}
+.ex.src{min-height:96px;background:var(--surface)}
+.ex.op{min-height:150px}
+.ex.out{min-height:84px;background:var(--surface)}
+.ex.dead{background:var(--bad-soft);border-color:var(--bad)}
+.ex-h{font:600 .7rem/1.3 var(--f-mono);color:var(--muted)}
+.ex-h small{display:block;font-weight:400;color:var(--faint)}
+.chip{font:500 .74rem/1.25 var(--f-mono);padding:6px 7px;border-radius:6px;border:1px solid transparent;display:flex;justify-content:space-between;gap:4px;flex-wrap:wrap;transition:opacity .3s}
+.chip.ca{background:var(--c1-soft);color:var(--c1);border-color:color-mix(in srgb,var(--c1) 30%,transparent)}
+.chip.cb{background:var(--c2-soft);color:var(--c2);border-color:color-mix(in srgb,var(--c2) 30%,transparent)}
+.chip.cc{background:var(--c3-soft);color:var(--c3);border-color:color-mix(in srgb,var(--c3) 30%,transparent)}
+.chip.state{background:var(--surface);border:1px solid var(--line);color:var(--ink);font-weight:600}
+.chip.state.ca{box-shadow:inset 3px 0 0 var(--c1)} .chip.state.cb{box-shadow:inset 3px 0 0 var(--c2)} .chip.state.cc{box-shadow:inset 3px 0 0 var(--c3)}
+.chip.bar{background:repeating-linear-gradient(135deg,var(--accent-soft) 0 6px,var(--surface) 6px 12px);color:var(--accent);border:1px solid var(--accent);justify-content:center;font-weight:600}
+.chip.alert{background:var(--bad-soft);color:var(--bad);border-color:var(--bad);font-weight:600}
+.chip.drop{opacity:.5;text-decoration:line-through}
+.chip.snap{background:var(--ok-soft);color:var(--ok);font-size:.68rem}
+.chip.dead{background:none;color:var(--bad);justify-content:center}
+@media (max-width:520px){.chip{font-size:.64rem;padding:5px}.ex{padding:6px}}
+.sim-ctl{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.dots{display:flex;gap:5px;margin-left:auto;flex-wrap:wrap}
+.dots button{width:22px;height:22px;border-radius:50%;border:1px solid var(--line);background:var(--surface);font:500 .62rem var(--f-mono);color:var(--faint);cursor:pointer;padding:0}
+.dots button.on{background:var(--accent-strong);border-color:var(--accent-strong);color:#fff}
+.legend{display:flex;flex-wrap:wrap;gap:12px;font-size:.8rem;color:var(--muted)}
+.legend i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:5px;vertical-align:-1px}
+
+/* ---------- windows visual ---------- */
+.wins{display:grid;gap:18px}
+.win{display:grid;gap:6px}
+.win-h{display:flex;gap:10px;align-items:baseline;flex-wrap:wrap}
+.win-h b{font-size:.95rem}
+.win-h span{font-size:.85rem;color:var(--muted)}
+.track{position:relative;height:58px;border-bottom:1px solid var(--faint)}
+.track.tall{height:78px}
+.track .dot{position:absolute;bottom:-5px;width:10px;height:10px;margin-left:-5px;border-radius:50%;background:var(--ink)}
+.track .box{position:absolute;border:1.5px solid var(--accent);background:color-mix(in srgb,var(--accent-soft) 70%,transparent);border-radius:6px;font:600 .66rem var(--f-mono);color:var(--accent);padding:2px 5px;white-space:nowrap;overflow:hidden}
+.axis{display:flex;justify-content:space-between;font:500 .66rem var(--f-mono);color:var(--faint)}
+
+/* ---------- watermark lab ---------- */
+.wm-rows{display:grid;gap:4px;overflow-x:auto}
+.wm-row{display:grid;grid-template-columns:72px 82px 92px minmax(170px,1fr);gap:10px;align-items:center;font:500 .8rem var(--f-mono);padding:6px 10px;border-radius:6px;background:var(--bg);min-width:440px}
+.wm-row.head{background:none;color:var(--muted);font-size:.68rem;letter-spacing:.06em;text-transform:uppercase}
+.wm-row.fire{background:var(--accent-soft);color:var(--accent);grid-template-columns:1fr;font-weight:600}
+.wm-row .late{color:var(--bad)}
+.stat{display:flex;flex-wrap:wrap;gap:10px 28px}
+.stat div{display:grid}
+.stat b{font:700 1.5rem var(--f-display);font-variant-numeric:tabular-nums}
+.stat span{font-size:.8rem;color:var(--muted)}
+.range{display:grid;gap:4px}
+.range .rl{display:flex;justify-content:space-between;gap:8px;font-size:.88rem}
+.range output{font:600 .85rem var(--f-mono);color:var(--accent);white-space:nowrap}
+input[type=range]{width:100%;accent-color:var(--accent-strong)}
+
+/* ---------- use cases ---------- */
+.cases{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,330px),1fr));gap:16px}
+.case{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:18px;display:grid;gap:10px;align-content:start;grid-template-rows:auto auto 1fr auto}
+.case-h{display:flex;justify-content:space-between;gap:10px;align-items:start}
+.case h3{font-size:1.05rem}
+.case p{font-size:.93rem;color:var(--muted)}
+.case p b{color:var(--ink);font-weight:600}
+.pipe{display:flex;flex-wrap:wrap;gap:4px;align-items:center;font:500 .72rem var(--f-mono)}
+.pipe span{padding:4px 7px;border-radius:5px;background:var(--sunk);color:var(--ink)}
+.pipe span.sp{background:var(--accent-soft);color:var(--accent)}
+.pipe i{font-style:normal;color:var(--faint)}
+.nope{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,260px),1fr));gap:12px}
+.nope div{border:1px solid var(--line);border-radius:10px;padding:14px;display:grid;gap:4px;background:var(--surface)}
+.nope b{font-size:.95rem}
+.nope p{font-size:.88rem;color:var(--muted)}
+
+/* ---------- decision helper ---------- */
+.ask{display:grid;gap:14px}
+.ask .q{display:grid;gap:8px}
+.ask .q > span{font:600 .74rem var(--f-mono);letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.verdict{border-radius:12px;padding:18px;display:grid;gap:8px;border:1px solid var(--line);background:var(--sunk)}
+.verdict.yes{background:var(--ok-soft);border-color:color-mix(in srgb,var(--ok) 40%,transparent)}
+.verdict.maybe{background:var(--warn-soft);border-color:color-mix(in srgb,var(--warn) 40%,transparent)}
+.verdict.no{background:var(--bad-soft);border-color:color-mix(in srgb,var(--bad) 40%,transparent)}
+.verdict .vh{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.verdict b{font:700 1.05rem var(--f-display)}
+.verdict p{font-size:.95rem}
+.verdict .alt{font-size:.88rem;color:var(--muted)}
+
+/* ---------- deep dive tabs ---------- */
+.tabs{display:flex;gap:4px;overflow-x:auto;border-bottom:1px solid var(--line);scrollbar-width:thin}
+.tabs button{flex:none;font:500 .9rem var(--f-body);background:none;border:0;border-bottom:2px solid transparent;color:var(--muted);padding:10px 12px;cursor:pointer;margin-bottom:-1px}
+.tabs button:hover{color:var(--ink)}
+.tabs button[aria-selected="true"]{color:var(--ink);border-bottom-color:var(--accent-strong);font-weight:600}
+.panel{display:grid;gap:18px;min-width:0}
+.bp{display:grid;grid-template-columns:repeat(5,auto);align-items:center;justify-content:start;gap:8px;overflow-x:auto;padding-bottom:4px}
+.bp .opn{border:1px solid var(--line);border-radius:10px;padding:10px 12px;background:var(--bg);font:600 .8rem var(--f-mono);display:grid;gap:2px;min-width:110px}
+.bp .opn small{font-weight:400;color:var(--muted)}
+.bp .opn.slow{border-color:var(--bad)}
+.buf{width:70px;display:grid;gap:3px;font:500 .62rem var(--f-mono);color:var(--muted);text-align:center}
+.buf .bt{height:12px;border-radius:3px;background:var(--sunk);overflow:hidden}
+.buf .bf{height:100%;background:var(--ok);transition:width .3s}
+.buf .bf.full{background:var(--bad)}
+
+/* ---------- quiz ---------- */
+.quiz{display:grid;gap:14px}
+.qq{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:18px;display:grid;gap:10px}
+.qq h3{font-size:1rem;font-weight:600}
+.qq .opts{display:grid;gap:6px}
+.qq .opts button{text-align:left;font:400 .93rem/1.45 var(--f-body);border:1px solid var(--line);background:var(--bg);color:var(--ink);border-radius:8px;padding:9px 12px;cursor:pointer}
+.qq .opts button:hover:not(:disabled){border-color:var(--faint)}
+.qq .opts button:disabled{cursor:default}
+.qq .opts button.right{border-color:var(--ok);background:var(--ok-soft)}
+.qq .opts button.wrong{border-color:var(--bad);background:var(--bad-soft)}
+.qq .why{font-size:.9rem;color:var(--muted);border-left:3px solid var(--line);padding-left:12px}
+.score{display:flex;gap:12px;align-items:center;flex-wrap:wrap;font-size:.95rem}
+.score b{font:700 1.3rem var(--f-display)}
+
+/* ---------- glossary ---------- */
+dl.gloss{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr));gap:0 28px;margin:0}
+dl.gloss div{padding:12px 0;border-bottom:1px solid var(--line);display:grid;gap:2px}
+dl.gloss dt{font:600 .92rem var(--f-mono);color:var(--accent)}
+dl.gloss dd{margin:0;font-size:.92rem;color:var(--muted)}
+
+footer{border-top:1px solid var(--line);padding-block:28px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));text-align:center;font-size:.85rem;color:var(--muted)}
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div class="top-in">
+    <nav class="crumbs" aria-label="Навігація">
+      <a href="../../index.html">AI Pages</a><span>/</span><a href="./index.html">IT</a><span>/</span><b>Apache Flink</b>
+    </nav>
+    <button class="theme" id="themeBtn" type="button" aria-label="Перемкнути тему">Тема: авто</button>
+  </div>
+  <nav class="chips" id="chips" aria-label="Розділи"></nav>
+</header>
+
+<div class="wrap">
+  <aside class="rail" aria-label="Зміст">
+    <ol id="toc"></ol>
+  </aside>
+
+  <main>
+    <!-- ============ 1. WHAT ============ -->
+    <section id="what" data-title="Що це таке">
+      <div class="hero">
+        <span class="eyebrow">Інтерактивний посібник</span>
+        <h1>Apache Flink: кожна подія — <em>щойно вона сталася</em></h1>
+        <p class="def"><b>Apache Flink</b> — відкритий рушій для обробки потоків даних. Він не чекає, поки дані накопичаться: кожен платіж, клік чи показ датчика обробляється за мілісекунди після появи. Flink пам’ятає стан між подіями, наприклад «скільки платежів було з цієї картки за хвилину», і не губить його навіть тоді, коли падає сервер.</p>
+        <div class="facts">
+          <span>Apache License 2.0</span>
+          <span>Java · SQL · Python</span>
+          <span>затримка в мілісекундах</span>
+          <span>стан до терабайтів</span>
+          <span>exactly-once</span>
+        </div>
+      </div>
+
+      <div class="prose">
+        <p>Уявіть сортувальний центр пошти, де посилки їдуть стрічкою без зупинки, вдень і вночі.</p>
+      </div>
+      <div class="analogy">
+        <div><span class="mono">JobManager</span><b>Диспетчер</b><p>Розставляє станції, стежить, щоб усі працювали, і подає сигнал «фотографуємо журнали».</p></div>
+        <div><span class="mono">TaskManagers</span><b>Сортувальні станції</b><p>Кожна обробляє свої посилки одразу, як вони під’їхали. Ніхто не чекає кінця дня.</p></div>
+        <div><span class="mono">State</span><b>Журнал на станції</b><p>Скільки посилок уже пройшло для кожної адреси. Без журналу неможливо помітити, що адресі прийшло підозріло багато.</p></div>
+        <div><span class="mono">Checkpoint</span><b>Фото всіх журналів</b><p>За сигналом кожна станція фотографує свій журнал. Якщо станція згорить, роботу продовжать із фото.</p></div>
+      </div>
+    </section>
+
+    <!-- ============ 2. WHY ============ -->
+    <section id="why" data-title="Навіщо він потрібен">
+      <div class="sec-head">
+        <span class="eyebrow">Проблема</span>
+        <h2>Деякі відповіді марні вже за хвилину</h2>
+      </div>
+      <div class="prose">
+        <p>Звіт про шахрайський платіж, отриманий наступного ранку, грошей не поверне. Попередження про перегрів турбіни потрібне зараз, а не після нічного батча. Багато даних за природою є потоком: події йдуть безперервно і не мають «кінця файлу».</p>
+        <p>Flink будує все навколо потоку. Пакетна обробка для нього — окремий випадок: потік, який колись закінчується (bounded stream). Тому той самий код може працювати і над Kafka в реальному часі, і над архівом у S3.</p>
+      </div>
+      <div class="lab">
+        <div class="lab-head"><span class="eyebrow">Скільки чекати на результат</span><span class="small">задача: помітити підозрілу серію платежів</span></div>
+        <div class="flow">
+          <div class="flow-row">
+            <span class="who">Нічний батч</span>
+            <div class="steps"><span class="st">платіж</span><span class="arr">→</span><span class="wait">лежить до 02:00</span><span class="arr">→</span><span class="st">job</span><span class="arr">→</span><span class="st">звіт</span></div>
+            <span class="t">до 24 год</span>
+          </div>
+          <div class="flow-row">
+            <span class="who">Мікробатчі</span>
+            <div class="steps"><span class="st">платіж</span><span class="arr">→</span><span class="wait">чекає пачку</span><span class="arr">→</span><span class="st">пачка</span><span class="arr">→</span><span class="st">алерт</span></div>
+            <span class="t">секунди</span>
+          </div>
+          <div class="flow-row">
+            <span class="who">Apache Flink</span>
+            <div class="steps"><span class="st">платіж</span><span class="arr">→</span><span class="fast">оновити стан</span><span class="arr">→</span><span class="st">алерт</span></div>
+            <span class="t">мілісекунди</span>
+          </div>
+        </div>
+        <p class="small">Мікробатчі використовує, зокрема, Spark Structured Streaming. Для багатьох задач секунд достатньо, і тоді обидва рушії підходять.</p>
+      </div>
+      <div class="grid4">
+        <div class="cell"><span class="mono small">2010</span><h3>Stratosphere</h3><p>Дослідницький проєкт берлінських університетів TU Berlin, HU Berlin та інституту HPI.</p></div>
+        <div class="cell"><span class="mono small">2014</span><h3>Apache Flink</h3><p>Проєкт переходить до Apache і невдовзі стає проєктом верхнього рівня. Flink німецькою — «спритний».</p></div>
+        <div class="cell"><span class="mono small">2016 → 2019</span><h3>1.0 і Blink</h3><p>1.0 закріпив стан і event time. 2019 року Alibaba купила компанію засновників і влила свій форк Blink: новий SQL-планувальник.</p></div>
+        <div class="cell hot"><span class="mono small">2025</span><h3>Flink 2.0</h3><p>Стан у віддаленому сховищі (ForSt), Materialized Tables, прибрано застарілі DataSet API і Scala API.</p></div>
+      </div>
+    </section>
+
+    <!-- ============ 3. ARCHITECTURE ============ -->
+    <section id="arch" data-title="Архітектура">
+      <div class="sec-head">
+        <span class="eyebrow">Як влаштовано</span>
+        <h2>JobManager, TaskManagers і сховище чекпоінтів</h2>
+        <p class="lead">Ви описуєте граф обробки: джерела, оператори, приймачі. Flink розкладає його на паралельні копії й запускає на робочих процесах. Джоб працює безперервно, тижнями й місяцями.</p>
+      </div>
+      <div class="arch">
+        <div class="node client">
+          <div class="nh"><b>Клієнт</b><span>ваш код або SQL</span></div>
+          <div class="pills"><span>DataStream API</span><span>Flink SQL / Table API</span><span>PyFlink</span></div>
+        </div>
+        <span class="link">надсилає граф джоба (JobGraph)</span>
+        <div class="node jm">
+          <div class="nh"><b>JobManager</b><span>координатор</span></div>
+          <div class="pills"><span>планує оператори по слотах</span><span>ResourceManager</span><span>координатор чекпоінтів</span><span>перезапуск після збою</span></div>
+        </div>
+        <span class="link">розгортає паралельні копії операторів</span>
+        <div class="workers">
+          <div class="node"><div class="nh"><b>TaskManager 1</b><span>JVM-процес</span></div><div class="slots"><i>Source<br>[0]</i><i>Detector<br>[0]</i><i>Detector<br>[1]</i></div><div class="statebox">локальний стан: RocksDB / пам’ять</div></div>
+          <div class="node"><div class="nh"><b>TaskManager 2</b><span>JVM-процес</span></div><div class="slots"><i>Source<br>[1]</i><i>Detector<br>[2]</i><i>Sink<br>[0]</i></div><div class="statebox">локальний стан: RocksDB / пам’ять</div></div>
+        </div>
+        <span class="link">періодично зберігають знімки стану</span>
+        <div class="node store">
+          <div class="nh"><b>Сховище чекпоінтів</b><span>S3 · HDFS · GCS</span></div>
+          <div class="pills"><span>checkpoint #41</span><span>checkpoint #42</span><span>savepoint перед оновленням</span></div>
+        </div>
+      </div>
+      <div class="grid2">
+        <div class="cell"><h3>Слот — місце для ланцюжка операторів</h3><p>TaskManager ділиться на слоти. У слоті працює по одній паралельній копії кожного оператора, тож parallelism = 3 означає три копії детектора. Сусідні оператори без перерозподілу склеюються в один ланцюжок і передають записи без мережі.</p></div>
+        <div class="cell"><h3>Стан живе поруч з обчисленням</h3><p>Кожна копія оператора тримає стан тільки своїх ключів: у пам’яті або в локальному RocksDB. Звернення до стану не йде мережею, тому воно швидке навіть на терабайтах.</p></div>
+      </div>
+    </section>
+
+    <!-- ============ 4. SIMULATOR ============ -->
+    <section id="run" data-title="Як обробляється потік">
+      <div class="sec-head">
+        <span class="eyebrow">Покроково</span>
+        <h2>Антифрод: потік, стан, збій і відновлення</h2>
+        <p class="lead">Банк хоче бачити, коли з однієї картки пройшло 3 платежі за хвилину. Пройдіть кроки: побачите, як події розходяться за ключем, як знімається чекпоінт і чому після падіння сервера алерт не задвоюється.</p>
+      </div>
+      <div class="lab">
+        <div class="sim">
+          <div class="sim-code">
+<pre class="code" id="simCode"><span class="ln" data-l="0">env.enableCheckpointing(<span class="f">10_000</span>);   <span class="c">// кожні 10 с</span></span><span class="ln" data-l="1">env.fromSource(kafka, watermarks, <span class="s">"payments"</span>)</span><span class="ln" data-l="2">   .keyBy(p -&gt; p.cardId)</span><span class="ln" data-l="3">   .process(<span class="k">new</span> FraudDetector())  <span class="c">// стан: лічильник</span></span><span class="ln" data-l="4">   .sinkTo(alertsSink);  <span class="c">// exactly-once</span></span></pre>
+            <div class="stagebar" id="stagebar"><span data-s="run">обробка</span><span data-s="ckpt">чекпоінт</span><span data-s="fail" class="f">збій</span><span data-s="rec">відновлення</span></div>
+            <div class="explain" aria-live="polite"><h3 id="simTitle"></h3><p id="simText"></p></div>
+          </div>
+          <div class="cluster" id="cluster">
+            <div class="drv"><div class="drv-h">JobManager</div><div class="drv-body" id="jmBody"></div></div>
+            <div class="row2" id="srcs"></div>
+            <div class="net" id="net">keyBy(cardId)</div>
+            <div class="row3" id="ops"></div>
+            <div class="row2" id="outs"></div>
+            <div class="legend"><span><i style="background:var(--c1)"></i>картка A</span><span><i style="background:var(--c2)"></i>картка B</span><span><i style="background:var(--c3)"></i>картка C</span><span class="muted">правило: 3 платежі за хвилину</span></div>
+          </div>
+        </div>
+        <div class="sim-ctl">
+          <button class="btn" id="simPrev" type="button">← Назад</button>
+          <button class="btn primary" id="simNext" type="button">Далі →</button>
+          <button class="btn" id="simPlay" type="button">▶ Програти все</button>
+          <div class="dots" id="simDots" role="group" aria-label="Кроки"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ 5. TIME & WINDOWS ============ -->
+    <section id="time" data-title="Час і вікна">
+      <div class="sec-head">
+        <span class="eyebrow">Ключова ідея</span>
+        <h2>Час події, watermark і вікна</h2>
+        <p class="lead">Телефон без зв’язку надсилає події із запізненням, мережа міняє їх місцями. Якщо рахувати за годинником сервера, платіж о 12:00:05 може потрапити не в ту хвилину. Flink уміє рахувати за часом самої події.</p>
+      </div>
+      <div class="grid2">
+        <div class="cell hot"><h3>Event time</h3><p>Час, коли подія сталася: записаний у самій події. Результат не залежить від затримок мережі, і повторна обробка архіву дає ті самі цифри.</p></div>
+        <div class="cell"><h3>Processing time</h3><p>Час на годиннику сервера в момент обробки. Найменша затримка, але результат залежить від того, коли подія доїхала.</p></div>
+      </div>
+      <div class="prose">
+        <p><b>Watermark</b> — це позначка в потоці, яка каже: «подій із часом раніше T уже не буде». Flink рахує її як найбільший побачений час мінус допустиму затримку. Коли watermark переходить кінець вікна, вікно закривається і видає результат.</p>
+      </div>
+
+      <div class="lab">
+        <div class="lab-head"><span class="eyebrow">Лабораторія watermark</span><span class="small">вікно [12:00:00 – 12:00:10), у ньому 7 подій</span></div>
+        <label class="range" for="wmDelay"><span class="rl">Допустима затримка (out-of-orderness)<output id="oDelay"></output></span><input type="range" id="wmDelay" min="0" max="10" step="1" value="3"></label>
+        <div class="stat" id="wmStat"></div>
+        <div class="wm-rows" id="wmRows"></div>
+        <p class="small">Компроміс: мала затримка дає швидкий результат, але губить запізнілі події. Велика затримка рахує все, але відповідь приходить пізніше. Запізнілі події можна не губити, а прийняти через <code>allowedLateness</code> або відправити в side output.</p>
+      </div>
+
+      <div class="lab">
+        <div class="lab-head"><span class="eyebrow">Три типи вікон</span><span class="small">одні й ті самі 10 подій за хвилину</span></div>
+        <div class="wins" id="wins"></div>
+      </div>
+    </section>
+
+    <!-- ============ 6. STATE ============ -->
+    <section id="state" data-title="Стан і exactly-once">
+      <div class="sec-head">
+        <span class="eyebrow">Надійність</span>
+        <h2>Стан, чекпоінти й exactly-once</h2>
+        <p class="lead">Головна сила Flink у тому, що стан — частина рушія. Його не треба тримати в окремій базі, і він переживає збої.</p>
+      </div>
+      <div class="grid3">
+        <div class="cell hot"><h3>Keyed state</h3><p>Стан окремо для кожного ключа: <code>ValueState</code>, <code>ListState</code>, <code>MapState</code>. Після <code>keyBy</code> ви працюєте зі станом поточного ключа, як зі звичайною змінною.</p></div>
+        <div class="cell"><h3>Таймери</h3><p>Оператор може попросити «розбуди мене о 12:15 для цього ключа». Так будують правила на кшталт «оплати не було 15 хвилин — скасувати замовлення».</p></div>
+        <div class="cell"><h3>State TTL</h3><p>Стан неактивних ключів можна автоматично видаляти. Без TTL стан ростиме з кожним новим користувачем.</p></div>
+      </div>
+      <div class="tbl">
+        <table>
+          <thead><tr><th></th><th>Checkpoint</th><th>Savepoint</th></tr></thead>
+          <tbody>
+            <tr><td><b>Хто створює</b></td><td>Flink автоматично, кожні N секунд</td><td>Людина або CI вручну: <code>flink savepoint</code>, <code>stop --savepointPath</code></td></tr>
+            <tr><td><b>Навіщо</b></td><td>Відновлення після збою</td><td>Оновлення коду, зміна паралелізму, міграція кластера, версії Flink</td></tr>
+            <tr><td><b>Формат</b></td><td>Оптимізований, може бути інкрементним</td><td>Канонічний, переносний між версіями</td></tr>
+            <tr><td><b>Скільки живе</b></td><td>Старі видаляються автоматично</td><td>Доки ви не видалите</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="prose">
+        <p><b>Exactly-once від джерела до приймача</b> потребує трьох умов: джерело вміє перечитати дані з офсету (Kafka, Kinesis, файли), стан відновлюється з чекпоінта, а приймач або транзакційний (Kafka з двофазним комітом, Iceberg, Paimon), або ідемпотентний (upsert за ключем у базу). Тоді навіть після збою кожна подія вплине на результат рівно один раз.</p>
+      </div>
+    </section>
+
+    <!-- ============ 7. ECOSYSTEM ============ -->
+    <section id="eco" data-title="API та екосистема">
+      <div class="sec-head">
+        <span class="eyebrow">Модулі</span>
+        <h2>Від низькорівневого API до SQL</h2>
+      </div>
+      <div class="grid3">
+        <div class="cell hot"><h3>Flink SQL і Table API</h3><p>Стрімінговий SQL: віконні агрегації, join-и потоків, дедуплікація, Top-N. Запити працюють безперервно й оновлюють результат. Найпростіший вхід у Flink.</p></div>
+        <div class="cell"><h3>DataStream API</h3><p>Java API з повним контролем: стан, таймери, власні вікна, side outputs. Для складної бізнес-логіки.</p></div>
+        <div class="cell"><h3>PyFlink</h3><p>Table API і DataStream API на Python. Можна викликати Python-функції всередині SQL.</p></div>
+        <div class="cell"><h3>Flink CDC</h3><p>Читає журнал змін MySQL, PostgreSQL, Oracle, MongoDB і реплікує зміни в Kafka, Paimon, Iceberg чи іншу базу, разом зі змінами схеми.</p></div>
+        <div class="cell"><h3>Конектори</h3><p>Kafka, Kinesis, Pulsar, файли й S3, JDBC, Elasticsearch, Iceberg, Apache Paimon, ClickHouse та інші.</p></div>
+        <div class="cell"><h3>CEP</h3><p>Бібліотека пошуку шаблонів у потоці: «вхід з нової країни, потім зміна пароля, потім великий переказ протягом 10 хвилин».</p></div>
+      </div>
+    </section>
+
+    <!-- ============ 8. USE CASES ============ -->
+    <section id="cases" data-title="Для чого використовують">
+      <div class="sec-head">
+        <span class="eyebrow">Юзкейси</span>
+        <h2>Де Flink справді на своєму місці</h2>
+        <p class="lead">Спільне в усіх сценаріях — події йдуть безперервно, реагувати треба швидко, а для рішення потрібна історія: лічильники, вікна, попередні події.</p>
+      </div>
+      <div class="cases">
+        <article class="case">
+          <div class="case-h"><h3>Антифрод і аномалії</h3><span class="tag acc">стан</span></div>
+          <p><b>Задача:</b> заблокувати платіж, якщо картка за хвилину використана в трьох країнах.</p>
+          <p><b>Чому Flink:</b> стан на кожну картку, рішення за мілісекунди, шаблони через CEP.</p>
+          <div class="pipe"><span>Kafka</span><i>→</i><span class="sp">keyBy(card) + стан</span><i>→</i><span>блокування / алерт</span></div>
+        </article>
+        <article class="case">
+          <div class="case-h"><h3>CDC і real-time ETL</h3><span class="tag acc">інтеграція</span></div>
+          <p><b>Задача:</b> щоб сховище аналітиків відставало від продакшн-бази на хвилини, а не на добу.</p>
+          <p><b>Чому Flink:</b> Flink CDC читає binlog без навантаження на базу, перетворює дані на льоту і пише з exactly-once.</p>
+          <div class="pipe"><span>MySQL binlog</span><i>→</i><span class="sp">Flink CDC</span><i>→</i><span>Paimon / Iceberg</span></div>
+        </article>
+        <article class="case">
+          <div class="case-h"><h3>Аналітика в реальному часі</h3><span class="tag acc">SQL</span></div>
+          <p><b>Задача:</b> дашборд продажів і конверсії з оновленням щосекунди під час розпродажу.</p>
+          <p><b>Чому Flink:</b> віконні агрегації в SQL, результат одразу йде в швидке сховище для дашбордів.</p>
+          <div class="pipe"><span>clickstream</span><i>→</i><span class="sp">Flink SQL вікна</span><i>→</i><span>ClickHouse / Druid</span><i>→</i><span>дашборд</span></div>
+        </article>
+        <article class="case">
+          <div class="case-h"><h3>Подієві застосунки</h3><span class="tag acc">таймери</span></div>
+          <p><b>Задача:</b> вести замовлення як автомат станів: створено, оплачено, відправлено. Скасувати, якщо оплати немає 15 хвилин.</p>
+          <p><b>Чому Flink:</b> стан і таймери на кожне замовлення, відновлення після збою без втрат.</p>
+          <div class="pipe"><span>події замовлень</span><i>→</i><span class="sp">стан + таймер</span><i>→</i><span>команди сервісам</span></div>
+        </article>
+        <article class="case">
+          <div class="case-h"><h3>Ознаки для ML онлайн</h3><span class="tag acc">ML</span></div>
+          <p><b>Задача:</b> «скільки товарів користувач переглянув за 10 хвилин» має бути свіжим у момент запиту рекомендацій.</p>
+          <p><b>Чому Flink:</b> ковзні вікна оновлюють ознаки з кожною подією, а не раз на годину.</p>
+          <div class="pipe"><span>події</span><i>→</i><span class="sp">ковзні вікна</span><i>→</i><span>Redis / feature store</span><i>→</i><span>модель</span></div>
+        </article>
+        <article class="case">
+          <div class="case-h"><h3>Моніторинг IoT і логів</h3><span class="tag acc">вікна</span></div>
+          <p><b>Задача:</b> телеметрія з 100 тисяч датчиків, тривога, якщо середня температура за 30 секунд вийшла за межу.</p>
+          <p><b>Чому Flink:</b> event time коректно рахує дані з пристроїв, які надсилають із затримкою.</p>
+          <div class="pipe"><span>MQTT → Kafka</span><i>→</i><span class="sp">вікна за event time</span><i>→</i><span>тривоги</span></div>
+        </article>
+      </div>
+
+      <div class="sec-head"><h3>Коли Flink — поганий вибір</h3></div>
+      <div class="nope">
+        <div><b>Звіт раз на добу</b><p>Якщо результат потрібен завтра, звичайний батч на Spark, dbt чи SQL у сховищі простіший в експлуатації.</p></div>
+        <div><b>Просте перекладання повідомлень</b><p>Перетворити JSON і покласти в інший топік без стану? Вистачить Kafka Connect, Kafka Streams або звичайного консюмера.</p></div>
+        <div><b>Ad-hoc аналітика по історії</b><p>Довільні запити по архіву зручніше робити в Spark, Trino або сховищі даних.</p></div>
+        <div><b>Немає ресурсу на експлуатацію</b><p>Стрімінгові джоби працюють 24/7 і потребують моніторингу. Без команди беріть керований сервіс.</p></div>
+      </div>
+
+      <div class="sec-head"><h3>Де запускають</h3></div>
+      <div class="facts">
+        <span>локально: bin/start-cluster.sh</span><span>Kubernetes + Flink Kubernetes Operator</span><span>YARN</span><span>Amazon Managed Service for Apache Flink</span><span>Confluent Cloud for Apache Flink</span><span>Ververica</span><span>Alibaba Cloud Realtime Compute</span>
+      </div>
+    </section>
+
+    <!-- ============ 9. DECIDE ============ -->
+    <section id="decide" data-title="Flink чи Spark">
+      <div class="sec-head">
+        <span class="eyebrow">Вибір</span>
+        <h2>Flink, Spark чи щось простіше?</h2>
+        <p class="lead">Оберіть параметри задачі. Це грубе правило: межі залежать від команди і вже наявної інфраструктури.</p>
+      </div>
+      <div class="lab">
+        <div class="ask">
+          <div class="q"><span>Тип задачі</span><div class="seg" id="qWork"><button type="button" data-v="stateful" aria-pressed="true">потік зі станом (лічильники, вікна)</button><button type="button" data-v="cdc">CDC / реплікація</button><button type="button" data-v="simple">просте перетворення повідомлень</button><button type="button" data-v="batch">обробка історії</button><button type="button" data-v="bi">дашборди й ad-hoc SQL</button></div></div>
+          <div class="q"><span>Як швидко потрібен результат</span><div class="seg" id="qLat"><button type="button" data-v="ms" aria-pressed="true">мілісекунди</button><button type="button" data-v="sec">секунди</button><button type="button" data-v="hours">хвилини–години</button></div></div>
+          <div class="q"><span>Потік подій</span><div class="seg" id="qRate"><button type="button" data-v="low">до 1 тис./с</button><button type="button" data-v="mid" aria-pressed="true">1–100 тис./с</button><button type="button" data-v="high">понад 100 тис./с</button></div></div>
+        </div>
+        <div class="verdict" id="verdict" aria-live="polite"></div>
+      </div>
+      <div class="tbl">
+        <table>
+          <thead><tr><th></th><th>Apache Flink</th><th>Spark Structured Streaming</th><th>Kafka Streams</th></tr></thead>
+          <tbody>
+            <tr><td><b>Модель</b></td><td>подія за подією</td><td>мікробатчі</td><td>подія за подією</td></tr>
+            <tr><td><b>Типова затримка</b></td><td>мілісекунди</td><td>від ~100 мс до секунд</td><td>мілісекунди</td></tr>
+            <tr><td><b>Стан</b></td><td>вбудований, RocksDB / ForSt, терабайти</td><td>state store на RocksDB</td><td>локальний RocksDB + changelog-топік</td></tr>
+            <tr><td><b>Розгортання</b></td><td>окремий кластер</td><td>окремий кластер</td><td>бібліотека у вашому сервісі</td></tr>
+            <tr><td><b>Джерела</b></td><td>будь-які</td><td>будь-які</td><td>лише Kafka</td></tr>
+            <tr><td><b>Батч</b></td><td>так, режим BATCH</td><td>сильна сторона</td><td>ні</td></tr>
+            <tr><td><b>SQL</b></td><td>Flink SQL</td><td>Spark SQL</td><td>ні (є окремий ksqlDB)</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="small">Про Spark є окремий посібник: <a href="./apache-spark.html">Apache Spark простими словами</a>.</p>
+    </section>
+
+    <!-- ============ 10. START ============ -->
+    <section id="start" data-title="Перший запуск">
+      <div class="sec-head">
+        <span class="eyebrow">Спробувати</span>
+        <h2>Перший потоковий джоб на Python</h2>
+        <p class="lead">PyFlink запускає локальний міні-кластер прямо в процесі Python. Потрібні Python і Java 11 або 17. Генератор <code>datagen</code> створює випадкові платежі, тож Kafka для старту не потрібна.</p>
+      </div>
+<pre class="code"><span class="c"># pip install apache-flink</span>
+<span class="k">from</span> pyflink.table <span class="k">import</span> EnvironmentSettings, TableEnvironment
+
+t_env = TableEnvironment.create(EnvironmentSettings.in_streaming_mode())
+
+<span class="c"># Нескінченний потік випадкових платежів: 5 на секунду</span>
+t_env.execute_sql(<span class="s">"""
+CREATE TABLE payments (
+    card_id STRING,
+    amount  DOUBLE,
+    ts      AS LOCALTIMESTAMP,
+    WATERMARK FOR ts AS ts - INTERVAL '2' SECOND
+) WITH (
+    'connector' = 'datagen',
+    'rows-per-second' = '5',
+    'fields.card_id.length' = '1',
+    'fields.amount.min' = '1',
+    'fields.amount.max' = '500'
+)
+"""</span>)
+
+<span class="c"># Картки з 3+ платежами за хвилину. Запит не завершується:</span>
+<span class="c"># щохвилини, коли закривається вікно, з’являються нові рядки</span>
+t_env.execute_sql(<span class="s">"""
+SELECT window_start, card_id, COUNT(*) AS cnt, ROUND(SUM(amount), 2) AS total
+FROM TABLE(TUMBLE(TABLE payments, DESCRIPTOR(ts), INTERVAL '1' MINUTE))
+GROUP BY window_start, window_end, card_id
+HAVING COUNT(*) &gt;= 3
+"""</span>).print()</pre>
+      <p class="small">На повноцінному кластері те саме можна виконати в SQL-клієнті <code>bin/sql-client.sh</code>, а за роботою стежити у веб-інтерфейсі на <code>http://localhost:8081</code>: граф джоба, backpressure, чекпоінти.</p>
+    </section>
+
+    <!-- ============ 11. DEEP ============ -->
+    <section id="deep" data-title="Поглиблено">
+      <div class="sec-head">
+        <span class="eyebrow">Для інженерів</span>
+        <h2>Під капотом: backpressure, бар’єри, бекенди стану</h2>
+        <p class="lead">Для тих, хто вже запускає джоби і хоче розуміти, чому вони відстають, а чекпоінти не встигають.</p>
+      </div>
+      <div class="lab">
+        <div class="tabs" role="tablist" id="deepTabs">
+          <button role="tab" type="button" id="t-bp" aria-controls="p-bp" aria-selected="true">Backpressure</button>
+          <button role="tab" type="button" id="t-bar" aria-controls="p-bar" aria-selected="false">Бар’єри чекпоінтів</button>
+          <button role="tab" type="button" id="t-be" aria-controls="p-be" aria-selected="false">Бекенди стану</button>
+          <button role="tab" type="button" id="t-sc" aria-controls="p-sc" aria-selected="false">Масштабування</button>
+          <button role="tab" type="button" id="t-bug" aria-controls="p-bug" aria-selected="false">Типові проблеми</button>
+        </div>
+
+        <div class="panel" role="tabpanel" id="p-bp" aria-labelledby="t-bp">
+          <p class="muted">Якщо приймач не встигає, Flink не губить дані і не падає з переповненням пам’яті. Буфери між операторами заповнюються, і повільний оператор перестає видавати «кредити» попередньому (credit-based flow control). Тиск іде назад до джерела, а те просто читає Kafka повільніше.</p>
+          <div class="grid2">
+            <label class="range" for="bpRate"><span class="rl">Потік у Kafka, подій/с<output id="oRate"></output></span><input type="range" id="bpRate" min="1000" max="20000" step="1000" value="12000"></label>
+            <label class="range" for="bpCap"><span class="rl">Пропускна здатність приймача, подій/с<output id="oCap"></output></span><input type="range" id="bpCap" min="2000" max="20000" step="1000" value="8000"></label>
+          </div>
+          <div class="bp" id="bpPipe"></div>
+          <div class="stat" id="bpStat"></div>
+          <p class="small">Backpressure — симптом, а не хвороба. Знайдіть у Web UI перший оператор, який позначено як busy, а не backpressured: саме він вузьке місце. Далі збільшуйте його паралелізм, прибирайте синхронні виклики зовнішніх сервісів (для них є Async I/O) або перевіряйте перекіс ключів.</p>
+        </div>
+
+        <div class="panel" role="tabpanel" id="p-bar" aria-labelledby="t-bar" hidden>
+          <div class="grid2">
+            <div class="cell hot"><h3>Як працює бар’єр</h3><p>JobManager просить джерела вставити в потік бар’єр #N і запам’ятати свої офсети. Бар’єр рухається разом із подіями. Оператор, що отримав бар’єр з усіх входів, асинхронно зберігає стан і передає бар’єр далі. Коли всі приймачі підтвердили, чекпоінт завершено. Це варіант алгоритму Чанді-Лампорта.</p></div>
+            <div class="cell"><h3>Aligned і unaligned</h3><p>У звичайному (aligned) режимі оператор із кількома входами чекає, поки бар’єр прийде з усіх. Під backpressure це затягує чекпоінт на хвилини. Режим unaligned дозволяє бар’єру обганяти буфери, а самі буфери записуються в чекпоінт. Чекпоінт швидший, але більший.</p></div>
+            <div class="cell"><h3>Інкрементні чекпоінти</h3><p>З RocksDB або ForSt зберігаються лише нові файли стану з минулого разу. Для стану на сотні гігабайтів це різниця між секундами і десятками хвилин.</p></div>
+            <div class="cell"><h3>Головні налаштування</h3><p><code>execution.checkpointing.interval</code>, <code>…timeout</code>, <code>…min-pause</code>, <code>…unaligned.enabled</code>, <code>state.backend.incremental</code>. Інтервал — компроміс між часом відновлення і навантаженням.</p></div>
+          </div>
+        </div>
+
+        <div class="panel" role="tabpanel" id="p-be" aria-labelledby="t-be" hidden>
+          <div class="tbl">
+            <table>
+              <thead><tr><th>Бекенд</th><th>Де лежить стан</th><th>Плюси</th><th>Мінуси</th></tr></thead>
+              <tbody>
+                <tr><td><b>HashMap</b></td><td>Java-об’єкти в heap TaskManager-а</td><td>Найшвидший доступ</td><td>Обмежений пам’яттю, паузи GC на великому стані, повні чекпоінти</td></tr>
+                <tr><td><b>RocksDB</b></td><td>Вбудована база на локальному диску</td><td>Стан набагато більший за пам’ять, інкрементні чекпоінти</td><td>Серіалізація на кожен доступ, потрібні швидкі локальні диски</td></tr>
+                <tr><td><b>ForSt</b> <span class="tag acc">2.0</span></td><td>Основна копія у віддаленому сховищі (S3), локально лише кеш</td><td>Швидке масштабування і відновлення: стан не треба копіювати на нові вузли</td><td>Новий бекенд, затримка доступу залежить від кешу</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="panel" role="tabpanel" id="p-sc" aria-labelledby="t-sc" hidden>
+          <div class="grid2">
+            <div class="cell hot"><h3>Key groups</h3><p>Ключі розкладаються не прямо на копії оператора, а на фіксовану кількість груп ключів, рівну <code>maxParallelism</code>. Під час масштабування між копіями переїжджають цілі групи. Тому maxParallelism визначає верхню межу паралелізму і після запуску його змінювати не можна без втрати стану.</p></div>
+            <div class="cell"><h3>Зміна паралелізму</h3><p>Класичний шлях: зупинити джоб із savepoint і запустити з новим паралелізмом. Adaptive Scheduler і автоскейлер у Flink Kubernetes Operator роблять це автоматично за метриками навантаження.</p></div>
+            <div class="cell"><h3>Перекіс ключів</h3><p>Якщо один ключ дає половину потоку, його копія оператора стане вузьким місцем, скільки б вузлів не було. Допомагає попередня агрегація у два етапи або додавання випадкового суфікса до ключа.</p></div>
+            <div class="cell"><h3>Ланцюжки операторів</h3><p>Оператори з однаковим паралелізмом без перерозподілу між ними об’єднуються в одну таску й передають записи викликом функції. <code>keyBy</code> і зміна паралелізму розривають ланцюжок.</p></div>
+          </div>
+        </div>
+
+        <div class="panel" role="tabpanel" id="p-bug" aria-labelledby="t-bug" hidden>
+          <div class="grid2">
+            <div class="cell"><h3>Вікна не закриваються</h3><p><b>Причина:</b> одна партиція Kafka без подій, і watermark, який береться як мінімум по всіх входах, стоїть на місці.</p><p><b>Що робити:</b> <code>WatermarkStrategy…withIdleness(Duration.ofMinutes(1))</code>.</p></div>
+            <div class="cell"><h3>Стан росте без кінця</h3><p><b>Причина:</b> ключі з необмеженою кількістю значень (session id, user id) без очищення, join потоків без часових меж.</p><p><b>Що робити:</b> State TTL, інтервальні join-и, <code>table.exec.state.ttl</code> у SQL.</p></div>
+            <div class="cell"><h3>Чекпоінти падають за таймаутом</h3><p><b>Причина:</b> backpressure затримує бар’єри, повільний запис у S3, величезний повний стан.</p><p><b>Що робити:</b> усунути вузьке місце, unaligned checkpoints, інкрементні чекпоінти.</p></div>
+            <div class="cell"><h3>Повільна серіалізація</h3><p><b>Причина:</b> класи, які Flink не розпізнав як POJO, серіалізуються через загальний Kryo.</p><p><b>Що робити:</b> POJO з публічним конструктором без аргументів, Avro або явні серіалізатори. <code>pipeline.generic-types: false</code> покаже проблемні типи.</p></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ 12. QUIZ ============ -->
+    <section id="quiz" data-title="Перевір себе">
+      <div class="sec-head">
+        <span class="eyebrow">Тест</span>
+        <h2>Перевір себе</h2>
+        <p class="lead">Вісім питань від базових до інженерних. Відповідь і пояснення з’являються одразу.</p>
+      </div>
+      <div class="quiz" id="quizBox"></div>
+      <div class="score" id="score"></div>
+    </section>
+
+    <!-- ============ 13. GLOSSARY ============ -->
+    <section id="gloss" data-title="Словник">
+      <div class="sec-head">
+        <span class="eyebrow">Терміни</span>
+        <h2>Короткий словник</h2>
+      </div>
+      <dl class="gloss">
+        <div><dt>Unbounded / bounded stream</dt><dd>Нескінченний потік (Kafka) і скінченний (файл, архів). Батч для Flink — скінченний потік.</dd></div>
+        <div><dt>Operator</dt><dd>Крок обробки: map, filter, window, process. Має паралельні копії.</dd></div>
+        <div><dt>Parallelism</dt><dd>Скільки паралельних копій оператора працює одночасно.</dd></div>
+        <div><dt>keyBy</dt><dd>Перерозподіл потоку за ключем: усі події ключа йдуть до однієї копії оператора.</dd></div>
+        <div><dt>Keyed state</dt><dd>Стан, прив’язаний до ключа: лічильник, список, мапа для кожної картки чи користувача.</dd></div>
+        <div><dt>State backend</dt><dd>Де і як зберігається стан: HashMap, RocksDB, ForSt.</dd></div>
+        <div><dt>Checkpoint</dt><dd>Автоматичний узгоджений знімок стану всіх операторів і офсетів джерел.</dd></div>
+        <div><dt>Savepoint</dt><dd>Ручний знімок для оновлень і міграцій.</dd></div>
+        <div><dt>Barrier</dt><dd>Маркер у потоці, що ділить події на «до» і «після» чекпоінта.</dd></div>
+        <div><dt>Event time</dt><dd>Час, коли подія сталася, а не коли її обробили.</dd></div>
+        <div><dt>Watermark</dt><dd>Позначка «подій, старших за T, більше не буде». Закриває вікна.</dd></div>
+        <div><dt>Window</dt><dd>Скінченний відрізок потоку для агрегації: tumbling, sliding, session.</dd></div>
+        <div><dt>Backpressure</dt><dd>Сповільнення джерела, коли оператор далі по потоку не встигає.</dd></div>
+        <div><dt>Task slot</dt><dd>Частка ресурсів TaskManager-а для одного ланцюжка операторів.</dd></div>
+      </dl>
+    </section>
+  </main>
+</div>
+
+<footer>© <span id="year"></span> AI Pages · <a href="https://nightlies.apache.org/flink/flink-docs-stable/" target="_blank" rel="noopener">офіційна документація Flink</a></footer>
+
+<script>
+(function(){
+  "use strict";
+  var $ = function(s, r){ return (r || document).querySelector(s); };
+  var $$ = function(s, r){ return Array.prototype.slice.call((r || document).querySelectorAll(s)); };
+  var reduceMotion = window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches;
+  $("#year").textContent = new Date().getFullYear();
+
+  /* ---------- theme ---------- */
+  var root = document.documentElement, themeBtn = $("#themeBtn");
+  var modes = ["auto", "light", "dark"], names = {auto: "авто", light: "світла", dark: "темна"};
+  var mode = "auto";
+  try { mode = localStorage.getItem("flink-theme") || "auto"; } catch (e) {}
+  function applyTheme(){
+    if (mode === "auto") root.removeAttribute("data-theme"); else root.setAttribute("data-theme", mode);
+    themeBtn.textContent = "Тема: " + names[mode];
+  }
+  themeBtn.addEventListener("click", function(){
+    mode = modes[(modes.indexOf(mode) + 1) % 3];
+    try { localStorage.setItem("flink-theme", mode); } catch (e) {}
+    applyTheme();
+  });
+  applyTheme();
+
+  /* ---------- TOC + scrollspy ---------- */
+  var secs = $$("main > section[data-title]");
+  var toc = $("#toc"), chips = $("#chips");
+  secs.forEach(function(s){
+    var li = document.createElement("li");
+    li.innerHTML = '<a href="#' + s.id + '">' + s.dataset.title + "</a>";
+    toc.appendChild(li);
+    var c = document.createElement("a");
+    c.href = "#" + s.id; c.textContent = s.dataset.title;
+    chips.appendChild(c);
+  });
+  if ("IntersectionObserver" in window) {
+    var io = new IntersectionObserver(function(entries){
+      entries.forEach(function(en){
+        if (!en.isIntersecting) return;
+        $$("a", toc).concat($$("a", chips)).forEach(function(a){
+          var on = a.getAttribute("href") === "#" + en.target.id;
+          a.classList.toggle("on", on);
+          if (on && a.parentNode === chips) chips.scrollTo({left: a.offsetLeft - 16, behavior: reduceMotion ? "auto" : "smooth"});
+        });
+      });
+    }, {rootMargin: "-30% 0px -60% 0px"});
+    secs.forEach(function(s){ io.observe(s); });
+  }
+
+  /* ---------- FLIP helper ---------- */
+  function flip(container, build){
+    var before = {};
+    $$("[data-id]", container).forEach(function(el){ before[el.dataset.id] = el.getBoundingClientRect(); });
+    build();
+    if (reduceMotion || !Element.prototype.animate) return;
+    $$("[data-id]", container).forEach(function(el){
+      var b = before[el.dataset.id], a = el.getBoundingClientRect();
+      if (b) {
+        var dx = b.left - a.left, dy = b.top - a.top;
+        if (dx || dy) el.animate([{transform: "translate(" + dx + "px," + dy + "px)"}, {transform: "none"}], {duration: 650, easing: "cubic-bezier(.2,.7,.2,1)"});
+      } else {
+        el.animate([{opacity: 0, transform: "scale(.9)"}, {opacity: 1, transform: "none"}], {duration: 380, easing: "ease-out"});
+      }
+    });
+  }
+
+  /* ---------- simulator ---------- */
+  var CLS = {A: "ca", B: "cb", C: "cc"};
+  var EV = {
+    e1: {card: "A", amt: 120}, e2: {card: "C", amt: 40}, e3: {card: "B", amt: 25},
+    e4: {card: "A", amt: 300}, e5: {card: "A", amt: 90}, e6: {card: "C", amt: 75}
+  };
+  var S1 = {A: [2, 420], B: [1, 25], C: [1, 40]};
+  var S2 = {A: [3, 510], B: [1, 25], C: [2, 115]};
+  var OWN = ["A", "B", "C"];
+  function ch(id, cls, html){ return '<div class="chip ' + cls + '" data-id="' + id + '">' + html + "</div>"; }
+  function ev(id){ var e = EV[id]; return ch(id, CLS[e.card], "<span>" + e.card + "</span><span>" + e.amt + " ₴</span>"); }
+  function st(card, s){ return ch("st-" + card, "state " + CLS[card], "<span>стан " + card + "</span><span>" + s[card][0] + " шт · " + s[card][1] + " ₴</span>"); }
+  function bar(i){ return ch("bar-" + i, "bar", "▮ бар’єр #1"); }
+  function snap(i){ return ch("snap-" + i, "snap", "знімок у ckpt #1 ✓"); }
+  function alert(id, extra, tag){ return ch(id, "alert " + (extra || ""), "<span>⚠ A: 3 платежі · 510 ₴</span>") + (tag || ""); }
+  var ck1 = ch("ck1", "snap", "ckpt #1 · A 2/420 · B 1/25 · C 1/40 · офсети 2, 2");
+  var ck2 = ch("ck2", "snap", "ckpt #2 · A 3/510 · B 1/25 · C 2/115 · офсети 3, 3");
+  var srcH = function(off){ return function(i){ return "Kafka · партиція " + i + "<small>" + off[i] + "</small>"; }; };
+  var opH = function(i){ return "FraudDetector [" + i + "]<small>ключ " + OWN[i] + " · TaskManager " + (i < 2 ? 1 : 2) + "</small>"; };
+  var states = function(s){ return OWN.map(function(c){ return [st(c, s)]; }); };
+
+  var STEPS = [
+    {lines: [0, 1, 2, 3, 4], ph: "run", title: "Джоб запущено і чекає подій",
+     text: "На відміну від батча, цей джоб не завершується. Він постійно слухає Kafka. Кожна копія FraudDetector відповідає за свою частину ключів, тут для наочності по одній картці.",
+     jm: '<span class="tag">Source(2) → keyBy → FraudDetector(3) → Sink</span>',
+     src: [[], []], srcOff: ["офсет 0", "офсет 0"], ops: [[], [], []], sink: [], store: ['<span class="small">чекпоінтів ще немає</span>']},
+    {lines: [1], ph: "run", title: "Платежі з’являються в Kafka",
+     text: "Дві копії джерела читають дві партиції топіка payments. Кожна копія запам’ятовує свій офсет, тобто скільки повідомлень прочитано.",
+     jm: '<span class="small">усе працює</span>',
+     src: [["e1", "e2"].map(ev), ["e3", "e4"].map(ev)], srcOff: ["офсет 0 → 2", "офсет 0 → 2"], ops: [[], [], []], sink: [], store: ['<span class="small">чекпоінтів ще немає</span>']},
+    {lines: [2], ph: "run", title: "keyBy: кожна подія йде до власника ключа",
+     text: "За хешем номера картки Flink визначає, яка копія оператора відповідає за ключ. Усі платежі картки A, з будь-якої партиції, потрапляють до FraudDetector [0]. Це перерозподіл мережею.",
+     jm: '<span class="small">усе працює</span>', net: true,
+     src: [[], []], srcOff: ["офсет 2", "офсет 2"], ops: [["e1", "e4"].map(ev), ["e3"].map(ev), ["e2"].map(ev)], sink: [], store: ['<span class="small">чекпоінтів ще немає</span>']},
+    {lines: [3], ph: "run", title: "Стан оновлюється з кожною подією",
+     text: "Кожна подія обробляється одразу, за мілісекунди. Оператор додає її до лічильника своєї картки. У A вже 2 платежі. Стан лежить локально, поруч з оператором.",
+     jm: '<span class="small">усе працює</span>',
+     src: [[], []], srcOff: ["офсет 2", "офсет 2"], ops: states(S1), sink: [], store: ['<span class="small">чекпоінтів ще немає</span>']},
+    {lines: [0], ph: "ckpt", title: "Чекпоінт: бар’єр пливе потоком",
+     text: "Минуло 10 секунд. JobManager просить джерела вставити бар’єр #1 і запам’ятати офсети 2 і 2. Бар’єр іде разом із подіями. Кожен оператор, отримавши його, асинхронно зберігає свій стан у S3, не зупиняючи обробку.",
+     jm: '<span class="tag acc">checkpoint #1</span><span class="small">офсети P0 = 2, P1 = 2</span>',
+     src: [[bar(0), ev("e5")], [bar(1), ev("e6")]], srcOff: ["офсет 2 · далі нові події", "офсет 2 · далі нові події"],
+     ops: OWN.map(function(c, i){ return [st(c, S1), snap(i)]; }), sink: [], store: [ck1]},
+    {lines: [3, 4], ph: "run", title: "Третій платіж: алерт",
+     text: "Після бар’єра надходять нові платежі. У картки A стає 3 платежі за хвилину, і детектор одразу видає алерт. Транзакційний приймач пише його в Kafka, але закомітить лише після наступного чекпоінта.",
+     jm: '<span class="small">усе працює</span>', net: true,
+     src: [[], []], srcOff: ["офсет 3", "офсет 3"],
+     ops: [[st("A", S2), ev("e5")], [st("B", S2)], [st("C", S2), ev("e6")]],
+     sink: [alert("al1", "", '<span class="tag warn">транзакція відкрита</span>')], store: [ck1]},
+    {lines: [], ph: "fail", title: "Збій: TaskManager 2 впав",
+     text: "Сервер з TaskManager 2 зник. Стан картки C у пам’яті загинув. Відновлювати лише одну копію не можна: стан мусить бути узгоджений з офсетами. Тому JobManager перезапускає джоб з останнього чекпоінта.",
+     jm: '<span class="tag bad">TaskManager 2 не відповідає</span><span class="small">перезапуск</span>',
+     src: [[], []], srcOff: ["офсет 3", "офсет 3"],
+     ops: [[st("A", S2)], [st("B", S2)], [ch("dead", "dead", "✕ процес зупинено")]], dead: 2,
+     sink: [alert("al1", "", '<span class="tag warn">не закомічено</span>')], store: [ck1]},
+    {lines: [0], ph: "rec", title: "Відновлення з чекпоінта #1",
+     text: "Усі оператори завантажують стан із checkpoint #1: у A знову 2 платежі. Джерела перемотують Kafka на збережені офсети 2 і 2. Незакомічена транзакція з алертом скасовується, і споживачі з read_committed його так і не побачили.",
+     jm: '<span class="tag acc">відновлено з checkpoint #1</span>',
+     src: [[ev("e5")], [ev("e6")]], srcOff: ["перемотано на офсет 2", "перемотано на офсет 2"],
+     ops: states(S1), sink: [alert("al1", "drop", '<span class="tag bad">транзакцію скасовано</span>')], store: [ck1]},
+    {lines: [3, 4], ph: "rec", title: "Ті самі події, той самий результат",
+     text: "Платежі після бар’єра обробляються повторно, стан знову 3 для A, алерт видається знову. Чекпоінт #2 комітить транзакцію, і алерт доходить до споживачів рівно один раз. Це і є exactly-once.",
+     jm: '<span class="tag ok">checkpoint #2 завершено</span>', net: true,
+     src: [[], []], srcOff: ["офсет 3", "офсет 3"],
+     ops: [[st("A", S2), ev("e5")], [st("B", S2)], [st("C", S2), ev("e6")]],
+     sink: [alert("al2", "", '<span class="tag ok">закомічено один раз</span>')], store: [ck1, ck2]}
+  ];
+  var step = 0, playing = null;
+  var cluster = $("#cluster"), dots = $("#simDots");
+  STEPS.forEach(function(_, i){
+    var b = document.createElement("button");
+    b.type = "button"; b.textContent = i + 1; b.setAttribute("aria-label", "Крок " + (i + 1));
+    b.addEventListener("click", function(){ stop(); go(i); });
+    dots.appendChild(b);
+  });
+  function go(i){
+    step = Math.max(0, Math.min(STEPS.length - 1, i));
+    var s = STEPS[step];
+    $$("#simCode .ln").forEach(function(l){ l.classList.toggle("hl", s.lines.indexOf(+l.dataset.l) > -1); });
+    $$("#stagebar span").forEach(function(sp){ sp.classList.toggle("on", sp.dataset.s === s.ph); });
+    $("#simTitle").textContent = (step + 1) + ". " + s.title;
+    $("#simText").textContent = s.text;
+    $("#net").classList.toggle("on", !!s.net);
+    $("#net").textContent = s.net ? "keyBy(cardId): перерозподіл мережею" : "keyBy(cardId)";
+    flip(cluster, function(){
+      $("#jmBody").innerHTML = s.jm;
+      $("#srcs").innerHTML = s.src.map(function(list, k){ return '<div class="ex src"><div class="ex-h">' + srcH(s.srcOff)(k) + "</div>" + list.join("") + "</div>"; }).join("");
+      $("#ops").innerHTML = s.ops.map(function(list, k){ return '<div class="ex op' + (s.dead === k ? " dead" : "") + '"><div class="ex-h">' + opH(k) + "</div>" + list.join("") + "</div>"; }).join("");
+      $("#outs").innerHTML = '<div class="ex out"><div class="ex-h">Sink<small>Kafka-топік alerts, транзакційний</small></div>' + (s.sink.join("") || '<span class="small">алертів немає</span>') + '</div><div class="ex out"><div class="ex-h">Сховище чекпоінтів<small>S3</small></div>' + s.store.join("") + "</div>";
+    });
+    $$("button", dots).forEach(function(b, k){ b.classList.toggle("on", k === step); b.setAttribute("aria-current", k === step ? "step" : "false"); });
+    $("#simPrev").disabled = step === 0;
+    $("#simNext").disabled = step === STEPS.length - 1;
+  }
+  function stop(){ if (playing) { clearInterval(playing); playing = null; $("#simPlay").textContent = "▶ Програти все"; } }
+  $("#simPrev").addEventListener("click", function(){ stop(); go(step - 1); });
+  $("#simNext").addEventListener("click", function(){ stop(); go(step + 1); });
+  $("#simPlay").addEventListener("click", function(){
+    if (playing) { stop(); return; }
+    if (step === STEPS.length - 1) go(0);
+    $("#simPlay").textContent = "⏸ Пауза";
+    playing = setInterval(function(){ if (step >= STEPS.length - 1) stop(); else go(step + 1); }, 3600);
+  });
+  go(0);
+
+  /* ---------- watermark lab ---------- */
+  var WE = [
+    {id: "e1", ts: 1, arr: 1}, {id: "e2", ts: 3, arr: 3}, {id: "e3", ts: 4, arr: 6}, {id: "e4", ts: 8, arr: 8},
+    {id: "e7", ts: 12, arr: 10}, {id: "e5", ts: 6, arr: 11}, {id: "e6", ts: 9, arr: 12}, {id: "e9", ts: 14, arr: 15},
+    {id: "e8", ts: 2, arr: 16}, {id: "e10", ts: 17, arr: 18}, {id: "e11", ts: 21, arr: 21}
+  ];
+  var IN_WIN = WE.filter(function(e){ return e.ts < 10; }).length;
+  var pad = function(n){ return ":" + (n < 10 ? "0" : "") + n; };
+  function wm(){
+    var d = +$("#wmDelay").value;
+    $("#oDelay").textContent = d + " с";
+    var max = -Infinity, fired = null, counted = 0, late = 0, html = ['<div class="wm-row head"><span>прибула</span><span>час події</span><span>watermark</span><span>що сталося</span></div>'];
+    WE.forEach(function(e){
+      max = Math.max(max, e.ts);
+      var w = max - d, status;
+      if (e.ts >= 10) status = '<span class="muted">наступне вікно</span>';
+      else if (fired !== null) { status = '<span class="late">запізнилась, відкинута</span>'; late++; }
+      else { status = "<span>у вікні ✓</span>"; counted++; }
+      html.push('<div class="wm-row"><span>' + pad(e.arr) + "</span><span>" + pad(e.ts) + "</span><span>" + (w < 0 ? "—" : pad(w)) + "</span>" + status + "</div>");
+      if (fired === null && w >= 10) { fired = e.arr; html.push('<div class="wm-row fire">watermark ' + pad(w) + " ≥ :10 → вікно закрито о 12:00" + pad(e.arr) + ", результат: " + counted + " подій</div>"); }
+    });
+    $("#wmRows").innerHTML = html.join("");
+    $("#wmStat").innerHTML =
+      "<div><b>" + (fired === null ? "—" : "+" + (fired - 10) + " с") + "</b><span>результат після кінця вікна</span></div>" +
+      "<div><b>" + counted + " / " + IN_WIN + "</b><span>подій враховано</span></div>" +
+      "<div><b>" + late + "</b><span>відкинуто як запізнілі</span></div>";
+  }
+  $("#wmDelay").addEventListener("input", wm);
+  wm();
+
+  /* ---------- windows visual ---------- */
+  var DOTS = [3, 8, 11, 14, 27, 29, 31, 48, 52, 55], SPAN = 60;
+  var cnt = function(a, b){ return DOTS.filter(function(x){ return x >= a && x < b; }).length; };
+  function box(a, b, lane, h, label){ return '<div class="box" style="left:' + (a / SPAN * 100) + "%;width:" + ((b - a) / SPAN * 100) + "%;top:" + lane + "px;height:" + h + 'px">' + label + "</div>"; }
+  var dotsHtml = DOTS.map(function(x){ return '<i class="dot" style="left:' + (x / SPAN * 100) + '%"></i>'; }).join("");
+  var tumbling = [0, 20, 40].map(function(a){ return box(a, a + 20, 4, 40, cnt(a, a + 20) + " шт"); }).join("");
+  var sliding = [0, 10, 20, 30, 40].map(function(a, i){ return box(a, Math.min(a + 20, SPAN), i % 2 ? 36 : 4, 28, cnt(a, a + 20) + " шт"); }).join("");
+  var sess = [], cur = [DOTS[0], DOTS[0]];
+  DOTS.slice(1).forEach(function(x){ if (x - cur[1] < 8) cur[1] = x; else { sess.push(cur); cur = [x, x]; } });
+  sess.push(cur);
+  var session = sess.map(function(s){ return box(s[0], Math.min(s[1] + 8, SPAN), 4, 40, cnt(s[0], s[1] + 1) + " шт"); }).join("");
+  var axis = '<div class="axis"><span>0 с</span><span>10</span><span>20</span><span>30</span><span>40</span><span>50</span><span>60 с</span></div>';
+  $("#wins").innerHTML =
+    '<div class="win"><div class="win-h"><b>Tumbling</b><span>фіксовані вікна без перекриття, тут по 20 с: «платежі за кожну хвилину»</span></div><div class="track">' + tumbling + dotsHtml + "</div>" + axis + "</div>" +
+    '<div class="win"><div class="win-h"><b>Sliding</b><span>довжина 20 с, крок 10 с: вікна перекриваються, подія потрапляє у кілька</span></div><div class="track tall">' + sliding + dotsHtml + "</div>" + axis + "</div>" +
+    '<div class="win"><div class="win-h"><b>Session</b><span>вікно триває, доки між подіями менше 8 с: «сесія користувача»</span></div><div class="track">' + session + dotsHtml + "</div>" + axis + "</div>";
+
+  /* ---------- decision helper ---------- */
+  var ans = {work: "stateful", lat: "ms", rate: "mid"};
+  function bindSeg(id, key){
+    var boxEl = $("#" + id);
+    $$("button", boxEl).forEach(function(b){
+      if (!b.hasAttribute("aria-pressed")) b.setAttribute("aria-pressed", "false");
+      b.addEventListener("click", function(){
+        $$("button", boxEl).forEach(function(x){ x.setAttribute("aria-pressed", String(x === b)); });
+        ans[key] = b.dataset.v; decide();
+      });
+    });
+  }
+  bindSeg("qWork", "work"); bindSeg("qLat", "lat"); bindSeg("qRate", "rate");
+  function decide(){
+    var v, t, p, alt;
+    if (ans.work === "batch") { v = "no"; t = "Краще Spark або сховище"; p = "Flink уміє батч, але для перерахунку історії й важких join-ів по архіву екосистема Spark зріліша, а SQL у сховищі ще простіший."; alt = "Spark, dbt + сховище даних, Trino. Flink лишіть для свіжих даних."; }
+    else if (ans.work === "bi") { v = "maybe"; t = "Flink лише як частина рішення"; p = "Сам Flink не відповідає на довільні запити дашборда. Зате він може безперервно рахувати агрегати й класти їх у швидке сховище."; alt = "Для запитів: ClickHouse, Apache Druid, Apache Pinot, BigQuery. Flink або Kafka Connect наповнює їх даними."; }
+    else if (ans.lat === "hours") { v = "no"; t = "Стрімінг тут зайвий"; p = "Якщо результат може почекати годину, батч на розкладі набагато простіший в експлуатації, ніж джоб, що працює 24/7."; alt = "Spark або SQL у сховищі за розкладом (Airflow, dbt)."; }
+    else if (ans.work === "simple") {
+      v = ans.rate === "high" ? "maybe" : "no"; t = ans.rate === "high" ? "Можливо, але спершу простіші варіанти" : "Flink буде завеликим";
+      p = "Перетворення окремих повідомлень без стану не потребує рушія з чекпоінтами й кластером."; alt = "Kafka Connect з SMT, Kafka Streams у вашому сервісі або звичайний консюмер. Flink має сенс, якщо потрібен SQL над потоком або багато різних джерел.";
+    }
+    else if (ans.work === "cdc") { v = "yes"; t = "Flink CDC підійде"; p = "Flink CDC читає журнал змін бази, переживає зміни схеми і пише в Paimon, Iceberg, Kafka чи іншу базу з exactly-once."; alt = "Альтернатива: Debezium + Kafka Connect, якщо дані треба лише перекласти в Kafka без обробки."; }
+    else if (ans.rate === "low" && ans.lat !== "ms") { v = "maybe"; t = "Підійде, але є простіші варіанти"; p = "Flink впорається, але на тисячі подій за секунду кластер може бути зайвим, якщо команда не має досвіду з ним."; alt = "Kafka Streams у вашому сервісі або Spark Structured Streaming, якщо Spark уже є."; }
+    else {
+      v = "yes"; t = "Класичний юзкейс Flink";
+      p = ans.lat === "ms" ? "Стан на кожен ключ, реакція за мілісекунди, вікна за часом події і exactly-once: саме для цього Flink створено." : "Flink дасть секундну реакцію з надійним станом. Spark Structured Streaming теж підійде, якщо команда вже на Spark.";
+      alt = ans.rate === "high" ? "На такому потоці обирайте RocksDB або ForSt, інкрементні чекпоінти і стежте за перекосом ключів." : "Якщо джерело лише Kafka і логіка проста, розгляньте також Kafka Streams.";
+    }
+    var label = {yes: "так", maybe: "можливо", no: "ні"}[v];
+    var boxEl = $("#verdict");
+    boxEl.className = "verdict " + v;
+    boxEl.innerHTML = '<div class="vh"><span class="tag ' + (v === "yes" ? "ok" : v === "maybe" ? "warn" : "bad") + '">' + label + "</span><b>" + t + "</b></div><p>" + p + '</p><p class="alt">' + alt + "</p>";
+  }
+  decide();
+
+  /* ---------- tabs ---------- */
+  var tabs = $$("#deepTabs [role=tab]");
+  function selectTab(t){
+    tabs.forEach(function(x){ var on = x === t; x.setAttribute("aria-selected", String(on)); x.tabIndex = on ? 0 : -1; $("#" + x.getAttribute("aria-controls")).hidden = !on; });
+  }
+  tabs.forEach(function(t, i){
+    t.addEventListener("click", function(){ selectTab(t); });
+    t.addEventListener("keydown", function(e){
+      var d = e.key === "ArrowRight" ? 1 : e.key === "ArrowLeft" ? -1 : 0;
+      if (d) { var n = tabs[(i + d + tabs.length) % tabs.length]; selectTab(n); n.focus(); }
+    });
+  });
+  selectTab(tabs[0]);
+
+  /* ---------- backpressure ---------- */
+  var k = function(n){ return (n / 1000).toLocaleString("uk-UA") + " тис."; };
+  function bp(){
+    var r = +$("#bpRate").value, c = +$("#bpCap").value;
+    $("#oRate").textContent = k(r); $("#oCap").textContent = k(c);
+    var over = r > c, fill = over ? 100 : Math.round(r / c * 60), thr = Math.min(r, c);
+    function buf(label){ return '<div class="buf"><span>буфер</span><div class="bt"><div class="bf' + (over ? " full" : "") + '" style="width:' + fill + '%"></div></div><span>' + fill + "%</span></div>"; }
+    $("#bpPipe").innerHTML =
+      '<div class="opn">Source<small>' + (over ? "сповільнюється" : "читає все") + "</small></div>" + buf() +
+      '<div class="opn">Map / Detector<small>' + (over ? "backpressured" : "ок") + "</small></div>" + buf() +
+      '<div class="opn' + (over ? " slow" : "") + '">Sink<small>' + (over ? "busy 100%" : "ок") + "</small></div>";
+    $("#bpStat").innerHTML =
+      "<div><b>" + k(thr) + "</b><span>подій/с реально обробляється</span></div>" +
+      "<div><b>" + (over ? "+" + ((r - c) * 60 / 1e6).toLocaleString("uk-UA", {maximumFractionDigits: 2}) + " млн" : "0") + "</b><span>росте відставання (lag) у Kafka за хвилину</span></div>" +
+      "<div><b>" + (over ? "довгі" : "швидкі") + "</b><span>чекпоінти: бар’єри " + (over ? "застрягають у повних буферах" : "проходять без черги") + "</span></div>";
+  }
+  $$("#p-bp input").forEach(function(i){ i.addEventListener("input", bp); });
+  bp();
+
+  /* ---------- quiz ---------- */
+  var QUIZ = [
+    {q: "Чим Flink принципово відрізняється від нічного батч-джоба?", o: ["Він працює тільки з SQL", "Обробляє кожну подію щойно вона прийшла, а джоб працює безперервно", "Він зберігає дані замість бази", "Він працює тільки на одній машині"], a: 1, w: "Батч обробляє накопичені дані і завершується. Flink-джоб живе постійно і реагує на кожну подію за мілісекунди."},
+    {q: "Навіщо потрібен keyBy?", o: ["Щоб відсортувати потік", "Щоб зашифрувати ключі", "Щоб усі події одного ключа потрапили до однієї копії оператора з її станом", "Щоб зменшити кількість подій"], a: 2, w: "Стан зберігається окремо для кожного ключа в тій копії оператора, яка за ключ відповідає. keyBy гарантує, що події ключа завжди приходять туди."},
+    {q: "Що таке watermark?", o: ["Підпис, що захищає дані від змін", "Позначка в потоці: подій, старших за час T, більше не буде", "Максимальна кількість подій у вікні", "Розмір буфера між операторами"], a: 1, w: "Watermark просувається разом із даними. Коли вона проходить кінець вікна, Flink закриває вікно і видає результат."},
+    {q: "TaskManager впав посеред роботи. Що зробить Flink?", o: ["Продовжить з того місця, втративши стан упалого вузла", "Почне обробку з самого початку топіка", "Завантажить стан з останнього чекпоінта і перечитає джерело зі збережених офсетів", "Зупиниться і чекатиме адміністратора"], a: 2, w: "Чекпоінт містить узгоджені стан і офсети. Після відновлення події з моменту чекпоінта обробляються повторно, і результат такий самий, ніби збою не було."},
+    {q: "Чим savepoint відрізняється від checkpoint?", o: ["Нічим, це синоніми", "Savepoint створюють вручну для оновлень і міграцій, checkpoint — автоматично для відновлення", "Savepoint зберігає лише офсети", "Checkpoint можна робити лише раз на добу"], a: 1, w: "Savepoint — переносний знімок, з яким можна оновити код, змінити паралелізм чи перенести джоб на інший кластер."},
+    {q: "Події йдуть, а вікна не закриваються. Найімовірніша причина?", o: ["Замало пам’яті", "Одна партиція Kafka простоює, і watermark не просувається", "Забагато вікон", "Неправильний пароль до Kafka"], a: 1, w: "Watermark оператора — мінімум по всіх входах. Порожня партиція тримає його на місці. Рішення: withIdleness у WatermarkStrategy."},
+    {q: "Стан джоба росте з кожним днем і ніколи не зменшується. Що найперше перевірити?", o: ["Версію Java", "Чи налаштовано State TTL для ключів, що з’являються без кінця", "Кількість партицій Kafka", "Розмір логів"], a: 1, w: "Ключі на кшталт session id з’являються постійно. Без TTL їхній стан ніколи не видаляється."},
+    {q: "Що потрібно для exactly-once запису в Kafka з Flink?", o: ["Нічого, Kafka робить це сама", "Транзакції, які комітяться після завершення чекпоінта, і споживачі з read_committed", "Вимкнути чекпоінти", "Писати в один потік"], a: 1, w: "Приймач пише в транзакцію і комітить її разом із чекпоінтом (двофазний коміт). Після збою незакомічена транзакція скасовується."}
+  ];
+  var answered = 0, correct = 0, qbox = $("#quizBox");
+  QUIZ.forEach(function(item, qi){
+    var d = document.createElement("div");
+    d.className = "qq";
+    d.innerHTML = "<h3>" + (qi + 1) + ". " + item.q + '</h3><div class="opts">' + item.o.map(function(o, oi){ return '<button type="button" data-i="' + oi + '">' + o + "</button>"; }).join("") + '</div><p class="why" hidden></p>';
+    $$("button", d).forEach(function(b){
+      b.addEventListener("click", function(){
+        var ok = +b.dataset.i === item.a;
+        $$("button", d).forEach(function(x){ x.disabled = true; if (+x.dataset.i === item.a) x.classList.add("right"); });
+        if (!ok) b.classList.add("wrong");
+        var why = $(".why", d); why.hidden = false; why.textContent = (ok ? "Правильно. " : "Не зовсім. ") + item.w;
+        answered++; if (ok) correct++;
+        renderScore();
+      });
+    });
+    qbox.appendChild(d);
+  });
+  function renderScore(){
+    var s = $("#score");
+    if (!answered) { s.innerHTML = '<span class="muted">Відповідайте на питання — рахунок з’явиться тут.</span>'; return; }
+    var msg = answered < QUIZ.length ? "" : correct === QUIZ.length ? "Чудово, ви розумієте, як працює Flink." : correct >= 5 ? "Добре. Перегляньте пояснення до помилок." : "Пройдіться ще раз по розділах «Як обробляється потік» і «Час і вікна».";
+    s.innerHTML = "<b>" + correct + " / " + QUIZ.length + "</b><span>правильних з " + answered + " відповідей. " + msg + '</span><button class="btn" type="button" id="qReset">Почати знову</button>';
+    $("#qReset").addEventListener("click", function(){
+      answered = 0; correct = 0;
+      $$(".qq", qbox).forEach(function(d){ $$("button", d).forEach(function(x){ x.disabled = false; x.classList.remove("right", "wrong"); }); $(".why", d).hidden = true; });
+      renderScore();
+    });
+  }
+  renderScore();
+})();
+</script>
+</body>
+</html>
