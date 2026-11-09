@@ -214,6 +214,26 @@ input[type=range]:focus-visible{outline:3px solid var(--blue);outline-offset:3px
 .wheel-spin.paused{animation-play-state:paused}
 .w-click{cursor:pointer}
 
+/* playbook */
+.pb-grid{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(0,1fr);gap:24px;align-items:start}
+@media (max-width:860px){.pb-grid{grid-template-columns:minmax(0,1fr)}}
+.rule{display:flex;gap:10px;align-items:flex-start;padding:10px 12px;border:2px solid var(--rule);border-radius:14px;background:#fff;margin-top:8px}
+.rule .sw{width:auto;flex:none;padding:0}
+.rule .rtxt{font-size:15px;line-height:1.5}
+.rule input{width:62px;font:800 15px var(--sans);border:2px solid var(--ink);border-radius:8px;padding:1px 4px;text-align:center;color:var(--ink);background:#fff}
+.rule.off .rtxt{color:var(--muted)}
+.nw{white-space:nowrap}
+#pb-rules.disabled{opacity:.45}
+.pb-h{font-size:17px;font-weight:900;margin:4px 0 10px}
+.tl-list{list-style:none;margin:0 0 0 8px;padding:0;border-left:3px solid var(--rule)}
+.tl-list li{position:relative;padding:5px 0 9px 18px;font-size:14.5px;line-height:1.45}
+.tl-list li::before{content:'';position:absolute;left:-9px;top:10px;width:11px;height:11px;border-radius:50%;background:#fff;border:2.5px solid var(--ink)}
+.tl-list li.done::before{background:var(--ink)}
+.tl-list li.future{color:var(--ink-2)}
+.tl-list li.nowrow{font-weight:900;color:var(--red)}
+.tl-list li.nowrow::before{background:var(--red);border-color:var(--red)}
+.tl-list .tm{display:inline-block;min-width:44px;font-weight:900;font-variant-numeric:tabular-nums;color:var(--ink)}
+
 /* matrix */
 .matrix{overflow-x:auto}
 .matrix table{border-collapse:separate;border-spacing:4px;min-width:720px;width:100%}
@@ -451,6 +471,30 @@ input[type=range]:focus-visible{outline:3px solid var(--blue);outline-offset:3px
     <div class="legend" id="legend"></div>
   </section>
 
+  <!-- PLAYBOOK -->
+  <section class="card" id="pb-card" aria-labelledby="pb-h">
+    <div class="tape"></div>
+    <h2 id="pb-h">📋 Плейбук: як діємо під час відключень</h2>
+    <p class="lead">Правила, за якими обладнання на батареях вмикають і вимикають. Увімкніть ті, що діють у нас, і підправте пороги — схема, батареї й «моя квартира» одразу перерахуються. Правила передаються в посиланні разом з іншими налаштуваннями.</p>
+    <div class="pb-grid">
+      <div>
+        <button class="sw" role="switch" data-pb="on" type="button"><span class="tr"></span><span>Діяти за плейбуком<small>вимкніть, щоб порівняти: що буде без правил</small></span></button>
+        <div id="pb-rules">
+          <div class="rule" data-rule="liftOn"><button class="sw" role="switch" data-pb="liftOn" type="button" aria-label="Правило: ліфти до порогу заряду"><span class="tr"></span></button><div class="rtxt">🛗 Ліфти на батареях вимикаємо, коли їхня батарея опускається до <span class="nw"><input type="number" inputmode="numeric" data-pbn="liftPct" min="0" max="95" step="5" aria-label="Поріг для ліфтів, %">%</span> — решту тримаємо в резерві, наприклад на екстрений випадок.</div></div>
+          <div class="rule" data-rule="noKte2"><button class="sw" role="switch" data-pb="noKte2" type="button" aria-label="Правило: без тепла — насос II зони вимкнено"><span class="tr"></span></button><div class="rtxt">🔥 Київтеплоенерго не подає тепло — <b>не крутимо насос опалення верхньої зони</b>: ганяти холодну воду нагору немає сенсу, а заряд (чи світло) він їсть.</div></div>
+          <div class="rule" data-rule="noKte1"><button class="sw" role="switch" data-pb="noKte1" type="button" aria-label="Правило: без тепла — насос I зони вимкнено"><span class="tr"></span></button><div class="rtxt">🔥 …і насос нижньої зони без тепла теж вимикаємо.</div></div>
+          <div class="rule" data-rule="selfConv"><button class="sw" role="switch" data-pb="selfConv" type="button" aria-label="Правило: на батареях насос I зони вимкнено"><span class="tr"></span></button><div class="rtxt">🎡 На батареях вимикаємо насос опалення нижньої зони — <b>«мале колесо» крутиться саме</b>, а заряд іде на верхню зону.</div></div>
+          <div class="rule" data-rule="shedOn"><button class="sw" role="switch" data-pb="shedOn" type="button" aria-label="Правило: на низькому заряді вода лише нижній зоні"><span class="tr"></span></button><div class="rtxt">🚰 Коли батарея води опускається до <span class="nw"><input type="number" inputmode="numeric" data-pbn="shedPct" min="0" max="95" step="5" aria-label="Поріг для води, %">%</span>, лишаємо тільки насоси нижньої зони — нижні поверхи довше з водою.</div></div>
+          <div class="rule" data-rule="resOn"><button class="sw" role="switch" data-pb="resOn" type="button" aria-label="Правило: резерв заряду насосів"><span class="tr"></span></button><div class="rtxt">🔋 Батареї насосів не розряджаємо нижче <span class="nw"><input type="number" inputmode="numeric" data-pbn="resPct" min="0" max="95" step="5" aria-label="Резерв заряду, %">%</span> — резерв на наступне відключення.</div></div>
+        </div>
+      </div>
+      <div>
+        <h3 class="pb-h">⏱ Що відбувається за плейбуком</h3>
+        <div id="pb-tl" aria-live="polite"></div>
+      </div>
+    </div>
+  </section>
+
   <!-- MATRIX -->
   <section class="card" id="matrix-card" aria-labelledby="mx-h">
     <h2 id="mx-h">Статус по секціях</h2>
@@ -663,7 +707,8 @@ const DEFAULTS={
   ],
   load:{heat:80,water:40,lift:20},
   usable:90,targetH:4,month:new Date().getMonth(),
-  ods:{bk:true},cross:true,cityBar:2.5,tset:21,inertia:60
+  ods:{bk:true},cross:true,cityBar:2.5,tset:21,inertia:60,
+  pb:{on:true,liftOn:true,liftPct:50,noKte2:true,noKte1:false,selfConv:false,shedOn:false,shedPct:30,resOn:false,resPct:20}
 };
 const DEF_ST={g:[true,true],kte:true,tMains:70,water:true,season:'heat',tOut:-5,sun:'cloud',bk:true,t:0};
 const BASE_ST={g:[true,true],kte:true,tMains:70,water:true,season:'heat',tOut:-5,sun:'cloud',bk:true,t:0};
@@ -694,6 +739,7 @@ function fixCfg(c){
   for(const k in c.load)c.load[k]=clamp(c.load[k],1,100);
   c.usable=clamp(c.usable,10,100);c.targetH=clamp(c.targetH,.5,72);c.month=Math.round(clamp(c.month,0,11));
   c.cityBar=clamp(c.cityBar,0,8);c.tset=clamp(c.tset,14,26);c.inertia=clamp(c.inertia,5,400);
+  ['liftPct','shedPct','resPct'].forEach(k=>c.pb[k]=Math.round(clamp(c.pb[k],0,95)));
   return c;
 }
 function fixSt(s){s.tMains=clamp(Math.round(s.tMains),35,110);s.tOut=clamp(Math.round(s.tOut),-25,32);s.t=clamp(s.t,0,24);if(s.season!=='heat'&&s.season!=='summer')s.season='heat';if(!(s.sun in SUN))s.sun='cloud';return s;}
@@ -725,15 +771,33 @@ async function copyText(t){try{await navigator.clipboard.writeText(t);return tru
 /* ---------- physics (very simplified) ---------- */
 function solveTi(Ts,To){let lo=To-1,hi=Math.max(Ts,To+GAIN)+1;for(let i=0;i<50;i++){const m=(lo+hi)/2;const d=Math.max(0,.81*(Ts-m));const f=KR*Math.pow(d,1.3)-(m-To-GAIN);if(f>0)lo=m;else hi=m;}return (lo+hi)/2;}
 function needTs(To,Tset){const need=Math.max(0,Tset-To-GAIN);return Tset+Math.pow(need/KR,1/1.3)/.81;}
-function batt(inv,kwh,load,peak,pv,grid,t){
-  const cap=Math.max(0,kwh)*cfg.usable/100;
-  const has=st.bk&&cap>0&&inv>0;
-  const invOk=inv+1e-9>=peak;
-  const eff=Math.max(0,load-pv);
-  const aut=(cap<=0||inv<=0||!invOk||load<=0)?0:(eff<=1e-9?Infinity:cap/eff);
-  const soc=grid?1:(!has||load<=0?(has?1:0):(eff<=1e-9?1:clamp(1-eff*t/cap,0,1)));
+// батарея з фазами: кожна фаза — свій набір обладнання; плейбук може вимикати частину на порозі заряду
+function batt(inv,kwh,phases,stopPct,pv,grid,t){
+  const cut=100-cfg.usable,stop=Math.max(cut,stopPct||0);
+  const ph=phases.filter((x,i)=>i===0||x.from>stop);
+  const load=ph[0].load,peak=ph[0].peak;
+  const has=st.bk&&kwh>0&&inv>0,invOk=inv+1e-9>=peak;
+  const cap=Math.max(0,kwh)*(100-stop)/100;
+  const segs=[];let soc=100,time=0;
+  if(kwh>0&&inv>0&&invOk&&load>0){
+    for(let i=0;i<ph.length;i++){
+      const end=i<ph.length-1?ph[i+1].from:stop;
+      const eff=Math.max(0,ph[i].load-pv*ph[i].load/load);
+      const dur=eff<=1e-9?Infinity:kwh*(soc-end)/100/eff;
+      segs.push({start:time,dur,from:soc,to:end,eff,keys:ph[i].keys,shed:!!ph[i].shed});
+      if(dur===Infinity){time=Infinity;break;}
+      time+=dur;soc=end;
+    }
+  }
+  const aut=segs.length?time:0;
+  let socT=100,cur=segs[0];
+  if(!grid){
+    if(!has)socT=0;
+    else if(segs.length){for(const sg of segs){cur=sg;if(t<sg.start+sg.dur){socT=sg.from-(t-sg.start)*sg.eff/kwh*100;break;}socT=sg.to;}}
+  }
   const alive=!grid&&has&&invOk&&load>0&&(aut===Infinity||t<aut);
-  return {inv,kwh,cap,has,invOk,load,peak,pv,eff,aut,soc,alive,grid};
+  return {inv,kwh,cap,has,invOk,load,peak,pv,eff:segs.length?segs[0].eff:load,aut,soc:clamp(socT,0,100)/100,alive,grid,stop,segs,
+    active:alive&&cur?cur.keys:[],byRule:has&&invOk&&load>0&&!grid&&t>=aut&&stop>cut};
 }
 function compute(){
   const t=st.t,hs=st.season==='heat',sunF=SUN[st.sun];
@@ -748,23 +812,40 @@ function compute(){
   const tdhw0=clamp(st.tMains-5,10,55);
   const cityFloors=Math.max(0,Math.floor((cfg.cityBar*10.2-10)/2.9)+1);
   const liftL=cfg.secs.map(S=>{const n=Math.min(S.liftBk,S.lifts);return {n,load:n*S.liftKw*cfg.load.lift/100,peak:n*S.liftKw};});
+  // плейбук
+  const PB=cfg.pb;
+  const ruleOff=k=>PB.on&&hs&&!st.kte&&((k==='heat2'&&PB.noKte2)||(k==='heat1'&&PB.noKte1))?'nokte':null;
+  const batOff=k=>PB.on&&PB.selfConv&&hs&&st.kte&&k==='heat1'?'selfconv':null;
+  const resStop=PB.on&&PB.resOn?PB.resPct:0,liftStop=PB.on&&PB.liftOn?PB.liftPct:0;
   const nodes=cfg.nodes.map((N,n)=>{
     const grid=nodeGrid[n];
-    let hL=0,hP=0;
-    if(hs){for(const k of ['heat1','heat2'])if(N.bk[k]){hL+=N.p[k]*cfg.load.heat/100;hP+=N.p[k];}if(hP>0){hL+=N.makeup*.1+N.ctrl;hP+=N.makeup+N.ctrl;}}
-    let wL=0,wP=0;
-    if(st.water){for(const k of ['cold1','cold2','dhw1','dhw2'])if(N.bk[k]){wL+=N.p[k]*(k[0]==='c'?cfg.load.water:cfg.load.heat)/100;wP+=N.p[k];}}
+    const hKeys=hs?['heat1','heat2'].filter(k=>N.bk[k]&&!ruleOff(k)&&!batOff(k)):[];
+    const hLoad=ks=>ks.reduce((a,k)=>a+N.p[k]*cfg.load.heat/100,0)+(ks.length?N.makeup*.1+N.ctrl:0);
+    const hPeak=ks=>ks.reduce((a,k)=>a+N.p[k],0)+(ks.length?N.makeup+N.ctrl:0);
+    const wKeys=st.water?['cold1','cold2','dhw1','dhw2'].filter(k=>N.bk[k]):[];
+    const wLoad=ks=>ks.reduce((a,k)=>a+N.p[k]*(k[0]==='c'?cfg.load.water:cfg.load.heat)/100,0);
+    const wPeak=ks=>ks.reduce((a,k)=>a+N.p[k],0);
+    const hPh=[{keys:hKeys,load:hLoad(hKeys),peak:hPeak(hKeys),from:100}];
+    const wPh=[{keys:wKeys,load:wLoad(wKeys),peak:wPeak(wKeys),from:100}];
+    if(PB.on&&PB.shedOn&&PB.shedPct>resStop){const k1=wKeys.filter(k=>k!=='cold2'&&k!=='dhw2');if(k1.length<wKeys.length)wPh.push({keys:k1,load:wLoad(k1),peak:wPeak(k1),from:PB.shedPct,shed:true});}
     const lsum=NODES[n].secs.reduce((a,s)=>a+liftL[s].load,0);
-    const pvKw=N.pv*sunF,tot=hL+wL+lsum;
+    const pvKw=N.pv*sunF,tot=hPh[0].load+wPh[0].load+lsum;
     const share=L=>tot>0?pvKw*L/tot:0;
-    const hb=batt(N.hInv,N.hKwh,hL,hP,share(hL),grid,t);
-    const wb=batt(N.wInv,N.wKwh,wL,wP,share(wL),grid,t);
+    const hb=batt(N.hInv,N.hKwh,hPh,resStop,share(hPh[0].load),grid,t);
+    const wb=batt(N.wInv,N.wKwh,wPh,resStop,share(wPh[0].load),grid,t);
     const pumps={};
     for(const P of PUMPS){
-      const need=P.sys==='heat'?hs:st.water;let on=false,src;
-      if(!need)src='off';else if(grid){on=true;src='grid';}
-      else if(N.bk[P.k]&&(P.sys==='heat'?hb.alive:wb.alive)){on=true;src='bat';}else src='none';
-      pumps[P.k]={on,src};
+      const need=P.sys==='heat'?hs:st.water,b=P.sys==='heat'?hb:wb,ro=ruleOff(P.k);let on=false,src,why='';
+      if(!need)src='off';
+      else if(ro){src='rule';why=ro;}
+      else if(grid){on=true;src='grid';}
+      else if(!N.bk[P.k])src='none';
+      else if(batOff(P.k)){src='rule';why='selfconv';}
+      else if(b.alive&&b.active.includes(P.k)){on=true;src='bat';}
+      else if(b.alive)src='shed';
+      else if(b.byRule)src='reserve';
+      else src='none';
+      pumps[P.k]={on,src,why};
     }
     return {grid,src:nodeSrc[n],hb,wb,pumps,pvKw,liftShare:s=>share(liftL[s].load)};
   });
@@ -799,14 +880,28 @@ function compute(){
       let state;if(c.state==='none')state='none';else if(temp<35)state='cold';else if(!pu.on)state='flush';else state='ok';
       return {state,temp,riser,circ:pu.on,src:pu.src,reach:c.reach,weak:c.state==='weak'};
     });
-    const lb=batt(S.bInv,S.bKwh,liftL[s].load,liftL[s].peak,N.liftShare(s),p,t);
+    const lb=batt(S.bInv,S.bKwh,[{keys:[],load:liftL[s].load,peak:liftL[s].peak,from:100}],liftStop,N.liftShare(s),p,t);
     let work=0,src='none',odsBlock=false;
-    if(p){work=S.lifts;src='grid';}else if(lb.alive){work=liftL[s].n;src='bat';}
+    if(p){work=S.lifts;src='grid';}else if(lb.alive){work=liftL[s].n;src='bat';}else if(lb.byRule)src='reserve';
     if(s<3&&!odsOK&&work>0){work=0;odsBlock=true;src='ods';}
     const mzk=hs&&st.tOut<=-5&&t>=3&&heat[1].state!=='ok'&&heat[1].state!=='weak';
     return {s,n,power:p,heat,f1,cold,hot,mzk,lift:{work,total:S.lifts,src,odsBlock,bat:lb,bkN:liftL[s].n}};
   });
-  return {nodes,secs,odsOK,pow5,tsNeed,tsNorm,ti0,limited:tsNeed>st.tMains-4+.5,tdhw0,cityFloors,hs,convFloor};
+  // хронологія для плейбуку
+  const ev=[],add=(time,ico,txt,key,sec)=>ev.push({time,ico,txt,key,sec}),cut=100-cfg.usable;
+  [0,1].forEach(i=>{if(!st.g[i])add(0,'⚡',`Немає світла: ${FEEDS[i].name}, секції ${FEEDS[i].secs}. Ліфти й насоси переходять на батареї.`,'feed'+i);});
+  if((!st.g[0]||!st.g[1])&&!st.bk)add(0,'⛔','Резервні батареї вимкнено — без світла насоси й ліфти стоять.','nobk');
+  if(!st.g[1]&&st.g[0]&&cfg.cross)add(0,'🔌','ІТП 3–5 і диспетчерська живляться через резервний кабель із секції 3.','cross');
+  if(hs&&!st.kte&&PB.on&&(PB.noKte2||PB.noKte1))add(0,'🔥',`КТЕ не подає тепло — вимикаємо насоси опалення ${PB.noKte2&&PB.noKte1?'обох зон':PB.noKte2?'II зони':'I зони'}: ганяти холодну воду немає сенсу.`,'nokte');
+  nodes.forEach((N,n)=>{
+    if(N.grid||!st.bk)return;const nm=NODES[n].name;
+    if(hs&&PB.on&&PB.selfConv&&st.kte&&cfg.nodes[n].bk.heat1)add(0,'🎡',`${nm}: насос опалення I зони вимкнено — «мале колесо» крутиться саме.`,'selfconv'+n);
+    N.wb.segs.forEach(sg=>{if(sg.shed)add(sg.start,'🚰',`${nm}: батарея води ${PB.shedPct}% — вимикаємо насоси II зони, вода лишається нижнім поверхам.`,'shed'+n);});
+    [[N.hb,'опалення','🔥'],[N.wb,'води','💧']].forEach(([b,w,ic])=>{if(b.has&&b.invOk&&b.load>0&&isFinite(b.aut))add(b.aut,ic,b.stop>cut?`${nm}: батарея ${w} ${b.stop}% — насоси зупиняємо, решта в резерві.`:`${nm}: батарея ${w} розрядилась — насоси стали.`,'stop'+w+n);});
+  });
+  secs.forEach((r,s)=>{const b=r.lift.bat;if(!r.power&&b.has&&b.invOk&&b.load>0&&isFinite(b.aut))add(b.aut,'🛗',b.stop>cut?`ліфт зупиняємо: батарея ${b.stop}%, решта в резерві.`:'ліфт зупинився: батарея розрядилась.','lift',s);});
+  ev.sort((a,b)=>a.time-b.time);
+  return {nodes,secs,odsOK,pow5,tsNeed,tsNorm,ti0,limited:tsNeed>st.tMains-4+.5,tdhw0,cityFloors,hs,convFloor,events:ev};
 }
 function floorHeat(R,s,k){
   const r=R.secs[s],S=cfg.secs[s];
@@ -822,6 +917,7 @@ function mix(a,b,f){const pa=parseInt(a.slice(1),16),pb=parseInt(b.slice(1),16);
 function tColor(T){if(T==null||isNaN(T))return '#cfc8bb';if(T<=TST[0][0])return TST[0][1];for(let i=1;i<TST.length;i++)if(T<=TST[i][0]){const [t0,c0]=TST[i-1],[t1,c1]=TST[i];return mix(c0,c1,(T-t0)/(t1-t0));}return TST[TST.length-1][1];}
 function tGradient(a,b){const n=8,o=[];for(let i=0;i<=n;i++){const T=a+(b-a)*i/n;o.push(tColor(T)+' '+(i*100/n)+'%');}return 'linear-gradient(90deg,'+o.join(',')+')';}
 const BLUE='#3d7dd8';
+const pcol=src=>({grid:'#4f9d69',bat:'#e9a23b',off:'#bdb6c6',rule:'#8c6bb1',shed:'#8c6bb1',reserve:'#8c6bb1'})[src]||'#e4572e';
 const LVC={ok:'ok',weak:'warn',conv:'warn',flush:'warn',nokte:'bad',nocirc:'bad',none:'bad',cold:'bad',summer:'off'};
 
 /* ---------- scene geometry ---------- */
@@ -1021,7 +1117,7 @@ function updateScene(R){
     PUMPS.forEach(P=>{
       const pu=N.pumps[P.k],el=$(`[data-pump="${n}-${P.k}"]`,SV);
       el.classList.toggle('on',pu.on);
-      el.style.setProperty('--pc',pu.src==='grid'?'#4f9d69':pu.src==='bat'?'#e9a23b':pu.src==='off'?'#bdb6c6':'#e4572e');
+      el.style.setProperty('--pc',pcol(pu.src));
       const col=P.sys==='heat'?tColor(r0.heat[P.z].ts):P.sys==='dhw'?tColor(r0.hot[P.z].riser):BLUE;
       setPipe(`pc-${n}-${P.k}`,pu.src==='off'?'#d9d2c4':col,pu.on?'run':pu.src==='off'?'stop':'stop',1.2);
     });
@@ -1086,6 +1182,9 @@ function batWhy(b,onBk){
 }
 function pumpWhy(n,k){
   const N=LAST.nodes[n],P=PUMPS.find(p=>p.k===k),pu=N.pumps[k],b=P.sys==='heat'?N.hb:N.wb;
+  if(pu.src==='rule')return 'вимкнено за плейбуком: '+(pu.why==='nokte'?'Київтеплоенерго не подає тепло — ганяти холодну воду немає сенсу':'на батареях «мале колесо» крутиться саме, а заряд бережемо для верхньої зони');
+  if(pu.src==='shed')return `вимкнено за плейбуком: батарея води опустилась до ${cfg.pb.shedPct}% — воду лишили тільки нижній зоні`;
+  if(pu.src==='reserve')return `зупинено за плейбуком: батарея дійшла до ${b.stop}% — решту тримаємо в резерві`;
   if(pu.src==='off')return P.sys==='heat'?'не опалювальний сезон — насоси опалення стоять':'у міській мережі немає води — насоси не вмикаються';
   if(pu.src==='grid')return 'працює від мережі ('+N.src+')';
   if(pu.src==='bat')return 'працює від батареї: '+(b.aut===Infinity?'сонце покриває витрати':'лишилось ≈'+fmtH(Math.max(0,b.aut-st.t)));
@@ -1121,6 +1220,7 @@ function explain(s,floor){
   if(L.total===0)out.push({ic:'🛗',lv:'off',t:'Ліфтів не задано',w:'Кількість ліфтів можна вказати в налаштуваннях.'});
   else if(L.src==='grid')out.push({ic:'🛗',lv:'ok',t:`Ліфти працюють · ${L.work} з ${L.total}`,w:`Від мережі (${F.name}).`+(s<3?' Ліфти секцій 1–3 ще й залежать від диспетчерської (ОДС) у секції 5 — вона зараз працює.':'')});
   else if(L.src==='bat')out.push({ic:'🛗',lv:'warn',t:`На батареї · ${L.work} з ${L.total}`,w:`Світла немає, працює ${L.work===1?'один ліфт':L.work+' ліфти'} від резерву — ${L.bat.aut===Infinity?'сонце покриває витрати':'лишилось ≈'+fmtH(Math.max(0,L.bat.aut-st.t))}.`});
+  else if(L.src==='reserve')out.push({ic:'🛗',lv:'bad',t:'Ліфт зупинено за плейбуком',w:`Світла немає, а батарея ліфта опустилась до ${L.bat.stop}% — решту заряду тримаємо в резерві.`});
   else if(L.src==='ods')out.push({ic:'🛗',lv:'bad',t:'Ліфти стоять',w:'Ліфти секцій 1–3 не працюють без диспетчерської (ОДС) у секції 5, а вона зараз без живлення.'});
   else out.push({ic:'🛗',lv:'bad',t:'Ліфти стоять',w:`Світла немає (${F.name}), а ${L.bkN===0?'жоден ліфт цієї секції не підключений до резерву':batWhy(L.bat,true)}.`});
   return out;
@@ -1163,7 +1263,7 @@ function renderMatrix(R){
     ['♨️ Гаряча II',r=>c(LVC[r.hot[1].state],hotTxt(r.hot[1]))],
     ['♨️ Гаряча I',r=>c(LVC[r.hot[0].state],hotTxt(r.hot[0]))],
     'gap',
-    ['🛗 Ліфти',r=>{const L=r.lift;const lv=L.total===0?'off':L.work===L.total?'ok':L.work?'warn':'bad';return c(lv,`${L.work} з ${L.total}`+(L.src==='bat'?' 🔋':L.src==='ods'?' (ОДС)':''));}]
+    ['🛗 Ліфти',r=>{const L=r.lift;const lv=L.total===0?'off':L.work===L.total?'ok':L.work?'warn':'bad';return c(lv,`${L.work} з ${L.total}`+(L.src==='bat'?' 🔋':L.src==='ods'?' (ОДС)':L.src==='reserve'?' (резерв)':''));}]
   ];
   $('#matrix').innerHTML=`<table><caption class="sr">Статус систем по секціях</caption>${head}${rows.map(rw=>rw==='gap'?'<tr class="gap"><td colspan="8"></td></tr>':`<tr><td class="rh">${rw[0]}</td>${R.secs.map(rw[1]).join('')}</tr>`).join('')}</table>`;
 }
@@ -1185,7 +1285,9 @@ function batBlock(icon,name,b,extra){
       else if(b.grid)meta.push('🔌 світло є — батарея заряджена');
       else if(b.alive)meta.push(`🔋 працює від батареї: ${pct}%, лишилось ≈${b.aut===Infinity?'∞':fmtH(b.aut-st.t)}`);
       else meta.push('<span class="w">🪫 розрядилась</span>');
-      if(b.aut!==Infinity&&b.aut<cfg.targetH){const need=b.eff*cfg.targetH/(cfg.usable/100);meta.push(`<span class="w">на ${nf(cfg.targetH)} год треба ≈${nf(need,0)} кВт·год</span>`);}
+      if(b.stop>100-cfg.usable)meta.push(`📋 за плейбуком зупиняємо на ${b.stop}%`+(b.segs.some(x=>x.shed)?`, з ${cfg.pb.shedPct}% — лише нижня зона`:''));
+      else if(b.segs.some(x=>x.shed))meta.push(`📋 з ${cfg.pb.shedPct}% — лише нижня зона`);
+      if(b.aut!==Infinity&&b.aut<cfg.targetH){const need=b.eff*cfg.targetH/((100-b.stop)/100);meta.push(`<span class="w">на ${nf(cfg.targetH)} год треба ≈${nf(need,0)} кВт·год</span>`);}
       else meta.push(`<span class="g">${nf(cfg.targetH)} год — вистачає</span>`);
     }
   }
@@ -1214,6 +1316,39 @@ function renderBackup(R){
     (weakest?`<span>Найслабше місце: <b>${weakest.nm}</b> — ${weakest.inv?'інвертор не потягне':weakest.a===Infinity?'∞':'≈'+fmtH(weakest.a)}</span>`:'')+
     `<span>☀️ Панелей: <b>${totPv>0?nf(totPv)+' кВт':'поки немає'}</b></span>`+
     `<button class="btn small" type="button" data-open-settings="bk">Змінити цифри</button>`;
+}
+
+/* ---------- playbook ---------- */
+function secList(a){a=[...a].sort((x,y)=>x-y);const out=[];for(let i=0;i<a.length;){let j=i;while(j+1<a.length&&a[j+1]===a[j]+1)j++;out.push(j>i+1?`${a[i]+1}–${a[j]+1}`:j===i+1?`${a[i]+1}, ${a[j]+1}`:`${a[i]+1}`);i=j+1;}return out.join(', ');}
+const fmtClock=h=>{const m=Math.round(h*60);return Math.floor(m/60)+':'+String(m%60).padStart(2,'0');};
+function renderPlaybook(R){
+  const P=cfg.pb;
+  $('#pb-rules').classList.toggle('disabled',!P.on);
+  $$('#pb-card [data-pb]').forEach(b=>b.setAttribute('aria-checked',P[b.dataset.pb]?'true':'false'));
+  $$('#pb-card [data-pbn]').forEach(i=>{if(i!==document.activeElement)i.value=P[i.dataset.pbn];});
+  $$('#pb-card .rule').forEach(r=>r.classList.toggle('off',!P[r.dataset.rule]));
+  if(st.g[0]&&st.g[1]&&st.kte){$('#pb-tl').innerHTML=`<p style="margin:0 0 10px">Зараз усе працює — плейбук не потрібен.</p><button class="btn small" type="button" data-apply="long">🕯 Показати на довгому блекауті в мороз</button>`;return;}
+  const groups=new Map();
+  for(const e of R.events){const k=e.key+'|'+Math.round(e.time*20)+'|'+e.txt;const g=groups.get(k);if(g){if(e.sec!=null)g.secs.push(e.sec);}else groups.set(k,Object.assign({},e,{secs:e.sec!=null?[e.sec]:[]}));}
+  const list=[...groups.values()].sort((a,b)=>a.time-b.time);
+  let h='<ol class="tl-list">',nowDone=false;
+  const nowRow=`<li class="nowrow"><span class="tm">${fmtClock(st.t)}</span>▶ зараз</li>`;
+  for(const e of list){
+    if(!nowDone&&e.time>st.t+1e-6){h+=nowRow;nowDone=true;}
+    const who=e.secs.length?`Секці${e.secs.length>1?'ї':'я'} ${secList(e.secs)}: `:'';
+    h+=`<li class="${e.time<=st.t+1e-6?'done':'future'}"><span class="tm">${fmtClock(e.time)}</span>${e.ico} ${esc(who+e.txt)}</li>`;
+  }
+  if(!nowDone)h+=nowRow;
+  $('#pb-tl').innerHTML=h+'</ol><p class="hint">Час — від початку відключення. Повзунок «Минуло» на схемі рухає позначку «зараз». Хочете порівняти — вимкніть «Діяти за плейбуком».</p>';
+}
+function bindPlaybook(){
+  const card=$('#pb-card');
+  card.addEventListener('click',e=>{
+    const a=e.target.closest('[data-apply]');if(a){qMySec=false;applyPreset(a.dataset.apply);return;}
+    const b=e.target.closest('[data-pb]');if(!b)return;const k=b.dataset.pb;cfg.pb[k]=!cfg.pb[k];fixCfg(cfg);refresh();
+  });
+  card.addEventListener('input',e=>{const i=e.target.closest('[data-pbn]');if(!i)return;const v=parseFloat(i.value);if(!isFinite(v))return;cfg.pb[i.dataset.pbn]=v;fixCfg(cfg);refresh();});
+  card.addEventListener('change',e=>{const i=e.target.closest('[data-pbn]');if(i)i.value=cfg.pb[i.dataset.pbn];});
 }
 
 /* ---------- plan ---------- */
@@ -1298,13 +1433,13 @@ function updateFlow(R){
   $('#fl-tp').textContent=st.kte?`з міста ≈${st.tMains}°`:'КТЕ не подає тепло';
   if(h.state==='summer'){setPipe('fl-ss','#d9d2c4','stop');setPipe('fl-sr','#d9d2c4','stop');$('#fl-ti').textContent='літо';$('#fl-ts').textContent='';$('#fl-tr').textContent='';$$('#fl-rad rect').forEach(e=>e.style.fill='#ebe5da');$('#fl-pump').classList.remove('on');$('#fl-pump').style.setProperty('--pc','#bdb6c6');}
   else{const m=h.circ||h.conv?'run':'stop',fd=h.conv?3.6:1.2;setPipe('fl-ss',tColor(h.ts),m,fd);setPipe('fl-sr',tColor(h.tr),m,fd);$('#fl-ti').textContent='≈'+dg(h.ti);$('#fl-ts').textContent='подача ≈'+dg(h.ts);$('#fl-tr').textContent='зворотка ≈'+dg(h.tr);$$('#fl-rad rect').forEach(e=>e.style.fill=tColor((h.ts+h.tr)/2));
-    const pu=me.f===1?null:N.pumps['heat'+(z+1)];$('#fl-pump').classList.toggle('on',!!(pu&&pu.on));$('#fl-pump').style.setProperty('--pc',!pu?'#8b8495':pu.src==='grid'?'#4f9d69':pu.src==='bat'?'#e9a23b':'#e4572e');}
+    const pu=me.f===1?null:N.pumps['heat'+(z+1)];$('#fl-pump').classList.toggle('on',!!(pu&&pu.on));$('#fl-pump').style.setProperty('--pc',!pu?'#8b8495':pcol(pu.src));}
   const cp=N.pumps['cold'+(z+1)],hp=N.pumps['dhw'+(z+1)];
   setPipe('fl-w',BLUE,!st.water?'empty':c.state==='ok'?'run':c.state==='weak'?'run':'stop',c.state==='weak'?3:1.4);
   setPipe('fl-wb',BLUE,c.state==='none'?'empty':'run',1.4);
-  $('#fl-wp').classList.toggle('on',cp.on);$('#fl-wp').style.setProperty('--pc',cp.src==='grid'?'#4f9d69':cp.src==='bat'?'#e9a23b':cp.src==='off'?'#bdb6c6':'#e4572e');
+  $('#fl-wp').classList.toggle('on',cp.on);$('#fl-wp').style.setProperty('--pc',pcol(cp.src));
   setPipe('fl-wh',tColor(w.riser),w.state==='none'?'empty':w.circ?'run':'stop',1.3);setPipe('fl-whr',tColor(w.riser-6),w.state==='none'?'empty':w.circ?'run':'stop',1.3);
-  $('#fl-hp').classList.toggle('on',hp.on);$('#fl-hp').style.setProperty('--pc',hp.src==='grid'?'#4f9d69':hp.src==='bat'?'#e9a23b':hp.src==='off'?'#bdb6c6':'#e4572e');
+  $('#fl-hp').classList.toggle('on',hp.on);$('#fl-hp').style.setProperty('--pc',pcol(hp.src));
   $('#fl-th').textContent=w.state==='none'?'немає':w.state==='cold'?'холодна':'≈'+dg(w.temp);
 }
 
@@ -1398,7 +1533,7 @@ function renderLegend(){
   $('#legend').innerHTML=`<span class="it"><span><span class="tbar" style="display:block;background:${tGradient(0,95)}"></span><span class="tbar-l"><span>0°</span><span>30°</span><span>60°</span><span>95°</span></span></span> температура води</span>
   <span class="it"><span class="sw-pipe" style="background:${BLUE}"></span>холодна вода</span>
   <span class="it"><span class="sw-win" style="background:#ffe39a"></span>/<span class="sw-win" style="background:#76727f"></span> світло є / немає</span>
-  <span class="it">🟢 насос від мережі · 🟠 від батареї · 🔴 стоїть</span>
+  <span class="it">🟢 насос від мережі · 🟠 від батареї · 🟣 вимкнено за плейбуком · 🔴 стоїть</span>
   <span class="it"><span style="display:inline-block;width:22px;border-top:2px dashed var(--purple)"></span>межа I / II зони</span>`;
 }
 function renderZtable(){$('#ztable').innerHTML=`<tr><th>Секція</th><th>Поверхів</th><th>I зона</th><th>II зона</th></tr>`+cfg.secs.map((S,i)=>`<tr><td>${i+1}</td><td>${S.f}</td><td>1–${S.z}</td><td>${S.z+1}–${S.f}</td></tr>`).join('');}
@@ -1420,7 +1555,7 @@ function syncControls(){
 }
 function refresh(){
   LAST=compute();
-  syncControls();updateScene(LAST);renderMe();renderMatrix(LAST);renderBackup(LAST);updatePlan(LAST);updateFlow(LAST);
+  syncControls();updateScene(LAST);renderMe();renderPlaybook(LAST);renderMatrix(LAST);renderBackup(LAST);updatePlan(LAST);updateFlow(LAST);
   save();
 }
 function change(fn){fn();fixSt(st);activePreset='';refresh();}
@@ -1579,7 +1714,7 @@ async function boot(){
   const m=lsGet(LS_ME);if(m&&typeof m.s==='number'&&typeof m.f==='number')me={s:m.s,f:m.f};
   const u=lsGet(LS_UI);if(u&&typeof u.focus==='string')ui.focus=u.focus;
   if(!saved)activePreset='normal';
-  buildPlan();buildScene();buildFlow();buildWheels();indexPipes();renderLegend();renderZtable();renderMePickers();bindControls();bindPop();bindDrawer();
+  buildPlan();buildScene();buildFlow();buildWheels();indexPipes();renderLegend();renderZtable();renderMePickers();bindControls();bindPlaybook();bindPop();bindDrawer();
   refresh();
   const hm=location.hash.match(/[#&]cfg=([A-Za-z0-9_-]+)/);
   if(hm){history.replaceState(null,'',location.pathname+location.search);await applyCode(hm[1]);}
