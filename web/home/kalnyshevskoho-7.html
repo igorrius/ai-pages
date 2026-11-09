@@ -170,6 +170,8 @@ input[type=range]:focus-visible{outline:3px solid var(--blue);outline-offset:3px
 .d-time input{flex:1;min-width:80px;margin:0}
 .d-time output{font-weight:900;font-size:16px;white-space:nowrap;min-width:58px;text-align:right}
 .d-sw{display:flex;flex-wrap:wrap;gap:6px}
+.d-hint{flex-basis:100%;color:var(--muted);font-size:12.5px;font-weight:600;margin-top:-4px}
+@media (max-width:600px){.d-time label{white-space:normal;font-size:13px}}
 .d-sw .chip{font-size:13px;padding:4px 10px}
 .d-sw .chip[aria-pressed=true]{background:var(--yellow);color:var(--ink)}
 .d-sw .chip[aria-pressed=false]{background:#ece7f0;color:var(--muted);text-decoration:line-through}
@@ -468,12 +470,6 @@ input[type=range]:focus-visible{outline:3px solid var(--blue);outline-offset:3px
         <div class="seg" role="group" aria-label="Сонце"><button type="button" data-sun="night">🌙 Ніч</button><button type="button" data-sun="cloud">☁️ Хмарно</button><button type="button" data-sun="sun">☀️ Сонячно</button></div>
         <button class="sw" role="switch" id="sw-water" type="button"><span class="tr"></span><span>Вода в міській мережі<small>Київводоканал</small></span></button>
       </div>
-      <div class="cg">
-        <h3>⏱ Час</h3>
-        <div class="rg"><div class="top"><label for="r-t">Минуло від початку проблеми</label><output id="o-t"></output></div>
-          <div class="trow"><button class="play" id="play" type="button" aria-label="Прокрутити час">▶</button><input type="range" id="r-t" min="0" max="24" step="0.25"></div>
-          <small id="t-hint"></small></div>
-      </div>
     </div>
 
     <div class="layers" role="group" aria-label="Що підсвітити на схемі">
@@ -491,14 +487,15 @@ input[type=range]:focus-visible{outline:3px solid var(--blue);outline-offset:3px
     <p class="hint"><span class="mobile-hint">← схему можна гортати вбік → · </span>Колір труб — температура води в них. Рисочки біжать — вода тече; стоять — насос зупинився; пунктир — води немає.</p>
     <div class="legend" id="legend"></div>
     <div class="dock" role="group" aria-label="Швидке керування схемою">
-      <button class="play" id="d-play" type="button" aria-label="Прокрутити час">▶</button>
-      <div class="d-time"><label for="d-t">⏱ Минуло</label><input type="range" id="d-t" min="0" max="24" step="0.25"><output id="d-ot"></output></div>
+      <button class="play" id="play" type="button" aria-label="Прокрутити час">▶</button>
+      <div class="d-time"><label for="r-t">⏱ Минуло від початку проблеми</label><input type="range" id="r-t" min="0" max="24" step="0.25"><output id="o-t"></output></div>
       <div class="d-sw">
         <button class="chip" type="button" data-dsw="g0">⚡ Ввод 1</button>
         <button class="chip" type="button" data-dsw="g1">⚡ Ввод 2</button>
         <button class="chip" type="button" data-dsw="kte">🔥 Тепло КТЕ</button>
         <button class="chip" type="button" data-dsw="bk">🔋 Батареї</button>
       </div>
+      <small id="t-hint" class="d-hint"></small>
     </div>
   </section>
 
@@ -1570,7 +1567,6 @@ function syncControls(){
   $('#r-tm').value=st.tMains;$('#o-tm').textContent=st.tMains+'°';$('#o-tm').style.color=tColor(st.tMains);
   $('#r-to').value=st.tOut;$('#o-to').textContent=sg(st.tOut)+'°';$('#o-to').style.color=tColor(st.tOut);
   $('#r-t').value=st.t;$('#o-t').textContent=st.t===0?'щойно':fmtH(st.t);
-  $('#d-t').value=st.t;$('#d-ot').textContent=st.t===0?'щойно':fmtH(st.t);
   {const v={g0:st.g[0],g1:st.g[1],kte:st.kte,bk:st.bk};$$('[data-dsw]').forEach(b=>b.setAttribute('aria-pressed',v[b.dataset.dsw]?'true':'false'));}
   $$('[data-season]').forEach(b=>b.setAttribute('aria-pressed',b.dataset.season===st.season?'true':'false'));
   $$('[data-sun]').forEach(b=>b.setAttribute('aria-pressed',b.dataset.sun===st.sun?'true':'false'));
@@ -1602,17 +1598,15 @@ function bindControls(){
   $('#r-tm').addEventListener('input',e=>change(()=>st.tMains=+e.target.value));
   $('#r-to').addEventListener('input',e=>change(()=>st.tOut=+e.target.value));
   $('#r-t').addEventListener('input',e=>{stopPlay();change(()=>st.t=+e.target.value);});
-  $('#d-t').addEventListener('input',e=>{stopPlay();change(()=>st.t=+e.target.value);});
-  $('#d-play').addEventListener('click',()=>$('#play').click());
   $$('[data-dsw]').forEach(b=>b.addEventListener('click',()=>change(()=>{const k=b.dataset.dsw;if(k==='g0'||k==='g1'){const i=+k[1];st.g[i]=!st.g[i];}else st[k]=!st[k];})));
   $$('[data-season]').forEach(b=>b.addEventListener('click',()=>change(()=>st.season=b.dataset.season)));
   $$('[data-sun]').forEach(b=>b.addEventListener('click',()=>change(()=>st.sun=b.dataset.sun)));
   $$('.layers .chip').forEach(b=>b.addEventListener('click',()=>{ui.focus=b.dataset.focus||'';lsSet(LS_UI,ui);syncControls();SV.dataset.focus=ui.focus;}));
-  $('#play').addEventListener('click',()=>{if(playT){stopPlay();return;}if(st.t>=24)st.t=0;$('#play').textContent='❚❚';$('#d-play').textContent='❚❚';playT=setInterval(()=>{const keep=activePreset;st.t=Math.min(24,st.t+.25);refresh();activePreset=keep;syncControls();if(st.t>=24)stopPlay();},140);});
+  $('#play').addEventListener('click',()=>{if(playT){stopPlay();return;}if(st.t>=24)st.t=0;$('#play').textContent='❚❚';playT=setInterval(()=>{const keep=activePreset;st.t=Math.min(24,st.t+.25);refresh();activePreset=keep;syncControls();if(st.t>=24)stopPlay();},140);});
   $('#me-floor').addEventListener('change',e=>{me.f=+e.target.value;lsSet(LS_ME,me);refresh();});
 }
 function applyPreset(id){const p=PRESETS.find(x=>x.id===id);if(!p)return;stopPlay();st=fixSt(merge(DEF_ST,Object.assign(JSON.parse(JSON.stringify(BASE_ST)),{bk:st.bk},JSON.parse(JSON.stringify(p.s)))));activePreset=p.id;refresh();}
-let playT=0;function stopPlay(){if(playT){clearInterval(playT);playT=0;}$('#play').textContent='▶';$('#d-play').textContent='▶';}
+let playT=0;function stopPlay(){if(playT){clearInterval(playT);playT=0;}$('#play').textContent='▶';}
 
 /* ---------- popovers ---------- */
 const POP=$('#pop');
