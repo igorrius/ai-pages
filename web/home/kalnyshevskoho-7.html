@@ -214,6 +214,15 @@ input[type=range]:focus-visible{outline:3px solid var(--blue);outline-offset:3px
 .wheel-spin.paused{animation-play-state:paused}
 .w-click{cursor:pointer}
 
+/* gantt */
+.gantt{margin:8px 0 6px}
+.gr{display:grid;grid-template-columns:112px 1fr 64px;gap:8px;align-items:center;margin:5px 0;font-size:13.5px}
+.gb{position:relative;height:14px;border:1.5px solid var(--ink);border-radius:8px;background:#f5efe2;overflow:hidden}
+.gb i{position:absolute;left:0;top:0;bottom:0;background:#a8d68a;transition:width .4s}
+.gb .now{position:absolute;top:0;bottom:0;width:3px;background:var(--red)}
+.gb .tg{position:absolute;top:0;bottom:0;width:0;border-left:2px dashed var(--navy)}
+.gv{font-weight:900;text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+
 /* playbook */
 .pb-grid{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(0,1fr);gap:24px;align-items:start}
 @media (max-width:860px){.pb-grid{grid-template-columns:minmax(0,1fr)}}
@@ -480,12 +489,12 @@ input[type=range]:focus-visible{outline:3px solid var(--blue);outline-offset:3px
       <div>
         <button class="sw" role="switch" data-pb="on" type="button"><span class="tr"></span><span>Діяти за плейбуком<small>вимкніть, щоб порівняти: що буде без правил</small></span></button>
         <div id="pb-rules">
-          <div class="rule" data-rule="liftOn"><button class="sw" role="switch" data-pb="liftOn" type="button" aria-label="Правило: ліфти до порогу заряду"><span class="tr"></span></button><div class="rtxt">🛗 Ліфти на батареях вимикаємо, коли їхня батарея опускається до <span class="nw"><input type="number" inputmode="numeric" data-pbn="liftPct" min="0" max="95" step="5" aria-label="Поріг для ліфтів, %">%</span> — решту тримаємо в резерві, наприклад на екстрений випадок.</div></div>
+          <div class="rule" data-rule="liftOn"><button class="sw" role="switch" data-pb="liftOn" type="button" aria-label="Правило: ліфти вимикаємо на низькому заряді"><span class="tr"></span></button><div class="rtxt">🛗 Коли заряд батареї вузла опускається нижче <span class="nw"><input type="number" inputmode="numeric" data-pbn="liftPct" min="0" max="95" step="5" aria-label="Поріг заряду для ліфтів, %">%</span>, через <span class="nw"><input type="number" inputmode="numeric" data-pbn="liftDelay" min="0" max="240" step="5" aria-label="Затримка, хв"> хв</span> вимикаємо ліфти — заряд лишаємо насосам опалення й води.</div></div>
           <div class="rule" data-rule="noKte2"><button class="sw" role="switch" data-pb="noKte2" type="button" aria-label="Правило: без тепла — насос II зони вимкнено"><span class="tr"></span></button><div class="rtxt">🔥 Київтеплоенерго не подає тепло — <b>не крутимо насос опалення верхньої зони</b>: ганяти холодну воду нагору немає сенсу, а заряд (чи світло) він їсть.</div></div>
           <div class="rule" data-rule="noKte1"><button class="sw" role="switch" data-pb="noKte1" type="button" aria-label="Правило: без тепла — насос I зони вимкнено"><span class="tr"></span></button><div class="rtxt">🔥 …і насос нижньої зони без тепла теж вимикаємо.</div></div>
-          <div class="rule" data-rule="selfConv"><button class="sw" role="switch" data-pb="selfConv" type="button" aria-label="Правило: на батареях насос I зони вимкнено"><span class="tr"></span></button><div class="rtxt">🎡 На батареях вимикаємо насос опалення нижньої зони — <b>«мале колесо» крутиться саме</b>, а заряд іде на верхню зону.</div></div>
-          <div class="rule" data-rule="shedOn"><button class="sw" role="switch" data-pb="shedOn" type="button" aria-label="Правило: на низькому заряді вода лише нижній зоні"><span class="tr"></span></button><div class="rtxt">🚰 Коли батарея води опускається до <span class="nw"><input type="number" inputmode="numeric" data-pbn="shedPct" min="0" max="95" step="5" aria-label="Поріг для води, %">%</span>, лишаємо тільки насоси нижньої зони — нижні поверхи довше з водою.</div></div>
-          <div class="rule" data-rule="resOn"><button class="sw" role="switch" data-pb="resOn" type="button" aria-label="Правило: резерв заряду насосів"><span class="tr"></span></button><div class="rtxt">🔋 Батареї насосів не розряджаємо нижче <span class="nw"><input type="number" inputmode="numeric" data-pbn="resPct" min="0" max="95" step="5" aria-label="Резерв заряду, %">%</span> — резерв на наступне відключення.</div></div>
+          <div class="rule" data-rule="selfConv"><button class="sw" role="switch" data-pb="selfConv" type="button" aria-label="Правило: на батареях насос I зони вимкнено"><span class="tr"></span></button><div class="rtxt">🎡 На батареях вимикаємо насос опалення нижньої зони — <b>«мале колесо» крутиться саме</b>, а заряд іде на верхню зону, воду й ліфти.</div></div>
+          <div class="rule" data-rule="shedOn"><button class="sw" role="switch" data-pb="shedOn" type="button" aria-label="Правило: на низькому заряді вода лише нижній зоні"><span class="tr"></span></button><div class="rtxt">🚰 Коли заряд батареї вузла опускається до <span class="nw"><input type="number" inputmode="numeric" data-pbn="shedPct" min="0" max="95" step="5" aria-label="Поріг для води, %">%</span>, лишаємо тільки насоси нижньої зони — нижні поверхи довше з водою.</div></div>
+          <div class="rule" data-rule="resOn"><button class="sw" role="switch" data-pb="resOn" type="button" aria-label="Правило: резерв заряду насосів"><span class="tr"></span></button><div class="rtxt">🔋 Батарею вузла не розряджаємо нижче <span class="nw"><input type="number" inputmode="numeric" data-pbn="resPct" min="0" max="95" step="5" aria-label="Резерв заряду, %">%</span> — резерв на наступне відключення.</div></div>
         </div>
       </div>
       <div>
@@ -506,7 +515,7 @@ input[type=range]:focus-visible{outline:3px solid var(--blue);outline-offset:3px
   <section class="card" id="backup" aria-labelledby="bk-h">
     <div class="tape g"></div>
     <h2 id="bk-h">🔋 Скільки протримаються батареї</h2>
-    <p class="lead">У кожної системи — свої інвертори й акумулятори: окремо на насоси опалення, на воду й на ліфти. Поки світло є, вони заряджаються. Цифри орієнтовні — справжні потужності можна вписати в <a href="#" data-open-settings="bk">налаштуваннях</a>.</p>
+    <p class="lead">У кожного вузла (секції 1–2, 3–5, 6–7) — спільні інвертор і батарея на насоси опалення, води й ліфти. Смужки показують, до якої години що працюватиме з урахуванням плейбуку. Цифри орієнтовні — справжні можна вписати в <a href="#" data-open-settings="bk">налаштуваннях</a>.</p>
     <div class="bk-top" id="bk-top"></div>
     <div class="bk-grid" id="bk-grid"></div>
   </section>
@@ -600,7 +609,7 @@ input[type=range]:focus-visible{outline:3px solid var(--blue);outline-offset:3px
 
       <article class="lc">
         <h3><span class="ico">🔋</span>Резервне живлення</h3>
-        <p>Інвертори з акумуляторами живлять насоси опалення та холодної води під час відключень, а розширена версія — ще й один ліфт на секцію. У кожної системи своя батарея й своя потужність; заряджаються вони, поки світло є.</p>
+        <p>У кожного вузла — секції 1–2, 3–5 і 6–7 — спільні інвертор і акумулятори. Від них під час відключень живляться насоси опалення й води та по одному ліфту на секцію. Заряджаються вони, поки світло є.</p><p>Заряд усі ділять між собою, тому діє правило: коли батарея опускається нижче 50%, через 30 хвилин ліфти вимикають — щоб вистачило насосам.</p>
         <p>Скільки годин це дає — у блоці «Скільки протримаються батареї» вище. Справжні цифри обладнання впишіть у налаштуваннях і поділіться посиланням.</p>
         <p class="src">Джерело: k7osbb.com, оголошення про збір на резервне живлення (грудень 2025)</p>
       </article>
@@ -696,19 +705,19 @@ const MONTHS=['січні','лютому','березні','квітні','тр�
 const KR=0.376, GAIN=6;
 const ROMAN=['I','II'];
 
-function mkNode(p,extra){return Object.assign({p,bk:{heat1:true,heat2:true,dhw1:false,dhw2:false,cold1:true,cold2:true},makeup:0.37,ctrl:0.15,hInv:15,hKwh:32,wInv:15,wKwh:32,pv:0},extra||{});}
+function mkNode(p,extra){return Object.assign({p,bk:{heat1:true,heat2:true,dhw1:false,dhw2:false,cold1:true,cold2:true},makeup:0.37,ctrl:0.15,inv:40,kwh:60,pv:0},extra||{});}
 const DEFAULTS={
   v:1,
-  secs:[[25,13],[27,14],[25,12],[26,13],[24,12],[25,13],[20,11]].map(([f,z])=>({f,z,lifts:2,liftKw:7.5,liftBk:1,bInv:10,bKwh:16})),
+  secs:[[25,13],[27,14],[25,12],[26,13],[24,12],[25,13],[20,11]].map(([f,z])=>({f,z,lifts:2,liftKw:7.5,liftBk:1})),
   nodes:[
     mkNode({heat1:3,heat2:3,dhw1:.55,dhw2:.55,cold1:4,cold2:5.5}),
-    mkNode({heat1:4,heat2:4,dhw1:.75,dhw2:.75,cold1:5.5,cold2:7.5},{hInv:20,hKwh:48,wInv:20,wKwh:48}),
+    mkNode({heat1:4,heat2:4,dhw1:.75,dhw2:.75,cold1:5.5,cold2:7.5},{inv:50,kwh:90}),
     mkNode({heat1:2.2,heat2:2.2,dhw1:.55,dhw2:.55,cold1:4,cold2:5.5})
   ],
   load:{heat:80,water:40,lift:20},
   usable:90,targetH:4,month:new Date().getMonth(),
   ods:{bk:true},cross:true,cityBar:2.5,tset:21,inertia:60,
-  pb:{on:true,liftOn:true,liftPct:50,noKte2:true,noKte1:false,selfConv:false,shedOn:false,shedPct:30,resOn:false,resPct:20}
+  pb:{on:true,liftOn:true,liftPct:50,liftDelay:30,noKte2:true,noKte1:false,selfConv:false,shedOn:false,shedPct:30,resOn:false,resPct:20}
 };
 const DEF_ST={g:[true,true],kte:true,tMains:70,water:true,season:'heat',tOut:-5,sun:'cloud',bk:true,t:0};
 const BASE_ST={g:[true,true],kte:true,tMains:70,water:true,season:'heat',tOut:-5,sun:'cloud',bk:true,t:0};
@@ -734,12 +743,12 @@ function merge(def,src){
   return def;
 }
 function fixCfg(c){
-  c.secs.forEach(s=>{s.f=Math.round(clamp(s.f,3,40));s.z=Math.round(clamp(s.z,1,s.f-1));s.lifts=Math.round(clamp(s.lifts,0,4));s.liftBk=Math.round(clamp(s.liftBk,0,s.lifts));s.liftKw=clamp(s.liftKw,0,60);s.bInv=clamp(s.bInv,0,500);s.bKwh=clamp(s.bKwh,0,2000);});
-  c.nodes.forEach(n=>{for(const k in n.p)n.p[k]=clamp(n.p[k],0,200);['makeup','ctrl'].forEach(k=>n[k]=clamp(n[k],0,50));['hInv','wInv','pv'].forEach(k=>n[k]=clamp(n[k],0,1000));['hKwh','wKwh'].forEach(k=>n[k]=clamp(n[k],0,5000));});
+  c.secs.forEach(s=>{s.f=Math.round(clamp(s.f,3,40));s.z=Math.round(clamp(s.z,1,s.f-1));s.lifts=Math.round(clamp(s.lifts,0,4));s.liftBk=Math.round(clamp(s.liftBk,0,s.lifts));s.liftKw=clamp(s.liftKw,0,60);});
+  c.nodes.forEach(n=>{for(const k in n.p)n.p[k]=clamp(n.p[k],0,200);['makeup','ctrl'].forEach(k=>n[k]=clamp(n[k],0,50));n.inv=clamp(n.inv,0,1000);n.pv=clamp(n.pv,0,1000);n.kwh=clamp(n.kwh,0,5000);});
   for(const k in c.load)c.load[k]=clamp(c.load[k],1,100);
   c.usable=clamp(c.usable,10,100);c.targetH=clamp(c.targetH,.5,72);c.month=Math.round(clamp(c.month,0,11));
   c.cityBar=clamp(c.cityBar,0,8);c.tset=clamp(c.tset,14,26);c.inertia=clamp(c.inertia,5,400);
-  ['liftPct','shedPct','resPct'].forEach(k=>c.pb[k]=Math.round(clamp(c.pb[k],0,95)));
+  ['liftPct','shedPct','resPct'].forEach(k=>c.pb[k]=Math.round(clamp(c.pb[k],0,95)));c.pb.liftDelay=Math.round(clamp(c.pb.liftDelay,0,240));
   return c;
 }
 function fixSt(s){s.tMains=clamp(Math.round(s.tMains),35,110);s.tOut=clamp(Math.round(s.tOut),-25,32);s.t=clamp(s.t,0,24);if(s.season!=='heat'&&s.season!=='summer')s.season='heat';if(!(s.sun in SUN))s.sun='cloud';return s;}
@@ -771,34 +780,41 @@ async function copyText(t){try{await navigator.clipboard.writeText(t);return tru
 /* ---------- physics (very simplified) ---------- */
 function solveTi(Ts,To){let lo=To-1,hi=Math.max(Ts,To+GAIN)+1;for(let i=0;i<50;i++){const m=(lo+hi)/2;const d=Math.max(0,.81*(Ts-m));const f=KR*Math.pow(d,1.3)-(m-To-GAIN);if(f>0)lo=m;else hi=m;}return (lo+hi)/2;}
 function needTs(To,Tset){const need=Math.max(0,Tset-To-GAIN);return Tset+Math.pow(need/KR,1/1.3)/.81;}
-// батарея з фазами: кожна фаза — свій набір обладнання; плейбук може вимикати частину на порозі заряду
-function batt(inv,kwh,phases,stopPct,pv,grid,t){
-  const cut=100-cfg.usable,stop=Math.max(cut,stopPct||0);
-  const ph=phases.filter((x,i)=>i===0||x.from>stop);
-  const load=ph[0].load,peak=ph[0].peak;
-  const has=st.bk&&kwh>0&&inv>0,invOk=inv+1e-9>=peak;
-  const cap=Math.max(0,kwh)*(100-stop)/100;
-  const segs=[];let soc=100,time=0;
-  if(kwh>0&&inv>0&&invOk&&load>0){
-    for(let i=0;i<ph.length;i++){
-      const end=i<ph.length-1?ph[i+1].from:stop;
-      const eff=Math.max(0,ph[i].load-pv*ph[i].load/load);
-      const dur=eff<=1e-9?Infinity:kwh*(soc-end)/100/eff;
-      segs.push({start:time,dur,from:soc,to:end,eff,keys:ph[i].keys,shed:!!ph[i].shed});
-      if(dur===Infinity){time=Infinity;break;}
-      time+=dur;soc=end;
-    }
+// спільна батарея вузла: похвилинний розрахунок на 48 годин з правилами плейбуку
+const SIM_M=48*60;
+function simNode(n,ctx,allOff){
+  const N=cfg.nodes[n],PB=cfg.pb,{hs,ruleOff,batOff,pvKw}=ctx;
+  const nodeGrid=allOff?false:ctx.nodeGrid[n],secGrid=x=>allOff?false:ctx.secPow(x);
+  const items=[];
+  if(!nodeGrid)for(const P of PUMPS){
+    const need=P.sys==='heat'?hs:st.water;
+    if(!need||ruleOff(P.k)||!N.bk[P.k]||batOff(P.k))continue;
+    items.push({id:P.k,kind:P.sys,load:N.p[P.k]*(P.sys==='cold'?cfg.load.water:cfg.load.heat)/100,peak:N.p[P.k]});
   }
-  const aut=segs.length?time:0;
-  let socT=100,cur=segs[0];
-  if(!grid){
-    if(!has)socT=0;
-    else if(segs.length){for(const sg of segs){cur=sg;if(t<sg.start+sg.dur){socT=sg.from-(t-sg.start)*sg.eff/kwh*100;break;}socT=sg.to;}}
+  if(items.some(i=>i.kind==='heat'))items.push({id:'aux',kind:'heat',load:N.makeup*.1+N.ctrl,peak:N.makeup+N.ctrl});
+  for(const x of NODES[n].secs){if(secGrid(x))continue;const S=cfg.secs[x],k=Math.min(S.liftBk,S.lifts);if(k>0)items.push({id:'lift'+x,kind:'lift',sec:x,load:k*S.liftKw*cfg.load.lift/100,peak:k*S.liftKw});}
+  const has=st.bk&&N.kwh>0&&N.inv>0,cut=100-cfg.usable,stop=PB.on&&PB.resOn?Math.max(cut,PB.resPct):cut;
+  const peak=items.reduce((a,i)=>a+i.peak,0),hasLift=items.some(i=>i.kind==='lift');
+  const loadOf=(lo,sh)=>items.reduce((a,i)=>a+((i.kind==='lift'&&lo)||(sh&&(i.id==='cold2'||i.id==='dhw2'))?0:i.load),0);
+  const R={has,items,peak,inv:N.inv,kwh:N.kwh,invOk:N.inv+1e-9>=peak,stop,cut,pv:pvKw,used:items.length>0,hasLift,load:loadOf(false,false),
+    byKind:k=>items.filter(i=>k==='water'?(i.kind==='cold'||i.kind==='dhw'):i.kind===k).reduce((a,i)=>a+i.load,0),
+    liftBelowAt:Infinity,liftOffAt:Infinity,shedAt:Infinity,stopAt:Infinity,soc:null,fl:null};
+  if(!R.used||!has)return R;
+  const soc=new Float32Array(SIM_M+1),fl=new Uint8Array(SIM_M+1);
+  const canShed=PB.on&&PB.shedOn&&PB.shedPct>stop&&items.some(i=>i.id==='cold2'||i.id==='dhw2');
+  let c=100,lo=false,sh=false,stopped=false,below=-1;
+  for(let m=0;m<=SIM_M;m++){
+    soc[m]=c;fl[m]=(lo?1:0)|(sh?2:0)|(stopped?4:0);
+    if(stopped)continue;
+    c-=Math.max(0,loadOf(lo,sh)-pvKw)/60/N.kwh*100;
+    if(hasLift&&PB.on&&PB.liftOn&&below<0&&c<PB.liftPct){below=m+1;R.liftBelowAt=below/60;}
+    if(below>=0&&!lo&&m+1>=below+PB.liftDelay){lo=true;R.liftOffAt=(m+1)/60;}
+    if(canShed&&!sh&&c<=PB.shedPct){sh=true;R.shedAt=(m+1)/60;}
+    if(c<=stop){c=stop;stopped=true;R.stopAt=(m+1)/60;}
   }
-  const alive=!grid&&has&&invOk&&load>0&&(aut===Infinity||t<aut);
-  return {inv,kwh,cap,has,invOk,load,peak,pv,eff:segs.length?segs[0].eff:load,aut,soc:clamp(socT,0,100)/100,alive,grid,stop,segs,
-    active:alive&&cur?cur.keys:[],byRule:has&&invOk&&load>0&&!grid&&t>=aut&&stop>cut};
+  R.soc=soc;R.fl=fl;return R;
 }
+function simAt(sm,t){if(!sm.soc)return {soc:sm.used&&!sm.has?0:100,f:sm.used&&!sm.has?4:0};const m=Math.min(SIM_M,Math.max(0,Math.round(t*60)));return {soc:sm.soc[m],f:sm.fl[m]};}
 function compute(){
   const t=st.t,hs=st.season==='heat',sunF=SUN[st.sun];
   const secPow=s=>st.g[FEED_OF(s)];
@@ -816,38 +832,25 @@ function compute(){
   const PB=cfg.pb;
   const ruleOff=k=>PB.on&&hs&&!st.kte&&((k==='heat2'&&PB.noKte2)||(k==='heat1'&&PB.noKte1))?'nokte':null;
   const batOff=k=>PB.on&&PB.selfConv&&hs&&st.kte&&k==='heat1'?'selfconv':null;
-  const resStop=PB.on&&PB.resOn?PB.resPct:0,liftStop=PB.on&&PB.liftOn?PB.liftPct:0;
+  const ctx={hs,ruleOff,batOff,nodeGrid,secPow,pvKw:0};
   const nodes=cfg.nodes.map((N,n)=>{
-    const grid=nodeGrid[n];
-    const hKeys=hs?['heat1','heat2'].filter(k=>N.bk[k]&&!ruleOff(k)&&!batOff(k)):[];
-    const hLoad=ks=>ks.reduce((a,k)=>a+N.p[k]*cfg.load.heat/100,0)+(ks.length?N.makeup*.1+N.ctrl:0);
-    const hPeak=ks=>ks.reduce((a,k)=>a+N.p[k],0)+(ks.length?N.makeup+N.ctrl:0);
-    const wKeys=st.water?['cold1','cold2','dhw1','dhw2'].filter(k=>N.bk[k]):[];
-    const wLoad=ks=>ks.reduce((a,k)=>a+N.p[k]*(k[0]==='c'?cfg.load.water:cfg.load.heat)/100,0);
-    const wPeak=ks=>ks.reduce((a,k)=>a+N.p[k],0);
-    const hPh=[{keys:hKeys,load:hLoad(hKeys),peak:hPeak(hKeys),from:100}];
-    const wPh=[{keys:wKeys,load:wLoad(wKeys),peak:wPeak(wKeys),from:100}];
-    if(PB.on&&PB.shedOn&&PB.shedPct>resStop){const k1=wKeys.filter(k=>k!=='cold2'&&k!=='dhw2');if(k1.length<wKeys.length)wPh.push({keys:k1,load:wLoad(k1),peak:wPeak(k1),from:PB.shedPct,shed:true});}
-    const lsum=NODES[n].secs.reduce((a,s)=>a+liftL[s].load,0);
-    const pvKw=N.pv*sunF,tot=hPh[0].load+wPh[0].load+lsum;
-    const share=L=>tot>0?pvKw*L/tot:0;
-    const hb=batt(N.hInv,N.hKwh,hPh,resStop,share(hPh[0].load),grid,t);
-    const wb=batt(N.wInv,N.wKwh,wPh,resStop,share(wPh[0].load),grid,t);
+    const grid=nodeGrid[n];ctx.pvKw=N.pv*sunF;
+    const sim=simNode(n,ctx,false),plan=simNode(n,ctx,true),at=simAt(sim,t);
     const pumps={};
     for(const P of PUMPS){
-      const need=P.sys==='heat'?hs:st.water,b=P.sys==='heat'?hb:wb,ro=ruleOff(P.k);let on=false,src,why='';
+      const need=P.sys==='heat'?hs:st.water,ro=ruleOff(P.k);let on=false,src,why='';
       if(!need)src='off';
       else if(ro){src='rule';why=ro;}
       else if(grid){on=true;src='grid';}
-      else if(!N.bk[P.k])src='none';
+      else if(!N.bk[P.k]){src='none';why='notbk';}
       else if(batOff(P.k)){src='rule';why='selfconv';}
-      else if(b.alive&&b.active.includes(P.k)){on=true;src='bat';}
-      else if(b.alive)src='shed';
-      else if(b.byRule)src='reserve';
-      else src='none';
+      else if(!sim.has){src='none';why=st.bk?'nobat':'bkoff';}
+      else if(at.f&4){src=sim.stop>sim.cut?'reserve':'none';why='empty';}
+      else if((at.f&2)&&(P.k==='cold2'||P.k==='dhw2'))src='shed';
+      else{on=true;src='bat';}
       pumps[P.k]={on,src,why};
     }
-    return {grid,src:nodeSrc[n],hb,wb,pumps,pvKw,liftShare:s=>share(liftL[s].load)};
+    return {grid,src:nodeSrc[n],sim,plan,at,pumps,pvKw:ctx.pvKw};
   });
   const eq=st.tOut+GAIN;
   const cool=(T0,Tinf,tau)=>Tinf+(T0-Tinf)*Math.exp(-t/tau);
@@ -880,12 +883,17 @@ function compute(){
       let state;if(c.state==='none')state='none';else if(temp<35)state='cold';else if(!pu.on)state='flush';else state='ok';
       return {state,temp,riser,circ:pu.on,src:pu.src,reach:c.reach,weak:c.state==='weak'};
     });
-    const lb=batt(S.bInv,S.bKwh,[{keys:[],load:liftL[s].load,peak:liftL[s].peak,from:100}],liftStop,N.liftShare(s),p,t);
-    let work=0,src='none',odsBlock=false;
-    if(p){work=S.lifts;src='grid';}else if(lb.alive){work=liftL[s].n;src='bat';}else if(lb.byRule)src='reserve';
+    const sm=N.sim,at=N.at,it=sm.items.find(i=>i.id==='lift'+s);
+    let work=0,src='none',why='',odsBlock=false;
+    if(p){work=S.lifts;src='grid';}
+    else if(!it)why='nobk';
+    else if(!sm.has)why=st.bk?'nobat':'bkoff';
+    else if(at.f&4){src=sm.stop>sm.cut?'reserve':'none';why='empty';}
+    else if(at.f&1)src='liftrule';
+    else{work=liftL[s].n;src='bat';}
     if(s<3&&!odsOK&&work>0){work=0;odsBlock=true;src='ods';}
     const mzk=hs&&st.tOut<=-5&&t>=3&&heat[1].state!=='ok'&&heat[1].state!=='weak';
-    return {s,n,power:p,heat,f1,cold,hot,mzk,lift:{work,total:S.lifts,src,odsBlock,bat:lb,bkN:liftL[s].n}};
+    return {s,n,power:p,heat,f1,cold,hot,mzk,lift:{work,total:S.lifts,src,why,odsBlock,sim:sm,bkN:liftL[s].n}};
   });
   // хронологія для плейбуку
   const ev=[],add=(time,ico,txt,key,sec)=>ev.push({time,ico,txt,key,sec}),cut=100-cfg.usable;
@@ -894,12 +902,13 @@ function compute(){
   if(!st.g[1]&&st.g[0]&&cfg.cross)add(0,'🔌','ІТП 3–5 і диспетчерська живляться через резервний кабель із секції 3.','cross');
   if(hs&&!st.kte&&PB.on&&(PB.noKte2||PB.noKte1))add(0,'🔥',`КТЕ не подає тепло — вимикаємо насоси опалення ${PB.noKte2&&PB.noKte1?'обох зон':PB.noKte2?'II зони':'I зони'}: ганяти холодну воду немає сенсу.`,'nokte');
   nodes.forEach((N,n)=>{
-    if(N.grid||!st.bk)return;const nm=NODES[n].name;
-    if(hs&&PB.on&&PB.selfConv&&st.kte&&cfg.nodes[n].bk.heat1)add(0,'🎡',`${nm}: насос опалення I зони вимкнено — «мале колесо» крутиться саме.`,'selfconv'+n);
-    N.wb.segs.forEach(sg=>{if(sg.shed)add(sg.start,'🚰',`${nm}: батарея води ${PB.shedPct}% — вимикаємо насоси II зони, вода лишається нижнім поверхам.`,'shed'+n);});
-    [[N.hb,'опалення','🔥'],[N.wb,'води','💧']].forEach(([b,w,ic])=>{if(b.has&&b.invOk&&b.load>0&&isFinite(b.aut))add(b.aut,ic,b.stop>cut?`${nm}: батарея ${w} ${b.stop}% — насоси зупиняємо, решта в резерві.`:`${nm}: батарея ${w} розрядилась — насоси стали.`,'stop'+w+n);});
+    const sm=N.sim,nm=NODES[n].name;if(!sm.used||!sm.has)return;
+    if(hs&&PB.on&&PB.selfConv&&st.kte&&!N.grid&&cfg.nodes[n].bk.heat1)add(0,'🎡',`${nm}: насос опалення I зони вимкнено — «мале колесо» крутиться саме.`,'sc'+n);
+    if(isFinite(sm.liftBelowAt))add(sm.liftBelowAt,'🔋',`${nm}: заряд нижче ${PB.liftPct}% — ліфти працюють ще ${PB.liftDelay} хв.`,'lb'+n);
+    if(isFinite(sm.liftOffAt))add(sm.liftOffAt,'🛗',`${nm}: ліфти вимкнено — заряд лишаємо насосам.`,'lo'+n);
+    if(isFinite(sm.shedAt))add(sm.shedAt,'🚰',`${nm}: заряд ${PB.shedPct}% — вимикаємо насоси II зони, вода лишається нижнім поверхам.`,'sh'+n);
+    if(isFinite(sm.stopAt))add(sm.stopAt,'🪫',sm.stop>sm.cut?`${nm}: заряд ${sm.stop}% — зупиняємо все, решта в резерві.`:`${nm}: батарея розрядилась — насоси й ліфти стали.`,'st'+n);
   });
-  secs.forEach((r,s)=>{const b=r.lift.bat;if(!r.power&&b.has&&b.invOk&&b.load>0&&isFinite(b.aut))add(b.aut,'🛗',b.stop>cut?`ліфт зупиняємо: батарея ${b.stop}%, решта в резерві.`:'ліфт зупинився: батарея розрядилась.','lift',s);});
   ev.sort((a,b)=>a.time-b.time);
   return {nodes,secs,odsOK,pow5,tsNeed,tsNorm,ti0,limited:tsNeed>st.tMains-4+.5,tdhw0,cityFloors,hs,convFloor,events:ev};
 }
@@ -986,7 +995,7 @@ function buildScene(){
   NODES.forEach((Nd,n)=>{
     const {x:nx,w:nw}=nodeBox(n);
     const ys={hs:G+18,hr:G+25,cw:G+32,hw:G+39};
-    const bars=2+Nd.secs.length,rx=nx+nw-14-bars*17;
+    const rx=nx+nw-72;
     const px=i=>nx+22+i*30;
     // pump connectors (under bundle)
     o.push(`<rect class="room" x="${nx+4}" y="${G+52}" width="${nw-8}" height="130" rx="10" fill="var(--n${n})" filter="url(#rough)" data-info="itp:${n}"/>`);
@@ -1006,10 +1015,9 @@ function buildScene(){
     o.push(hx(nx+100,'опал.','heat'),hx(nx+136,'ГВП','dhw'));
     // pumps row
     PUMPS.forEach((P,i)=>{const cx=px(i),cy=G+98;o.push(`<g class="pump" data-pump="${n}-${P.k}" data-info="pump:${n}:${P.k}" data-layer="${P.sys==='heat'?'heat':'water'}"><circle class="ring" cx="${cx}" cy="${cy}" r="10.5"/><path class="imp" d="M${cx} ${cy} q3 -3 0 -7 M${cx} ${cy} q4.5 2 6 3.5 M${cx} ${cy} q-4.5 1.5 -6 3.5"/><text x="${cx}" y="${cy+24}" text-anchor="middle" class="lbl-xs">${P.short}</text></g>`);});
-    // battery rack
-    const labels=['🔥','💧',...Nd.secs.map(()=>'🛗')],names=['','',...Nd.secs.map(s=>'с'+(s+1))];
-    let rk=`<g data-info="rack:${n}" data-layer="power heat water lift"><rect x="${rx-4}" y="${G+60}" width="${bars*17+8}" height="114" rx="8" fill="#fffdf6" stroke="var(--ink)" stroke-width="1.6" stroke-dasharray="4 3"/><text x="${rx+bars*17/2}" y="${G+76}" text-anchor="middle" class="lbl-xs">резерв</text>`;
-    for(let i=0;i<bars;i++){const bx=rx+3+i*17;rk+=`<text x="${bx+5.5}" y="${G+92}" text-anchor="middle" font-size="10">${labels[i]}</text><rect x="${bx}" y="${G+97}" width="11" height="54" rx="2" fill="#fff" stroke="var(--ink)" stroke-width="1.4"/><rect class="bar-f" data-bar="${n}-${i}" x="${bx+1.5}" y="${G+98.5}" width="8" height="51" rx="1"/><text x="${bx+5.5}" y="${G+165}" text-anchor="middle" class="lbl-xs" font-size="10.5">${names[i]}</text>`;}
+    // battery rack (спільна батарея вузла)
+    let rk=`<g data-info="rack:${n}" data-layer="power heat water lift"><rect x="${rx-4}" y="${G+60}" width="66" height="114" rx="8" fill="#fffdf6" stroke="var(--ink)" stroke-width="1.6" stroke-dasharray="4 3"/><text x="${rx+29}" y="${G+75}" text-anchor="middle" class="lbl-xs">резерв</text><rect x="${rx+9}" y="${G+79}" width="8" height="4" fill="var(--ink)"/><rect x="${rx+2}" y="${G+83}" width="22" height="66" rx="3" fill="#fff" stroke="var(--ink)" stroke-width="1.6"/><rect class="bar-f" data-bar="${n}" x="${rx+4.5}" y="${G+85.5}" width="17" height="61" rx="2"/><text data-barpct="${n}" x="${rx+13}" y="${G+165}" text-anchor="middle" class="lbl-xs"></text>`;
+    ['🔥','💧','🛗'].forEach((e,i)=>{rk+=`<g class="st" data-rk="${n}-${i}"><circle cx="${rx+44}" cy="${G+93+i*24}" r="9.5" class="st-off"/><text x="${rx+44}" y="${G+97+i*24}" text-anchor="middle" font-size="10.5">${e}</text></g>`;});
     o.push(rk+'</g>');
   });
   // sections
@@ -1121,9 +1129,13 @@ function updateScene(R){
       const col=P.sys==='heat'?tColor(r0.heat[P.z].ts):P.sys==='dhw'?tColor(r0.hot[P.z].riser):BLUE;
       setPipe(`pc-${n}-${P.k}`,pu.src==='off'?'#d9d2c4':col,pu.on?'run':pu.src==='off'?'stop':'stop',1.2);
     });
-    // battery bars
-    const bats=[N.hb,N.wb,...NODES[n].secs.map(s=>R.secs[s].lift.bat)];
-    bats.forEach((b,i)=>{const el=$(`[data-bar="${n}-${i}"]`,SV);if(!el)return;const h=51*(b.has||b.grid&&b.cap>0?b.soc:0);el.setAttribute('height',h.toFixed(1));el.setAttribute('y',(G+98.5+51-h).toFixed(1));el.setAttribute('fill',!b.cap?'#ddd':b.grid?'#7cc48f':b.soc>.5?'#f2c94c':b.soc>.2?'#f29e4c':'#e4572e');});
+    // battery (спільна на вузол)
+    {const sm=N.sim,soc=sm.used?N.at.soc:(cfg.nodes[n].kwh>0?100:0),h=61*soc/100,el=$(`[data-bar="${n}"]`,SV);
+     el.setAttribute('height',h.toFixed(1));el.setAttribute('y',(G+85.5+61-h).toFixed(1));el.setAttribute('fill',!sm.used?'#7cc48f':soc>50?'#f2c94c':soc>20?'#f29e4c':'#e4572e');
+     $(`[data-barpct="${n}"]`,SV).textContent=cfg.nodes[n].kwh>0?Math.round(soc)+'%':'—';
+     const kindLv=ks=>{const ps=ks.map(k=>N.pumps[k]);if(ps.every(x=>x.src==='off'))return 'off';if(ps.some(x=>x.src==='bat'))return 'warn';if(ps.some(x=>x.src==='grid'))return 'ok';if(ps.some(x=>x.src==='rule'||x.src==='shed'||x.src==='reserve'))return 'off';return 'bad';};
+     const ls=NODES[n].secs.map(x=>R.secs[x].lift),liftLv=ls.every(l=>l.src==='grid')?'ok':ls.some(l=>l.src==='bat'||l.src==='grid')?'warn':'bad';
+     [kindLv(['heat1','heat2']),kindLv(['cold1','cold2','dhw1','dhw2']),liftLv].forEach((lv,i)=>$(`[data-rk="${n}-${i}"] circle`,SV).setAttribute('class','st-'+lv));}
     $$(`[data-pv="${n}"]`,SV).forEach(g=>g.style.display=cfg.nodes[n].pv>0?'':'none');
   });
   R.secs.forEach((r,s)=>{
@@ -1173,22 +1185,21 @@ function updateScene(R){
 
 /* ---------- explanations ---------- */
 function nodePow(n){const N=LAST.nodes[n];if(N.grid)return 'від мережі ('+N.src+')';if(n===1)return cfg.cross?'немає ні вводу 2, ні вводу 1 через кабель із с. 3':'немає вводу 2';return 'немає '+(n===0?'вводу 1':'вводу 2');}
-function batWhy(b,onBk){
-  if(!st.bk)return 'резервні батареї вимкнені перемикачем';
-  if(!onBk)return 'цей насос не підключений до батарей';
-  if(!b.cap||!b.inv)return 'батарею для нього не задано в налаштуваннях';
-  if(!b.invOk)return `інвертор ${nf(b.inv)} кВт слабший за насоси (${nf(b.peak)} кВт)`;
-  return `батарея розрядилась (її вистачило на ≈${fmtH(b.aut)})`;
+function noPowerWhy(n,why){
+  if(why==='bkoff')return 'резервні батареї вимкнені перемикачем';
+  if(why==='notbk')return 'цей насос не підключений до батарей';
+  if(why==='nobat')return 'батарею для вузла не задано в налаштуваннях';
+  return `батарея вузла розрядилась (її вистачило на ≈${fmtH(LAST.nodes[n].sim.stopAt)})`;
 }
 function pumpWhy(n,k){
-  const N=LAST.nodes[n],P=PUMPS.find(p=>p.k===k),pu=N.pumps[k],b=P.sys==='heat'?N.hb:N.wb;
-  if(pu.src==='rule')return 'вимкнено за плейбуком: '+(pu.why==='nokte'?'Київтеплоенерго не подає тепло — ганяти холодну воду немає сенсу':'на батареях «мале колесо» крутиться саме, а заряд бережемо для верхньої зони');
-  if(pu.src==='shed')return `вимкнено за плейбуком: батарея води опустилась до ${cfg.pb.shedPct}% — воду лишили тільки нижній зоні`;
-  if(pu.src==='reserve')return `зупинено за плейбуком: батарея дійшла до ${b.stop}% — решту тримаємо в резерві`;
+  const N=LAST.nodes[n],P=PUMPS.find(p=>p.k===k),pu=N.pumps[k],sm=N.sim;
+  if(pu.src==='rule')return 'вимкнено за плейбуком: '+(pu.why==='nokte'?'Київтеплоенерго не подає тепло — ганяти холодну воду немає сенсу':'на батареях «мале колесо» крутиться саме, а заряд бережемо для решти');
+  if(pu.src==='shed')return `вимкнено за плейбуком: заряд батареї вузла опустився до ${cfg.pb.shedPct}% — воду лишили тільки нижній зоні`;
+  if(pu.src==='reserve')return `зупинено за плейбуком: батарея вузла дійшла до ${sm.stop}% — решту тримаємо в резерві`;
   if(pu.src==='off')return P.sys==='heat'?'не опалювальний сезон — насоси опалення стоять':'у міській мережі немає води — насоси не вмикаються';
   if(pu.src==='grid')return 'працює від мережі ('+N.src+')';
-  if(pu.src==='bat')return 'працює від батареї: '+(b.aut===Infinity?'сонце покриває витрати':'лишилось ≈'+fmtH(Math.max(0,b.aut-st.t)));
-  return 'стоїть: '+nodePow(n)+', а '+batWhy(b,cfg.nodes[n].bk[k]);
+  if(pu.src==='bat'){const end=(k==='cold2'||k==='dhw2')?Math.min(sm.shedAt,sm.stopAt):sm.stopAt;return 'працює від батареї вузла: '+(end===Infinity?'заряду вистачить надовго':'лишилось ≈'+fmtH(Math.max(0,end-st.t)));}
+  return 'стоїть: '+nodePow(n)+', а '+noPowerWhy(n,pu.why);
 }
 function explain(s,floor){
   const R=LAST,S=cfg.secs[s],r=R.secs[s],n=r.n,z=floor<=S.z?0:1,zn=ROMAN[z],F=FEEDS[FEED_OF(s)],out=[];
@@ -1219,10 +1230,11 @@ function explain(s,floor){
   const L=r.lift;
   if(L.total===0)out.push({ic:'🛗',lv:'off',t:'Ліфтів не задано',w:'Кількість ліфтів можна вказати в налаштуваннях.'});
   else if(L.src==='grid')out.push({ic:'🛗',lv:'ok',t:`Ліфти працюють · ${L.work} з ${L.total}`,w:`Від мережі (${F.name}).`+(s<3?' Ліфти секцій 1–3 ще й залежать від диспетчерської (ОДС) у секції 5 — вона зараз працює.':'')});
-  else if(L.src==='bat')out.push({ic:'🛗',lv:'warn',t:`На батареї · ${L.work} з ${L.total}`,w:`Світла немає, працює ${L.work===1?'один ліфт':L.work+' ліфти'} від резерву — ${L.bat.aut===Infinity?'сонце покриває витрати':'лишилось ≈'+fmtH(Math.max(0,L.bat.aut-st.t))}.`});
-  else if(L.src==='reserve')out.push({ic:'🛗',lv:'bad',t:'Ліфт зупинено за плейбуком',w:`Світла немає, а батарея ліфта опустилась до ${L.bat.stop}% — решту заряду тримаємо в резерві.`});
+  else if(L.src==='bat'){const sm=L.sim,end=Math.min(sm.liftOffAt,sm.stopAt),byRule=isFinite(sm.liftOffAt)&&sm.liftOffAt<=sm.stopAt;out.push({ic:'🛗',lv:'warn',t:`На батареї · ${L.work} з ${L.total}`,w:`Світла немає, працює ${L.work===1?'один ліфт':L.work+' ліфти'} від батареї вузла — ${end===Infinity?'заряду вистачить надовго':(byRule?'за плейбуком вимкнеться приблизно через ':'лишилось ≈')+fmtH(Math.max(0,end-st.t))}.`});}
+  else if(L.src==='liftrule')out.push({ic:'🛗',lv:'bad',t:'Ліфт вимкнено за плейбуком',w:`Світла немає, заряд батареї вузла опустився нижче ${cfg.pb.liftPct}%, і через ${cfg.pb.liftDelay} хв ліфти вимкнули — заряд лишаємо насосам опалення й води.`});
+  else if(L.src==='reserve')out.push({ic:'🛗',lv:'bad',t:'Ліфт зупинено за плейбуком',w:`Світла немає, а батарея вузла дійшла до ${L.sim.stop}% — решту заряду тримаємо в резерві.`});
   else if(L.src==='ods')out.push({ic:'🛗',lv:'bad',t:'Ліфти стоять',w:'Ліфти секцій 1–3 не працюють без диспетчерської (ОДС) у секції 5, а вона зараз без живлення.'});
-  else out.push({ic:'🛗',lv:'bad',t:'Ліфти стоять',w:`Світла немає (${F.name}), а ${L.bkN===0?'жоден ліфт цієї секції не підключений до резерву':batWhy(L.bat,true)}.`});
+  else out.push({ic:'🛗',lv:'bad',t:'Ліфти стоять',w:`Світла немає (${F.name}), а ${L.why==='nobk'?'жоден ліфт цієї секції не підключений до резерву':noPowerWhy(n,L.why)}.`});
   return out;
 }
 function statHtml(items){return items.map(i=>`<div class="stat"><div class="ic ${i.lv}" aria-hidden="true">${i.ic}</div><div><b>${esc(i.t)}</b><div class="why">${esc(i.w)}</div></div></div>`).join('');}
@@ -1263,57 +1275,48 @@ function renderMatrix(R){
     ['♨️ Гаряча II',r=>c(LVC[r.hot[1].state],hotTxt(r.hot[1]))],
     ['♨️ Гаряча I',r=>c(LVC[r.hot[0].state],hotTxt(r.hot[0]))],
     'gap',
-    ['🛗 Ліфти',r=>{const L=r.lift;const lv=L.total===0?'off':L.work===L.total?'ok':L.work?'warn':'bad';return c(lv,`${L.work} з ${L.total}`+(L.src==='bat'?' 🔋':L.src==='ods'?' (ОДС)':L.src==='reserve'?' (резерв)':''));}]
+    ['🛗 Ліфти',r=>{const L=r.lift;const lv=L.total===0?'off':L.work===L.total?'ok':L.work?'warn':'bad';return c(lv,`${L.work} з ${L.total}`+(L.src==='bat'?' 🔋':L.src==='ods'?' (ОДС)':L.src==='reserve'?' (резерв)':L.src==='liftrule'?' (плейбук)':''));}]
   ];
   $('#matrix').innerHTML=`<table><caption class="sr">Статус систем по секціях</caption>${head}${rows.map(rw=>rw==='gap'?'<tr class="gap"><td colspan="8"></td></tr>':`<tr><td class="rh">${rw[0]}</td>${R.secs.map(rw[1]).join('')}</tr>`).join('')}</table>`;
 }
 
 /* ---------- backup ---------- */
-function batBlock(icon,name,b,extra){
-  const has=b.cap>0&&b.inv>0;
-  const pct=Math.round((b.grid?1:b.soc)*100);
-  const col=!has?'#ddd':b.grid?'#7cc48f':pct>50?'#f2c94c':pct>20?'#f29e4c':'#e4572e';
-  let v,meta=[];
-  if(!has){v='—';meta.push('батарею не задано');}
-  else if(b.load<=0){v='—';meta.push('зараз нічого не живить');}
-  else if(!b.invOk){v='⚠';meta.push(`<span class="w">інвертор ${nf(b.inv)} кВт слабший за обладнання (${nf(b.peak)} кВт) — не потягне</span>`);}
-  else v=b.aut===Infinity?'∞':fmtH(b.aut);
-  if(has&&b.load>0){
-    meta.unshift(`навантаження ≈${nf(b.load)} кВт${b.pv>0?` (сонце дає ${nf(b.pv)})`:''} · батарея ${nf(b.kwh,0)} кВт·год · інвертор ${nf(b.inv)} кВт`);
-    if(b.invOk){
-      if(!st.bk)meta.push('<span class="w">резерв вимкнено перемикачем</span>');
-      else if(b.grid)meta.push('🔌 світло є — батарея заряджена');
-      else if(b.alive)meta.push(`🔋 працює від батареї: ${pct}%, лишилось ≈${b.aut===Infinity?'∞':fmtH(b.aut-st.t)}`);
-      else meta.push('<span class="w">🪫 розрядилась</span>');
-      if(b.stop>100-cfg.usable)meta.push(`📋 за плейбуком зупиняємо на ${b.stop}%`+(b.segs.some(x=>x.shed)?`, з ${cfg.pb.shedPct}% — лише нижня зона`:''));
-      else if(b.segs.some(x=>x.shed))meta.push(`📋 з ${cfg.pb.shedPct}% — лише нижня зона`);
-      if(b.aut!==Infinity&&b.aut<cfg.targetH){const need=b.eff*cfg.targetH/((100-b.stop)/100);meta.push(`<span class="w">на ${nf(cfg.targetH)} год треба ≈${nf(need,0)} кВт·год</span>`);}
-      else meta.push(`<span class="g">${nf(cfg.targetH)} год — вистачає</span>`);
-    }
-  }
-  if(extra)meta.push(extra);
-  const max=24,w=has&&b.invOk&&b.load>0?clamp((b.aut===Infinity?max:b.aut)/max*100,0,100):0;
-  const now=clamp(st.t/max*100,0,100),tg=clamp(cfg.targetH/max*100,0,100);
-  return `<div class="bk-row"><div class="bk-h"><span class="nm">${icon} ${name}</span><span style="display:flex;gap:10px;align-items:center"><span class="bk-v">${v}</span><span class="bat" title="${pct}%"><i style="width:${has?pct:0}%;background:${col}"></i></span></span></div>
-    <div class="tl" aria-hidden="true"><i style="width:${w}%;background:#a8d68a"></i><span class="tg" style="left:${tg}%"></span>${b.grid?'':`<span class="now" style="left:calc(${now}% - 1px)"></span>`}</div>
-    <div class="tl-ax" aria-hidden="true"><span>0</span><span>6 год</span><span>12</span><span>18</span><span>24</span></div>
-    <div class="bk-meta">${meta.join('<br>')}</div></div>`;
-}
 function renderBackup(R){
-  const m=cfg.month,totPv=cfg.nodes.reduce((a,n)=>a+n.pv,0);
+  const m=cfg.month,totPv=cfg.nodes.reduce((a,x)=>a+x.pv,0),max=24;
+  const pos=h=>clamp((h===Infinity?max:h)/max*100,0,100),tg=pos(cfg.targetH);
+  const val=h=>h===Infinity?'∞':h>=48?'48+ год':fmtClock(h);
   let weakest=null;
-  const consider=(nm,b)=>{if(b.cap>0&&b.inv>0&&b.load>0){const a=b.invOk?b.aut:0;if(!weakest||a<weakest.a)weakest={nm,a,inv:!b.invOk};}};
   $('#bk-grid').innerHTML=R.nodes.map((N,n)=>{
-    consider('опалення '+NODES[n].name,N.hb);consider('вода '+NODES[n].name,N.wb);
-    const pv=cfg.nodes[n].pv;
-    let h=`<div class="bk-node"><h3>${NODES[n].name}</h3><div class="src">${NODES[n].lbl} · живлення: ${N.grid?N.src:'<b style="color:var(--bad)">немає</b>'}${pv>0?` · ☀️ ${nf(pv)} кВт панелей ≈${nf(pv*PV_MONTH[m],0)} кВт·год/добу в ${MONTHS[m]}`:''}</div>`;
-    h+=batBlock('🔥','Насоси опалення',N.hb,R.hs?'':'влітку насоси опалення не працюють');
-    h+=batBlock('💧','Насоси води',N.wb,st.water?'':'у місті немає води — насоси стоять');
-    NODES[n].secs.forEach(s=>{const L=R.secs[s].lift;consider('ліфт секції '+(s+1),L.bat);h+=batBlock('🛗',`Ліфт секції ${s+1}${L.bkN>1?` (×${L.bkN})`:''}`,L.bat);});
-    return h+'</div>';
+    const C=cfg.nodes[n],live=N.sim.used,sm=live?N.sim:N.plan,soc=live?N.at.soc:(C.kwh>0?100:0);
+    const col=!sm.has?'#ddd':!live?'#7cc48f':soc>50?'#f2c94c':soc>20?'#f29e4c':'#e4572e';
+    if(sm.has&&sm.used&&(!weakest||sm.stopAt<weakest.a))weakest={nm:NODES[n].name,a:sm.stopAt};
+    let h=`<div class="bk-node"><div class="bk-h"><h3>${NODES[n].name}</h3><span style="display:flex;gap:10px;align-items:center"><span class="bk-v">${C.kwh>0?Math.round(soc)+'%':'—'}</span><span class="bat"><i style="width:${soc}%;background:${col}"></i></span></span></div>`;
+    h+=`<div class="src">${NODES[n].lbl} · інвертор ${nf(C.inv)} кВт · батарея ${nf(C.kwh,0)} кВт·год${C.pv>0?` · ☀️ ${nf(C.pv)} кВт панелей (≈${nf(C.pv*PV_MONTH[m],0)} кВт·год/добу в ${MONTHS[m]})`:''}</div>`;
+    const meta=[];
+    if(!st.bk)meta.push('<span class="w">Резервні батареї вимкнено перемикачем.</span>');
+    else if(!sm.has)meta.push('<span class="w">Батарею для вузла не задано.</span>');
+    else if(!sm.used)meta.push('Зараз батарея нічого не живить.');
+    else meta.push(live?'🔋 Світла немає — працює від батареї.':'🔌 Світло є — батарея заряджена. Смужки — що буде, якщо світло зникне в усьому вузлі:');
+    let rows='';
+    if(sm.has&&sm.used){
+      const row=(lbl,end,note)=>`<div class="gr"><span class="gl">${lbl}</span><span class="gb"><i style="width:${pos(end)}%"></i><span class="tg" style="left:${tg}%"></span>${live?`<span class="now" style="left:calc(${pos(st.t)}% - 1px)"></span>`:''}</span><span class="gv">${val(end)}${note?' 📋':''}</span></div>`;
+      if(sm.hasLift)rows+=row('🛗 ліфти',Math.min(sm.liftOffAt,sm.stopAt),sm.liftOffAt<sm.stopAt);
+      if(sm.items.some(i=>i.id==='cold2'||i.id==='dhw2'))rows+=row('💧 вода II зона',Math.min(sm.shedAt,sm.stopAt),sm.shedAt<sm.stopAt);
+      if(sm.items.some(i=>i.id==='cold1'||i.id==='dhw1'))rows+=row('💧 вода I зона',sm.stopAt,false);
+      if(sm.items.some(i=>i.kind==='heat'))rows+=row('🔥 опалення',sm.stopAt,false);
+      rows=`<div class="gantt">${rows}<div class="gr"><span></span><span class="tl-ax"><span>0</span><span>6 год</span><span>12</span><span>18</span><span>24</span></span><span></span></div></div>`;
+      meta.push(`Навантаження ≈${nf(sm.load)} кВт: опалення ${nf(sm.byKind('heat'))} · вода ${nf(sm.byKind('water'))} · ліфти ${nf(sm.byKind('lift'))}${sm.pv>0?` · сонце дає ${nf(sm.pv)}`:''}`);
+      if(!sm.invOk)meta.push(`<span class="w">⚠ Якщо все ввімкнеться разом — до ${nf(sm.peak)} кВт, більше за інвертор (${nf(C.inv)} кВт).</span>`);
+      if(sm.stopAt<cfg.targetH)meta.push(`<span class="w">Насосам не вистачає до цілі ${nf(cfg.targetH)} год: потрібно ≈${nf(C.kwh*cfg.targetH/sm.stopAt,0)} кВт·год.</span>`);
+      else meta.push(`<span class="g">Насоси протримаються ${nf(cfg.targetH)} год — вистачає.</span>`);
+      if(cfg.pb.on)meta.push('📋 — спрацювало правило плейбуку.');
+    }
+    if(!R.hs)meta.push('Влітку насоси опалення не працюють.');
+    if(!st.water)meta.push('У місті немає води — насоси води стоять.');
+    return h+rows+`<div class="bk-meta">${meta.join('<br>')}</div></div>`;
   }).join('');
-  $('#bk-top').innerHTML=`<span class="pill">🎯 Ціль: протриматися ${nf(cfg.targetH)} год</span>`+
-    (weakest?`<span>Найслабше місце: <b>${weakest.nm}</b> — ${weakest.inv?'інвертор не потягне':weakest.a===Infinity?'∞':'≈'+fmtH(weakest.a)}</span>`:'')+
+  $('#bk-top').innerHTML=`<span class="pill">🎯 Ціль: насоси тримаються ${nf(cfg.targetH)} год</span>`+
+    (weakest?`<span>Найслабше місце: <b>${weakest.nm}</b> — насоси ≈${fmtH(weakest.a)}</span>`:'')+
     `<span>☀️ Панелей: <b>${totPv>0?nf(totPv)+' кВт':'поки немає'}</b></span>`+
     `<button class="btn small" type="button" data-open-settings="bk">Змінити цифри</button>`;
 }
@@ -1599,7 +1602,7 @@ function infoFor(key){
     case 'kzr':return {t:'Клапан КЗР з автоматикою',h:`<p>Регулює, скільки міського теплоносія йде в теплообмінники. Контролер дивиться на вуличний датчик і температури магістралі й прикриває або відкриває клапан.</p><p>Правильне налаштування автоматики може заощадити до 10 % тепла.</p>`};
     case 'hx':return a==='heat'?{t:'Теплообмінник опалення',h:`<p>Металеві пластини, крізь які тепло з міської труби переходить у воду наших батарей. Самі води не змішуються. Працює лише в опалювальний сезон.</p>${live(st.kte?`Міський теплоносій ≈${st.tMains}°`:'КТЕ не подає тепло — теплообмінник холодний')}`}:{t:'Теплообмінник гарячої води',h:`<p>Гріє холодну воду з водогону до ~55°. Працює цілий рік. Якщо з міста приходить менше ~60°, гаряча вода буде прохолоднішою.</p>${live(st.kte?`Гаряча вода ≈${dg(R.tdhw0)}`:'КТЕ не подає тепло — з гарячого крана піде холодна')}`};
     case 'pump':{const n=+a,P=PUMPS.find(p=>p.k===b),N=cfg.nodes[n];return {t:P.name,h:`<p>${P.sys==='heat'?'Ганяє воду по замкненому колу опалення: без нього батареї холонуть.':P.sys==='dhw'?'Постійно проганяє гарячу воду по стояках, щоб із крана одразу йшла гаряча.':'Піднімає воду з міської мережі на поверхи своєї зони.'} ${NODES[n].name}.</p>${live(`Потужність: ${nf(N.p[b])} кВт · на резерві: ${N.bk[b]?'так':'ні'}<br>${pumpWhy(n,b)}`)}`};}
-    case 'rack':{const n=+a,N=R.nodes[n];return {t:`Резерв ${NODES[n].name}`,h:`<p>Окремі інвертори з акумуляторами: на насоси опалення, на насоси води й по ліфту на секцію. Поки світло є — заряджаються.</p>${live(`🔥 опалення: ${N.hb.cap?(N.hb.invOk?fmtH(N.hb.aut):'інвертор не потягне'):'немає'} · 💧 вода: ${N.wb.cap?(N.wb.invOk?fmtH(N.wb.aut):'інвертор не потягне'):'немає'}`)}<p style="margin-top:8px"><a href="#backup">Детальніше — у блоці про батареї ↓</a></p>`};}
+    case 'rack':{const n=+a,N=R.nodes[n],C=cfg.nodes[n],sm=N.sim.used?N.sim:N.plan;return {t:`Резерв ${NODES[n].name}`,h:`<p>Спільні інвертор і акумулятори на весь вузол (${NODES[n].lbl}): від них живляться насоси опалення, води й ліфти. Поки світло є — батарея заряджається.</p>${live(`Інвертор ${nf(C.inv)} кВт · батарея ${nf(C.kwh,0)} кВт·год<br>${N.sim.used?`Зараз заряд ≈${Math.round(N.at.soc)}%. `:'Світло є — батарея заряджена. Якщо світло зникне: '}насоси ≈${fmtH(sm.stopAt)}${isFinite(sm.liftOffAt)?`, ліфти ≈${fmtH(sm.liftOffAt)}`:''}`)}<p style="margin-top:8px"><a href="#backup">Детальніше — у блоці про батареї ↓</a></p>`};}
     case 'kte':return {t:'Магістраль Київтеплоенерго',h:`<p>Подача й зворотка міської тепломережі. Вода звідси не потрапляє в наші батареї — тільки віддає тепло в теплообмінниках трьох теплових пунктів.</p>${live(st.kte?`Подача ≈${st.tMains}°`:'Теплоносій не подається')}`};
     case 'vk':return {t:'Міський водогін',h:`<p>Звідси вода йде на насоси холодної води кожного вузла. Без насосів міського тиску вистачає хіба що на нижні поверхи (оцінка: до ${R.cityFloors}-го, змінюється в налаштуваннях).</p>${live(st.water?'💧 Вода є':'🚱 Води немає')}`};
     case 'bundle':return {t:'Труби в підвалі',h:`<p>Від теплового пункту до стояків кожної секції — десятки метрів труб. Якщо вони погано ізольовані, гріють підвал, а це тепло всі оплачують у складі МЗК.</p>`};
@@ -1652,8 +1655,8 @@ function renderTab(){
   const D=$('#dbody');let h='';
   if(tab==='bk'){
     h+=`<fieldset class="fs"><legend>Загальне</legend><div class="fgrid">${num('usable','Корисна ємність батарей','%',1,10)}${num('targetH','Ціль: протриматися','год',.5,.5)}</div>${chk('ods.bk','Диспетчерська (ОДС) має резервне живлення','Якщо ні — під час блекауту ліфти секцій 1–3 стоятимуть навіть із батареями.')}</fieldset>`;
-    NODES.forEach((Nd,n)=>{h+=`<fieldset class="fs"><legend>${Nd.name} · ${Nd.lbl}</legend><p class="d">Окремі системи: на насоси опалення й на насоси води.</p><div class="fgrid">${num(`nodes.${n}.hInv`,'🔥 Інвертор опалення','кВт')}${num(`nodes.${n}.hKwh`,'🔥 Батарея опалення','кВт·год',1)}${num(`nodes.${n}.wInv`,'💧 Інвертор води','кВт')}${num(`nodes.${n}.wKwh`,'💧 Батарея води','кВт·год',1)}${num(`nodes.${n}.pv`,'☀️ Сонячні панелі на дахах','кВт',1)}</div></fieldset>`;});
-    h+=`<fieldset class="fs"><legend>🛗 Ліфти на резерві</legend><table class="ft"><tr><th>Секція</th><th>Ліфтів на батареї</th><th>Інвертор, кВт</th><th>Батарея, кВт·год</th></tr>${cfg.secs.map((S,i)=>`<tr><td class="nm">${i+1}</td><td>${cell(`secs.${i}.liftBk`,1)}</td><td>${cell(`secs.${i}.bInv`)}</td><td>${cell(`secs.${i}.bKwh`,1)}</td></tr>`).join('')}</table></fieldset>`;
+    NODES.forEach((Nd,n)=>{h+=`<fieldset class="fs"><legend>${Nd.name} · ${Nd.lbl}</legend><p class="d">Спільні інвертор і батарея на насоси опалення, води й ліфти вузла.</p><div class="fgrid">${num(`nodes.${n}.inv`,'🔌 Інвертор','кВт')}${num(`nodes.${n}.kwh`,'🔋 Батарея','кВт·год',1)}${num(`nodes.${n}.pv`,'☀️ Сонячні панелі на дахах','кВт',1)}</div></fieldset>`;});
+    h+=`<fieldset class="fs"><legend>🛗 Ліфти на резерві</legend><table class="ft"><tr><th>Секція</th><th>Ліфтів на батареї</th></tr>${cfg.secs.map((S,i)=>`<tr><td class="nm">${i+1}</td><td>${cell(`secs.${i}.liftBk`,1)}</td></tr>`).join('')}</table></fieldset>`;
     h+=`<fieldset class="fs"><legend>☀️ Сонце</legend><p class="d">Виробіток залежить від місяця: 1 кВт панелей у Києві дає від ≈0,7 кВт·год на добу в грудні до ≈5 у червні. Перемикач «Сонячно/Хмарно/Ніч» угорі задає миттєву потужність.</p><div class="f"><label>Місяць для оцінки</label><div class="inp"><select data-path="month" style="border:0;font:700 16px var(--sans);padding:6px 8px;width:100%;background:transparent">${MONTHS.map((m,i)=>`<option value="${i}" ${i===cfg.month?'selected':''}>${['Січень','Лютий','Березень','Квітень','Травень','Червень','Липень','Серпень','Вересень','Жовтень','Листопад','Грудень'][i]} — ${nf(PV_MONTH[i])} кВт·год/кВт</option>`).join('')}</select></div></div></fieldset>`;
   }else if(tab==='eq'){
     NODES.forEach((Nd,n)=>{h+=`<fieldset class="fs"><legend>${Nd.name} · насоси</legend><table class="ft"><tr><th>Насос</th><th>кВт</th><th>На батареї</th></tr>${PUMPS.map(P=>`<tr><td class="nm">${P.name.replace('Насос ','')}</td><td>${cell(`nodes.${n}.p.${P.k}`)}</td><td>${`<input type="checkbox" data-path="nodes.${n}.bk.${P.k}" ${cfg.nodes[n].bk[P.k]?'checked':''} aria-label="${P.name} на батареї">`}</td></tr>`).join('')}</table><div class="fgrid" style="margin-top:8px">${num(`nodes.${n}.makeup`,'Насос підживлення','кВт')}${num(`nodes.${n}.ctrl`,'Автоматика','кВт',.05)}</div></fieldset>`;});
