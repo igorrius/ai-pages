@@ -9,14 +9,13 @@
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='88'%3E%F0%9F%8F%A2%3C/text%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Caveat:wght@500;700&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet">
 <style>
 :root{
   --paper:#fbf6ea; --card:#fffdf8; --ink:#2d2a32; --ink-2:#5d5866; --muted:#8b8495; --rule:#e2d8c3;
   --red:#e4572e; --orange:#f29e4c; --yellow:#f6c344; --green:#4f9d69; --teal:#2bb3a3; --blue:#3d7dd8; --navy:#2f4b7c; --purple:#8c6bb1;
   --ok:#4f9d69; --warn:#e9a23b; --bad:#e4572e; --off:#b9b2c4;
   --n0:#eadcf7; --n1:#d6efdf; --n2:#fde2c2;
-  --hand:'Caveat','Segoe Print','Comic Sans MS',cursive;
   --sans:'Nunito',system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;
   --wob:255px 18px 225px 18px/18px 225px 18px 255px;
   --wob2:18px 225px 18px 255px/255px 18px 225px 18px;
@@ -35,7 +34,7 @@ button{font-family:inherit}
 .topbar{display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:14px 0 4px;font-size:14px;color:var(--ink-2)}
 .topbar a{color:var(--ink-2);text-decoration:none}.topbar a:hover{color:var(--navy);text-decoration:underline}
 .hero{display:flex;flex-wrap:wrap;gap:14px 24px;align-items:flex-end;justify-content:space-between;padding:6px 0 18px}
-.hero h1{font-family:var(--hand);font-weight:700;font-size:clamp(42px,6.4vw,72px);line-height:.95;margin:0 0 8px}
+.hero h1{font-weight:900;font-size:clamp(32px,5vw,52px);line-height:1.1;letter-spacing:-.5px;margin:0 0 8px}
 .hero h1 .u{background:linear-gradient(transparent 60%,rgba(246,195,68,.7) 60%,rgba(246,195,68,.7) 90%,transparent 90%);padding:0 6px}
 .hero .sub{margin:0;color:var(--ink-2);font-size:17px;max-width:64ch}
 .actions{display:flex;gap:10px;flex-wrap:wrap}
@@ -50,11 +49,11 @@ button{font-family:inherit}
 .note{background:#fff7c9;border:1.5px solid #e6d58a;padding:10px 14px 10px 12px;border-radius:4px 14px 6px 12px;box-shadow:2px 3px 0 rgba(0,0,0,.07);font-size:14.5px;display:flex;gap:10px;align-items:flex-start}
 .note:nth-child(2){background:#dff3ff;border-color:#a9d3ef;transform:rotate(.6deg)}
 .note:nth-child(3){background:#ffe3ea;border-color:#efb3c2;transform:rotate(-.5deg)}
-.note b.n{font-family:var(--hand);font-size:30px;line-height:.9}
+.note b.n{font-size:22px;font-weight:900;line-height:1.1}
 
 /* cards */
 .card{background:var(--card);border:2px solid var(--ink);border-radius:var(--wob);box-shadow:4px 5px 0 rgba(45,42,50,.14);padding:20px 18px;margin:0 0 28px;position:relative}
-.card>h2,.sec-h{font-family:var(--hand);font-size:36px;line-height:1.05;margin:0 0 4px}
+.card>h2,.sec-h{font-weight:900;font-size:27px;line-height:1.2;margin:0 0 6px}
 .lead{color:var(--ink-2);margin:0 0 14px;max-width:80ch}
 .tape{position:absolute;top:-13px;left:34px;width:100px;height:24px;background:rgba(246,195,68,.55);transform:rotate(-3deg)}
 .tape.b{background:rgba(61,125,216,.25);left:auto;right:40px;transform:rotate(2.5deg)}
@@ -67,7 +66,7 @@ button{font-family:inherit}
 .chip[aria-pressed=true]{background:var(--ink);color:#fff}
 .controls{display:grid;grid-template-columns:repeat(auto-fit,minmax(245px,1fr));gap:12px;margin-bottom:12px}
 .cg{border:2px dashed #d6cbb3;border-radius:16px;padding:10px 12px 8px;background:rgba(255,255,255,.65)}
-.cg h3{font-family:var(--hand);font-size:25px;margin:0 0 2px;line-height:1}
+.cg h3{font-size:17px;font-weight:900;margin:0 0 4px;line-height:1.2}
 .sw{display:flex;align-items:center;gap:10px;width:100%;background:none;border:0;padding:6px 0;font:700 15px var(--sans);color:var(--ink);cursor:pointer;text-align:left;line-height:1.25}
 .sw .tr{flex:none;width:48px;height:27px;border:2px solid var(--ink);border-radius:20px;background:#e3dccd;position:relative;transition:background .2s}
 .sw .tr::after{content:'';position:absolute;top:2px;left:2px;width:19px;height:19px;border-radius:50%;background:#fff;border:2px solid var(--ink);transition:transform .2s}
@@ -78,7 +77,7 @@ button{font-family:inherit}
 .rg{margin:6px 0 4px}
 .rg .top{display:flex;justify-content:space-between;align-items:baseline;gap:8px}
 .rg label{font-weight:700;font-size:15px}
-.rg output{font-family:var(--hand);font-size:27px;font-weight:700;line-height:1;white-space:nowrap}
+.rg output{font-size:19px;font-weight:900;line-height:1;white-space:nowrap}
 .rg small{display:block;color:var(--muted);font-size:12.5px;font-weight:600;line-height:1.3}
 input[type=range]{-webkit-appearance:none;appearance:none;width:100%;height:12px;border:2px solid var(--ink);border-radius:8px;background:#efe8da;margin:8px 0 4px;cursor:pointer}
 input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:24px;height:24px;border-radius:50%;background:#fff;border:2.5px solid var(--ink);box-shadow:2px 2px 0 var(--ink)}
@@ -99,16 +98,16 @@ input[type=range]:focus-visible{outline:3px solid var(--blue);outline-offset:3px
 .hint{font-size:13px;color:var(--muted);margin:6px 2px 0}
 .mobile-hint{display:none}
 @media (max-width:960px){.mobile-hint{display:inline}}
-#scene text{font-family:var(--hand)}
+#scene text,#wheels text,#plan text,#flow text{font-family:var(--sans)}
 .sky{fill:#fff9ea;transition:fill .6s}
 #scene[data-sun=cloud] .sky{fill:#f4f4f2}
 #scene[data-sun=night] .sky{fill:#e1e5f4}
-.cap{font-size:22px;fill:var(--ink-2)}
-.lbl{font-size:15px;fill:var(--ink)}
-.lbl-s{font-size:13px;fill:var(--ink-2)}
-.lbl-xs{font-size:11.5px;fill:var(--ink-2)}
-.lbl-b{font-size:19px;font-weight:700;fill:var(--ink)}
-.big{font-size:40px;font-weight:700;fill:var(--ink)}
+.cap{font-size:16px;font-weight:700;fill:var(--ink-2)}
+.lbl{font-size:14px;font-weight:600;fill:var(--ink)}
+.lbl-s{font-size:12.5px;font-weight:600;fill:#4a4552}
+.lbl-xs{font-size:11px;font-weight:600;fill:#3f3b46}
+.lbl-b{font-size:15px;font-weight:800;fill:var(--ink)}
+.big{font-size:30px;font-weight:900;fill:var(--ink)}
 .secbody{fill:#fffbf2;stroke:var(--ink);stroke-width:2.2}
 .flr{stroke:#ebe2cf;stroke-width:.8}
 .flr,.win,.rad,.radc,.secbody{pointer-events:none}
@@ -156,7 +155,7 @@ input[type=range]:focus-visible{outline:3px solid var(--blue);outline-offset:3px
 @keyframes fall{to{transform:translate(-40px,700px)}}
 .rays{transform-box:fill-box;transform-origin:center;animation:spin 40s linear infinite}
 .pv{fill:#5a7fc0;stroke:#2f4b7c;stroke-width:1}
-.ann{font-size:18px;fill:#7a5aa8}
+.ann{font-size:13.5px;font-weight:700;fill:#7a5aa8}
 .ann-l{fill:none;stroke:#7a5aa8;stroke-width:1.6;stroke-linecap:round}
 #scene[data-focus=heat] [data-layer]:not([data-layer~=heat]),
 #scene[data-focus=water] [data-layer]:not([data-layer~=water]),
@@ -186,10 +185,39 @@ input[type=range]:focus-visible{outline:3px solid var(--blue);outline-offset:3px
 .stat b{display:block;font-size:16.5px;line-height:1.3}
 .stat .why{color:var(--ink-2);font-size:14.5px;margin-top:2px}
 
+/* quick answer */
+.q-grid{display:grid;grid-template-columns:minmax(260px,340px) 1fr;gap:24px;align-items:start}
+@media (max-width:820px){.q-grid{grid-template-columns:minmax(0,1fr)}}
+.q-lbl{display:block;font-weight:900;font-size:14px;margin:0 0 6px}
+.secbtns{display:grid;grid-template-columns:repeat(7,1fr);gap:6px;margin-bottom:14px}
+.secbtns button{font:900 19px var(--sans);min-height:48px;border:2px solid var(--ink);border-radius:12px;background:#fff;color:var(--ink);cursor:pointer;box-shadow:2px 2px 0 var(--ink);padding:0}
+.secbtns button[aria-pressed=true]{background:var(--yellow)}
+.floorrow{display:flex;gap:8px;align-items:center;margin-bottom:14px}
+.floorrow button{flex:none;width:48px;height:46px;border:2px solid var(--ink);border-radius:12px;background:#fff;color:var(--ink);font:900 22px var(--sans);cursor:pointer;box-shadow:2px 2px 0 var(--ink)}
+.floorrow select{flex:1;min-width:0;font:800 16px var(--sans);padding:10px;border:2px solid var(--ink);border-radius:12px;background:#fff;color:var(--ink)}
+.scen{display:flex;flex-direction:column;gap:7px}
+.scen .chip{text-align:left;border-radius:12px;font-size:15px;padding:8px 12px}
+.q-answer{border:2px dashed #d6cbb3;border-radius:16px;padding:12px 16px;background:#fff}
+.q-answer h3{font-size:20px;font-weight:900;margin:0 0 2px;line-height:1.25}
+.q-sub{color:var(--ink-2);font-size:14px;margin:0 0 4px}
+.q-more{font-size:14px;margin:8px 0 0;color:var(--ink-2)}
+.secbtns button:focus-visible,.floorrow button:focus-visible{outline:3px solid var(--blue);outline-offset:2px}
+
+/* wheels */
+.wheels-grid{display:grid;grid-template-columns:minmax(0,1.45fr) minmax(280px,1fr);gap:22px;align-items:start}
+@media (max-width:900px){.wheels-grid{grid-template-columns:minmax(0,1fr)}}
+#wheels{width:100%;height:auto;display:block;background:#fffef9;border:2px solid var(--ink);border-radius:16px;user-select:none;-webkit-user-select:none}
+.quote{margin:0 0 14px;padding:12px 16px;background:#fff7c9;border-left:5px solid var(--yellow);border-radius:4px 14px 14px 4px;font-size:15.5px}
+.quote footer{font-size:13px;color:var(--ink-2);margin-top:6px}
+.wstat{margin-top:10px;padding:10px 12px;border-radius:12px;background:#f4eddd;font-size:15px;line-height:1.5}
+.wheel-spin{transform-box:fill-box;transform-origin:center;animation:spin var(--wd,4s) linear infinite reverse}
+.wheel-spin.paused{animation-play-state:paused}
+.w-click{cursor:pointer}
+
 /* matrix */
 .matrix{overflow-x:auto}
 .matrix table{border-collapse:separate;border-spacing:4px;min-width:720px;width:100%}
-.matrix th{font-family:var(--hand);font-size:22px;font-weight:700;line-height:1;padding:2px}
+.matrix th{font-size:17px;font-weight:900;line-height:1;padding:2px}
 .matrix th small{display:block;font-family:var(--sans);font-size:11px;font-weight:600;color:var(--muted);margin-top:3px}
 .matrix td{border:1.5px solid var(--rule);border-radius:10px;padding:6px 4px;font-size:13px;text-align:center;line-height:1.2;background:#fff}
 .matrix td.ok{background:#e2f3e6;border-color:#a6d4b1}.matrix td.warn{background:#fff1cf;border-color:#efcf86}.matrix td.bad{background:#ffe1d9;border-color:#f1aa98}.matrix td.off{background:#f1eef3;border-color:#ddd6e2;color:var(--muted)}
@@ -202,7 +230,7 @@ input[type=range]:focus-visible{outline:3px solid var(--blue);outline-offset:3px
 .bk-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(360px,1fr));gap:14px}
 @media (max-width:420px){.bk-grid{grid-template-columns:1fr}}
 .bk-node{border:2px solid var(--ink);border-radius:var(--wob2);padding:12px 14px;background:#fff}
-.bk-node h3{font-family:var(--hand);font-size:27px;margin:0;line-height:1}
+.bk-node h3{font-size:19px;font-weight:900;margin:0;line-height:1.2}
 .bk-node .src{font-size:13px;color:var(--ink-2);margin:2px 0 6px}
 .bk-row{padding:9px 0;border-top:1.5px dashed var(--rule)}
 .bk-h{display:flex;align-items:center;gap:10px;justify-content:space-between}
@@ -210,7 +238,7 @@ input[type=range]:focus-visible{outline:3px solid var(--blue);outline-offset:3px
 .bat{flex:none;width:48px;height:22px;border:2px solid var(--ink);border-radius:5px;position:relative;background:#fff;padding:2px}
 .bat::after{content:'';position:absolute;right:-6px;top:5px;width:4px;height:8px;background:var(--ink);border-radius:0 2px 2px 0}
 .bat i{display:block;height:100%;border-radius:2px;transition:width .4s,background .3s}
-.bk-v{font-family:var(--hand);font-size:24px;font-weight:700;line-height:1;white-space:nowrap}
+.bk-v{font-size:18px;font-weight:900;line-height:1;white-space:nowrap}
 .tl{position:relative;height:14px;border:1.5px solid var(--ink);border-radius:8px;background:#f5efe2;margin:7px 0 3px;overflow:hidden}
 .tl i{position:absolute;left:0;top:0;bottom:0;border-radius:6px 0 0 6px;transition:width .4s}
 .tl .now{position:absolute;top:0;bottom:0;width:3px;background:var(--red);transition:left .3s}
@@ -224,7 +252,6 @@ input[type=range]:focus-visible{outline:3px solid var(--blue);outline-offset:3px
 .plan-grid{display:grid;grid-template-columns:minmax(0,1.6fr) minmax(250px,1fr);gap:18px;align-items:start}
 @media (max-width:860px){.plan-grid{grid-template-columns:1fr}}
 #plan{width:100%;height:auto;display:block;background:#fffef9;border:2px solid var(--ink);border-radius:16px}
-#plan text{font-family:var(--hand)}
 .plan-list{margin:0;padding:0;list-style:none;font-size:14.5px}
 .plan-list li{padding:7px 0;border-bottom:1.5px dashed var(--rule);display:flex;gap:10px}
 .plan-list li:last-child{border-bottom:0}
@@ -235,7 +262,7 @@ input[type=range]:focus-visible{outline:3px solid var(--blue);outline-offset:3px
 .lc{background:#fff;border:2px solid var(--ink);border-radius:var(--wob2);padding:14px 16px 12px;box-shadow:3px 4px 0 rgba(45,42,50,.12)}
 .lc:nth-child(4n+1){transform:rotate(-.35deg)}.lc:nth-child(4n+3){transform:rotate(.3deg)}
 .lc.wide{grid-column:1/-1;transform:none}
-.lc h3{font-family:var(--hand);font-size:27px;margin:0 0 6px;line-height:1.05}
+.lc h3{font-size:19px;font-weight:900;margin:0 0 6px;line-height:1.25}
 .lc .ico{font-size:26px;margin-right:4px}
 .lc p{margin:0 0 8px;font-size:15px}
 .lc ul{margin:0 0 8px;padding-left:20px;font-size:15px}
@@ -247,14 +274,13 @@ input[type=range]:focus-visible{outline:3px solid var(--blue);outline-offset:3px
 .ztable th,.ztable td{border-bottom:1px dashed var(--rule);padding:3px 4px;text-align:left}
 .ztable th{font-size:12px;color:var(--ink-2)}
 #flow{width:100%;height:auto;display:block}
-#flow text{font-family:var(--hand)}
 .foot{font-size:13.5px;color:var(--ink-2);padding:6px 0 40px}
 .foot p{margin:0 0 6px}
 
 /* popover */
 .pop{position:fixed;z-index:50;width:min(370px,calc(100vw - 20px));max-height:min(70vh,560px);overflow:auto;background:#fffdf6;border:2px solid var(--ink);border-radius:14px;box-shadow:5px 6px 0 rgba(45,42,50,.22);padding:12px 14px 14px;display:none}
 .pop.show{display:block}
-.pop h4{font-family:var(--hand);font-size:27px;margin:0 26px 4px 0;line-height:1.05}
+.pop h4{font-size:19px;font-weight:900;margin:0 26px 4px 0;line-height:1.25}
 .pop p{margin:0 0 8px;font-size:14.5px}
 .pop .x{position:absolute;top:4px;right:6px;border:0;background:none;font-size:24px;cursor:pointer;line-height:1;color:var(--ink);padding:4px 8px}
 .pop .live{margin-top:6px;padding:8px 10px;border-radius:10px;background:#f4eddd;font-size:14px}
@@ -269,14 +295,14 @@ input[type=range]:focus-visible{outline:3px solid var(--blue);outline-offset:3px
 .drawer{position:fixed;top:0;right:0;bottom:0;width:min(580px,100vw);background:var(--paper);border-left:2.5px solid var(--ink);z-index:60;display:flex;flex-direction:column;transform:translateX(105%);transition:transform .25s ease,visibility 0s linear .25s;visibility:hidden}
 .drawer.open{transform:none;visibility:visible;transition:transform .25s ease,visibility 0s}
 .drawer header{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:12px 16px;background:var(--card);border-bottom:2px solid var(--ink)}
-.drawer header h2{font-family:var(--hand);font-size:34px;margin:0;line-height:1}
+.drawer header h2{font-size:24px;font-weight:900;margin:0;line-height:1}
 .drawer header p{margin:0;font-size:13px;color:var(--ink-2)}
 .tabs{display:flex;gap:4px;padding:10px 12px 0;border-bottom:2px solid var(--ink);overflow-x:auto;background:var(--card);flex:none}
 .tabs button{font:800 14px var(--sans);color:var(--ink);border:2px solid var(--ink);border-bottom:0;border-radius:12px 12px 0 0;background:#ece3d1;padding:7px 12px;cursor:pointer;white-space:nowrap;margin-bottom:-2px}
 .tabs button[aria-selected=true]{background:var(--paper)}
 .dbody{flex:1;overflow:auto;padding:14px 14px 40px}
 .fs{border:2px solid var(--ink);border-radius:14px;padding:8px 12px 12px;margin:0 0 14px;background:var(--card)}
-.fs legend{font-family:var(--hand);font-size:24px;font-weight:700;padding:0 6px;line-height:1}
+.fs legend{font-size:16px;font-weight:900;padding:0 6px;line-height:1}
 .fs .d{font-size:13px;color:var(--ink-2);margin:0 0 8px}
 .fgrid{display:grid;grid-template-columns:1fr 1fr;gap:8px 12px}
 @media (max-width:420px){.fgrid{grid-template-columns:1fr}}
@@ -301,12 +327,12 @@ input[type=range]:focus-visible{outline:3px solid var(--blue);outline-offset:3px
 .toast button{background:var(--yellow);border:0;border-radius:8px;font:800 13px var(--sans);padding:6px 10px;cursor:pointer;color:var(--ink)}
 
 @media (prefers-reduced-motion:reduce){
-  .pipe.run .pi,.cab,.pump.on .imp,.cable.live,.flake,.rays{animation:none!important}
+  .pipe.run .pi,.cab,.pump.on .imp,.cable.live,.flake,.rays,.wheel-spin{animation:none!important}
   html{scroll-behavior:auto}
 }
 @media (max-width:560px){
   .card{padding:16px 12px;border-radius:22px 14px 26px 12px}
-  .card>h2,.sec-h{font-size:31px}
+  .card>h2,.sec-h{font-size:23px}
   .hero .sub{font-size:16px}
 }
 </style>
@@ -329,16 +355,57 @@ input[type=range]:focus-visible{outline:3px solid var(--blue);outline-offset:3px
   </header>
 
   <div class="how" aria-label="Як користуватися">
-    <div class="note"><b class="n">1</b><span>Оберіть готову ситуацію — «блекаут», «мороз», «літо» — або перемикайте вимикачі самі.</span></div>
-    <div class="note"><b class="n">2</b><span>Натисніть на будь-що на схемі: насос, батарею, підстанцію, поверх — з'явиться пояснення.</span></div>
-    <div class="note"><b class="n">3</b><span>Знайдіть свою секцію й поверх — і побачите, що зараз є саме у вас.</span></div>
+    <div class="note"><b class="n">1</b><span><b>Оберіть секцію й поверх</b> — одразу побачите, що у вас буде під час відключень і чому.</span></div>
+    <div class="note"><b class="n">2</b><span><b>Подивіться «два колеса»</b> — так найпростіше зрозуміти, як працює опалення.</span></div>
+    <div class="note"><b class="n">3</b><span><b>Хочете покрутити?</b> Уся схема будинку з вимикачами — нижче. Натисніть на будь-що, щоб дізнатися, що це.</span></div>
   </div>
+
+  <!-- QUICK ANSWER -->
+  <section class="card" id="me" aria-labelledby="me-h">
+    <div class="tape b"></div>
+    <h2 id="me-h">📍 Що буде в моїй квартирі?</h2>
+    <p class="lead">Три кліки: секція, поверх, ситуація — відповідь одразу поруч.</p>
+    <div class="q-grid">
+      <div>
+        <span class="q-lbl" id="q-sec-l">1. Секція</span>
+        <div class="secbtns" id="q-secs" role="group" aria-labelledby="q-sec-l"></div>
+        <label class="q-lbl" for="me-floor">2. Поверх</label>
+        <div class="floorrow"><button type="button" id="fl-dn" aria-label="Поверх нижче">−</button><select id="me-floor"></select><button type="button" id="fl-up" aria-label="Поверх вище">+</button></div>
+        <span class="q-lbl" id="q-sc-l">3. Ситуація</span>
+        <div class="scen" id="q-scen" role="group" aria-labelledby="q-sc-l"></div>
+      </div>
+      <div class="q-answer" aria-live="polite">
+        <h3 id="q-title"></h3>
+        <p class="q-sub" id="me-meta"></p>
+        <div id="me-list"></div>
+        <p class="q-more">Те саме — на <a href="#sim">схемі будинку</a> нижче, ваш поверх позначено 📍.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- WHEELS -->
+  <section class="card" id="wheels-card" aria-labelledby="wh-h">
+    <div class="tape g"></div>
+    <h2 id="wh-h">🎡 Як працює опалення: два колеса</h2>
+    <blockquote class="quote">Уявіть собі велике колесо, в нижній частині якого стоїть нагрівач. Система опалення — це вода, що рухається по умовному колу. Одне колесо менше — нижній контур, друге більше — верхній. Коли колесо стоїть, грілка може нагріти тільки нижню його частину. Якщо його штовхнути й почати обертати — воно розносить тепло по всьому колу. Для обертання потрібні насоси: велике колесо треба крутити постійно, а мале досить підштовхнути — далі воно обертається саме. Це самоконвекція, і тому в нижніх квартирах тепло буває навіть із вимкненими насосами.<footer>— з пояснення інженера в чаті будинку</footer></blockquote>
+    <div class="wheels-grid">
+      <svg id="wheels" viewBox="0 0 900 450" role="img" aria-label="Два колеса опалення над нагрівачем: мале — нижня зона, велике — верхня. Колір обода — температура води."></svg>
+      <div>
+        <button class="sw" role="switch" id="w-heat" type="button"><span class="tr"></span><span>🔥 Нагрівач<small>тепло від Київтеплоенерго через теплообмінник</small></span></button>
+        <button class="sw" role="switch" id="w-p1" type="button"><span class="tr"></span><span>⚙️ Насос малого колеса<small>I зона — нижні поверхи</small></span></button>
+        <button class="sw" role="switch" id="w-p2" type="button"><span class="tr"></span><span>⚙️ Насос великого колеса<small>II зона — верхні поверхи</small></span></button>
+        <div class="row"><button class="btn primary" type="button" id="w-push">👋 Штовхнути колеса</button><button class="btn small" type="button" id="w-reset">↺ Як зазвичай</button></div>
+        <div class="wstat" id="w-stat" aria-live="polite"></div>
+        <p class="hint">Спробуйте: вимкніть обидва насоси — мале колесо крутиться далі, велике зупиняється. Вимкніть і знову ввімкніть нагрівач — тепер мале колесо треба штовхнути.</p>
+      </div>
+    </div>
+  </section>
 
   <!-- SIMULATOR -->
   <section class="card" id="sim" aria-labelledby="sim-h">
     <div class="tape"></div>
-    <h2 id="sim-h">Що зараз працює?</h2>
-    <p class="lead">Схема — розгортка фасаду: сім секцій поруч, у підвалі три теплові пункти з насосами, під землею — міські магістралі.</p>
+    <h2 id="sim-h">🔧 Покрутіть самі: уся схема будинку</h2>
+    <p class="lead">Розгортка фасаду: сім секцій поруч, у підвалі три теплові пункти з насосами, під землею — міські магістралі. Вмикайте й вимикайте світло, тепло, воду — і дивіться, що відбувається.</p>
     <div class="presets" id="presets" role="group" aria-label="Готові ситуації"></div>
 
     <div class="controls">
@@ -382,21 +449,6 @@ input[type=range]:focus-visible{outline:3px solid var(--blue);outline-offset:3px
     </div>
     <p class="hint"><span class="mobile-hint">← схему можна гортати вбік → · </span>Колір труб — температура води в них. Рисочки біжать — вода тече; стоять — насос зупинився; пунктир — води немає.</p>
     <div class="legend" id="legend"></div>
-  </section>
-
-  <!-- ME -->
-  <section class="card" id="me" aria-labelledby="me-h">
-    <div class="tape b"></div>
-    <h2 id="me-h">📍 Моя квартира</h2>
-    <p class="lead">Оберіть секцію й поверх (або просто клацніть на поверх на схемі) — тут буде видно, що у вас є зараз і від чого це залежить.</p>
-    <div class="me-grid">
-      <div class="pick">
-        <label for="me-sec">Секція</label><select id="me-sec"></select>
-        <label for="me-floor">Поверх</label><select id="me-floor"></select>
-        <div class="meta" id="me-meta"></div>
-      </div>
-      <div id="me-list" aria-live="polite"></div>
-    </div>
   </section>
 
   <!-- MATRIX -->
@@ -648,7 +700,8 @@ function fixSt(s){s.tMains=clamp(Math.round(s.tMains),35,110);s.tOut=clamp(Math.
 const LS='k7home.v1',LS_ME='k7home.me',LS_UI='k7home.ui';
 function lsGet(k){try{return JSON.parse(localStorage.getItem(k));}catch(e){return null;}}
 function lsSet(k,v){try{localStorage.setItem(k,JSON.stringify(v));}catch(e){}}
-let cfg,st,me={s:3,f:10},ui={focus:''},LAST=null,activePreset='';
+let cfg,st,me={s:3,f:10},ui={focus:''},LAST=null,activePreset='',qMySec=false;
+const QSCEN=[{id:'normal',t:'☀️ Усе працює'},{id:'mysec',t:'🔌 Немає світла в моїй секції'},{id:'black',t:'⚫ Блекаут у всьому будинку'},{id:'long',t:'🕯 Блекаут 9 годин у мороз'},{id:'frost',t:'🥶 Мороз, теплоносій ледь теплий'},{id:'nowater',t:'🚱 Немає води в місті'}];
 let saveT=0;
 function save(){clearTimeout(saveT);saveT=setTimeout(()=>lsSet(LS,{c:cfg,s:st}),150);}
 
@@ -717,11 +770,14 @@ function compute(){
   });
   const eq=st.tOut+GAIN;
   const cool=(T0,Tinf,tau)=>Tinf+(T0-Tinf)*Math.exp(-t/tau);
+  // «мале колесо» без насоса крутиться саме: що вище поверх у I зоні — то менше тепла доходить
+  const convFloor=(k,Z)=>{const g=.88*Math.exp(-(Math.max(k,2)-2)/(.8*Z));const base=Math.min(ti0,20);const ts=base+(tsNorm-base)*g;const eqk=Math.min(ti0,solveTi(ts,st.tOut));const ti=eqk+(ti0-eqk)*Math.exp(-t/cfg.inertia);return {ts,ti,tr:ti+.62*(ts-ti)};};
   const secs=cfg.secs.map((S,s)=>{
     const n=NODE_OF[s],N=nodes[n],p=secPow(s);
     const heat=[0,1].map(z=>{
       if(!hs)return {state:'summer'};
       const c=N.pumps['heat'+(z+1)];const works=c.on&&st.kte;
+      if(z===0&&!c.on&&st.kte){const lo=convFloor(2,S.z),hi=convFloor(S.z,S.z);return {state:'conv',circ:false,conv:true,src:c.src,ti:(lo.ti+hi.ti)/2,tiLo:lo.ti,tiHi:hi.ti,ts:lo.ts,tr:lo.tr,tsTop:hi.ts,trTop:hi.tr};}
       const ti=works?ti0:cool(ti0,eq,cfg.inertia);
       const ts=works?tsNorm:cool(tsNorm,ti,c.on?2:1);
       return {state:works?(ti0<cfg.tset-2.5?'weak':'ok'):(c.on?'nokte':'nocirc'),circ:c.on,src:c.src,ti,ts,tr:ti+.62*(ts-ti)};
@@ -750,7 +806,14 @@ function compute(){
     const mzk=hs&&st.tOut<=-5&&t>=3&&heat[1].state!=='ok'&&heat[1].state!=='weak';
     return {s,n,power:p,heat,f1,cold,hot,mzk,lift:{work,total:S.lifts,src,odsBlock,bat:lb,bkN:liftL[s].n}};
   });
-  return {nodes,secs,odsOK,pow5,tsNeed,tsNorm,ti0,limited:tsNeed>st.tMains-4+.5,tdhw0,cityFloors,hs};
+  return {nodes,secs,odsOK,pow5,tsNeed,tsNorm,ti0,limited:tsNeed>st.tMains-4+.5,tdhw0,cityFloors,hs,convFloor};
+}
+function floorHeat(R,s,k){
+  const r=R.secs[s],S=cfg.secs[s];
+  if(!R.hs)return {state:'summer'};
+  if(k===1)return r.f1;
+  const h=r.heat[k<=S.z?0:1];
+  return h.state==='conv'?Object.assign({},h,R.convFloor(k,S.z)):h;
 }
 
 /* ---------- colors ---------- */
@@ -759,7 +822,7 @@ function mix(a,b,f){const pa=parseInt(a.slice(1),16),pb=parseInt(b.slice(1),16);
 function tColor(T){if(T==null||isNaN(T))return '#cfc8bb';if(T<=TST[0][0])return TST[0][1];for(let i=1;i<TST.length;i++)if(T<=TST[i][0]){const [t0,c0]=TST[i-1],[t1,c1]=TST[i];return mix(c0,c1,(T-t0)/(t1-t0));}return TST[TST.length-1][1];}
 function tGradient(a,b){const n=8,o=[];for(let i=0;i<=n;i++){const T=a+(b-a)*i/n;o.push(tColor(T)+' '+(i*100/n)+'%');}return 'linear-gradient(90deg,'+o.join(',')+')';}
 const BLUE='#3d7dd8';
-const LVC={ok:'ok',weak:'warn',flush:'warn',nokte:'bad',nocirc:'bad',none:'bad',cold:'bad',summer:'off'};
+const LVC={ok:'ok',weak:'warn',conv:'warn',flush:'warn',nokte:'bad',nocirc:'bad',none:'bad',cold:'bad',summer:'off'};
 
 /* ---------- scene geometry ---------- */
 const G=690,SW=150,X0=110,VBW=1360,VBH=960;
@@ -801,7 +864,7 @@ function buildScene(){
   o.push(`<g stroke="#79a85a" stroke-width="1.6" stroke-linecap="round">${grass}</g>`);
   o.push(`<text x="14" y="${G+30}" class="lbl-s">підвал</text>`);
   // mains
-  o.push(`<text x="12" y="${G+194}" class="lbl-xs">Київтеплоенерго: подача / зворотка</text>`);
+  o.push(`<text x="12" y="${G+194}" class="lbl-xs">тепломережа КТЕ</text>`);
   o.push(pp('kte-s',`M8 ${G+203} H${VBW-8}`,5,'heat','data-info="kte"'));
   o.push(pp('kte-r',`M${VBW-8} ${G+213} H8`,5,'heat','data-info="kte"'));
   o.push(pp('vk',`M8 ${G+229} H${VBW-8}`,5,'water','data-info="vk"'));
@@ -812,7 +875,7 @@ function buildScene(){
     <path class="sb-body" d="M${x} ${G} V${G-38} L${x+37} ${G-58} L${x+74} ${G-38} V${G} Z" filter="url(#rough)"/>
     <text class="bolt" x="${x+37}" y="${G-12}" text-anchor="middle" font-size="24">⚡</text>
     <text x="${x+37}" y="${G-65}" text-anchor="middle" class="lbl-b">${FEEDS[i].sub}</text>
-    <text x="${x+37}" y="${G-84}" text-anchor="middle" class="lbl-s">${FEEDS[i].name} · с. ${FEEDS[i].secs}</text></g>`);});
+    <text x="${x+37}" y="${G-84}" text-anchor="middle" class="lbl-s">${FEEDS[i].name}</text></g>`);});
   // cables
   const tap=s=>secX(s)+48;
   o.push(`<path class="cable" data-cable="f0" data-layer="power" d="M55 ${G} V${G+8} H${tap(2)} ${[0,1,2].map(s=>`M${tap(s)} ${G+8} V${G}`).join(' ')}"/>`);
@@ -832,7 +895,7 @@ function buildScene(){
     // pump connectors (under bundle)
     o.push(`<rect class="room" x="${nx+4}" y="${G+52}" width="${nw-8}" height="130" rx="10" fill="var(--n${n})" filter="url(#rough)" data-info="itp:${n}"/>`);
     PUMPS.forEach((P,i)=>{const y=P.sys==='heat'?ys.hs:P.sys==='dhw'?ys.hw:ys.cw;o.push(pp(`pc-${n}-${P.k}`,`M${px(i)} ${G+88} V${y}`,2.4,P.sys==='heat'?'heat':'water'));});
-    o.push(`<g data-info="itp:${n}"><rect x="${nx+9}" y="${G+57}" width="172" height="20" rx="6" fill="#fffdf6" stroke="var(--ink)" stroke-width="1.3"/><text x="${nx+16}" y="${G+73}" class="lbl-b" font-size="17">ІТП + насосна ${Nd.lbl.replace('секції ','')}</text></g>`);
+    o.push(`<g data-info="itp:${n}"><rect x="${nx+9}" y="${G+57}" width="172" height="20" rx="6" fill="#fffdf6" stroke="var(--ink)" stroke-width="1.3"/><text x="${nx+16}" y="${G+73}" class="lbl-b" font-size="14">ІТП + насосна ${Nd.lbl.replace('секції ','')}</text></g>`);
     // bundle
     o.push(`<g data-info="bundle:${n}">`+pp(`bhs-${n}`,`M${nx+6} ${ys.hs} H${nx+nw-6}`,4,'heat')+pp(`bhr-${n}`,`M${nx+nw-6} ${ys.hr} H${nx+6}`,4,'heat')+pp(`bcw-${n}`,`M${nx+6} ${ys.cw} H${nx+nw-6}`,4,'water')+pp(`bhw-${n}`,`M${nx+6} ${ys.hw} H${nx+nw-6}`,4,'water')+`</g>`);
     // mains branches
@@ -848,7 +911,7 @@ function buildScene(){
     // pumps row
     PUMPS.forEach((P,i)=>{const cx=px(i),cy=G+98;o.push(`<g class="pump" data-pump="${n}-${P.k}" data-info="pump:${n}:${P.k}" data-layer="${P.sys==='heat'?'heat':'water'}"><circle class="ring" cx="${cx}" cy="${cy}" r="10.5"/><path class="imp" d="M${cx} ${cy} q3 -3 0 -7 M${cx} ${cy} q4.5 2 6 3.5 M${cx} ${cy} q-4.5 1.5 -6 3.5"/><text x="${cx}" y="${cy+24}" text-anchor="middle" class="lbl-xs">${P.short}</text></g>`);});
     // battery rack
-    const labels=['🔥','💧',...Nd.secs.map(()=>'🛗')],names=['оп','вода',...Nd.secs.map(s=>'л'+(s+1))];
+    const labels=['🔥','💧',...Nd.secs.map(()=>'🛗')],names=['','',...Nd.secs.map(s=>'с'+(s+1))];
     let rk=`<g data-info="rack:${n}" data-layer="power heat water lift"><rect x="${rx-4}" y="${G+60}" width="${bars*17+8}" height="114" rx="8" fill="#fffdf6" stroke="var(--ink)" stroke-width="1.6" stroke-dasharray="4 3"/><text x="${rx+bars*17/2}" y="${G+76}" text-anchor="middle" class="lbl-xs">резерв</text>`;
     for(let i=0;i<bars;i++){const bx=rx+3+i*17;rk+=`<text x="${bx+5.5}" y="${G+92}" text-anchor="middle" font-size="10">${labels[i]}</text><rect x="${bx}" y="${G+97}" width="11" height="54" rx="2" fill="#fff" stroke="var(--ink)" stroke-width="1.4"/><rect class="bar-f" data-bar="${n}-${i}" x="${bx+1.5}" y="${G+98.5}" width="8" height="51" rx="1"/><text x="${bx+5.5}" y="${G+165}" text-anchor="middle" class="lbl-xs" font-size="10.5">${names[i]}</text>`;}
     o.push(rk+'</g>');
@@ -879,10 +942,11 @@ function buildScene(){
     // heating risers
     g.push(pp(`h1s-${s}`,`M${x+8} ${G+18} V${zy+5} H${x+14}`,4,'heat',`data-info="riser:heat:${s}"`));
     g.push(pp(`h1r-${s}`,`M${x+14} ${zy+5} V${G+25}`,4,'heat',`data-info="riser:heat:${s}"`));
-    g.push(pp(`h2s-${s}`,`M${x+21} ${G+18} V${zy}`,2.2,'heat',`data-info="riser:transit:${s}"`));
+    o.push(`<defs><linearGradient id="g1s-${s}" gradientUnits="userSpaceOnUse" x1="0" y1="${G}" x2="0" y2="${zy}"><stop offset="0"/><stop offset="1"/></linearGradient><linearGradient id="g2t-${s}" gradientUnits="userSpaceOnUse" x1="0" y1="${G+18}" x2="0" y2="${zy}"><stop offset="0"/><stop offset="1"/></linearGradient></defs>`);
+    g.push(pp(`h2t-${s}`,`M${x+21} ${G+18} V${zy}`,2.2,'heat',`data-info="riser:transit:${s}"`));
     g.push(pp(`h2s-${s}`,`M${x+21} ${zy} V${top+5} H${x+27}`,4,'heat',`data-info="riser:heat:${s}"`));
     g.push(pp(`h2r-${s}`,`M${x+27} ${top+5} V${zy}`,4,'heat',`data-info="riser:heat:${s}"`));
-    g.push(pp(`h2r-${s}`,`M${x+27} ${zy} V${G+25}`,2.2,'heat',`data-info="riser:transit:${s}"`));
+    g.push(pp(`h2u-${s}`,`M${x+27} ${zy} V${G+25}`,2.2,'heat',`data-info="riser:transit:${s}"`));
     // water risers (zone I split at city-pressure reach)
     const cf=Math.min(Z,Math.max(0,Math.floor((cfg.cityBar*10.2-10)/2.9)+1));
     const cy=flY(cf)+FH/2;
@@ -906,9 +970,9 @@ function buildScene(){
     let pv='';for(let i=0;i<3;i++){const px0=x+40+i*17;pv+=`<path class="pv" d="M${px0} ${top-1} l5 -9 h11 l-5 9 z"/>`;}
     g.push(`<g class="pvs" data-pv="${n}" data-info="pv:${n}" data-layer="power">${pv}</g>`);
     // labels & status icons
-    g.push(`<g data-info="sec:${s}"><circle class="numc" data-num="${s}" cx="${x+16}" cy="${top-28}" r="14"/><text x="${x+16}" y="${top-21}" text-anchor="middle" class="lbl-b" font-size="21">${s+1}</text><text x="${x+34}" y="${top-23}" class="lbl-s">${F} пов.</text></g>`);
+    g.push(`<g data-info="sec:${s}"><circle class="numc" data-num="${s}" cx="${x+16}" cy="${top-28}" r="14"/><text x="${x+16}" y="${top-21}" text-anchor="middle" class="lbl-b" font-size="17">${s+1}</text><text x="${x+33}" y="${top-24}" class="lbl-xs">${F} пов.</text></g>`);
     const ic=['🔥','🚰','♨️','🛗'];
-    ic.forEach((e,i)=>g.push(`<g class="st" data-st="${s}-${i}" data-info="sec:${s}"><title></title><circle cx="${x+78+i*21}" cy="${top-28}" r="9.5" class="st-off"/><text x="${x+78+i*21}" y="${top-24}" text-anchor="middle" font-size="11">${e}</text></g>`));
+    ic.forEach((e,i)=>g.push(`<g class="st" data-st="${s}-${i}" data-info="sec:${s}"><title></title><circle cx="${x+84+i*19}" cy="${top-28}" r="9" class="st-off"/><text x="${x+84+i*19}" y="${top-24}" text-anchor="middle" font-size="11">${e}</text></g>`));
     o.push(`<g class="sec" data-secg="${s}">${g.join('')}</g>`);
   });
   // floor ticks & zone labels on section 1
@@ -971,11 +1035,19 @@ function updateScene(R){
     $(`[data-secg="${s}"]`,SV).classList.toggle('dark',!r.power);
     $(`[data-num="${s}"]`,SV).style.fill=r.power?'#ffe08a':'#d4cedb';
     // radiators
-    for(let k=1;k<=S.f;k++){const el=$(`[data-rad="${s}-${k}"]`,SV);if(!el)continue;const h=k===1?r.f1:k<=S.z?r.heat[0]:r.heat[1];el.style.fill=h.state==='summer'?'#ebe5da':tColor((h.ts+h.tr)/2);}
-    // heating risers
-    [0,1].forEach(z=>{const h=r.heat[z],kS=`h${z+1}s-${s}`,kR=`h${z+1}r-${s}`;
-      if(h.state==='summer'){setPipe(kS,'#d9d2c4','stop');setPipe(kR,'#d9d2c4','stop');}
-      else{const m=h.circ?'run':'stop';setPipe(kS,tColor(h.ts),m,1.2);setPipe(kR,tColor(h.tr),m,1.2);}});
+    for(let k=1;k<=S.f;k++){const el=$(`[data-rad="${s}-${k}"]`,SV);if(!el)continue;const h=floorHeat(R,s,k);el.style.fill=h.state==='summer'?'#ebe5da':tColor((h.ts+h.tr)/2);}
+    // heating risers («мале» і «велике» колесо)
+    const grad=(id,a,b)=>{const gr=document.getElementById(id);if(gr){gr.children[0].setAttribute('stop-color',a);gr.children[1].setAttribute('stop-color',b);}return 'url(#'+id+')';};
+    if(!R.hs){['h1s','h1r','h2s','h2r','h2t','h2u'].forEach(k=>setPipe(`${k}-${s}`,'#d9d2c4','stop'));}
+    else{
+      const h1=r.heat[0],h2=r.heat[1];
+      if(h1.state==='conv'){setPipe(`h1s-${s}`,grad(`g1s-${s}`,tColor(R.tsNorm),tColor(h1.tsTop)),'run',3.6);setPipe(`h1r-${s}`,tColor(h1.trTop),'run',3.6);}
+      else{const m=h1.circ?'run':'stop';setPipe(`h1s-${s}`,tColor(h1.ts),m,1.2);setPipe(`h1r-${s}`,tColor(h1.tr),m,1.2);}
+      const m2=h2.circ?'run':'stop';
+      setPipe(`h2s-${s}`,tColor(h2.ts),m2,1.2);setPipe(`h2r-${s}`,tColor(h2.tr),m2,1.2);setPipe(`h2u-${s}`,tColor(h2.tr),m2,1.2);
+      if(h2.state==='nocirc'&&st.kte)setPipe(`h2t-${s}`,grad(`g2t-${s}`,tColor(R.tsNorm),tColor(h2.ts)),'stop');
+      else setPipe(`h2t-${s}`,tColor(h2.ts),m2,1.2);
+    }
     // water risers
     [0,1].forEach(z=>{
       const c=r.cold[z],w=r.hot[z];
@@ -1025,10 +1097,11 @@ function explain(s,floor){
   // heating
   if(!R.hs)out.push({ic:'🔥',lv:'off',t:'Опалення вимкнене — не сезон',w:'Влітку працює лише контур гарячої води.'});
   else if(floor===1){const h=r.f1;out.push(h.state==='nokte'?{ic:'🔥',lv:'bad',t:`Тепла немає · у квартирі ≈${dg(h.ti)}`,w:'Перший поверх підключений напряму, але Київтеплоенерго зараз не подає теплоносій.'}:{ic:'🔥',lv:LVC[h.state],t:`Батареї гріють · ≈${dg(h.ti)} у квартирі`,w:`Перший поверх підключений напряму — насоси йому не потрібні, тож тепло є навіть без світла. Теплоносій ≈${dg(h.ts)}.`+(h.state==='weak'?` Але з міста приходить лише ${st.tMains}°, а для такого морозу треба ≈${dg(R.tsNeed)}.`:'')});}
-  else{const h=r.heat[z],pu=PUMPS.find(p=>p.k==='heat'+(z+1));
+  else{const h=floorHeat(R,s,floor),pu=PUMPS.find(p=>p.k==='heat'+(z+1));
     if(h.state==='ok'||h.state==='weak')out.push({ic:'🔥',lv:LVC[h.state],t:(h.state==='ok'?'Батареї гріють':'Гріє слабко')+` · ≈${dg(h.ti)} у квартирі`,w:`Насос опалення ${zn} зони (${NODES[n].name}) ${pumpWhy(n,pu.k)}. Подача ≈${dg(h.ts)}, зворотка ≈${dg(h.tr)}.`+(h.state==='weak'?` З міста приходить лише ${st.tMains}°, а за ${sg(st.tOut)}° надворі потрібно ≈${dg(R.tsNeed)}.`:'')});
+    else if(h.state==='conv')out.push({ic:'🔥',lv:'warn',t:`Гріє слабше · ≈${dg(h.ti)} у квартирі`,w:`Насос опалення I зони ${pumpWhy(n,pu.k)}. Але «мале колесо» нижньої зони крутиться саме — самоконвекція: гаряча вода піднімається, охолола опускається. Що нижче поверх, то тепліше: на ${floor}-му батареї ≈${dg((h.ts+h.tr)/2)}.`});
     else if(h.state==='nokte')out.push({ic:'🔥',lv:'bad',t:`Батареї холонуть · ≈${dg(h.ti)} у квартирі`,w:`Насос ганяє воду, але Київтеплоенерго не подає тепло — вода в батареях ≈${dg(h.ts)} і холоне.`});
-    else out.push({ic:'🔥',lv:'bad',t:`Батареї холонуть · ≈${dg(h.ti)} у квартирі`,w:`Насос опалення ${zn} зони ${pumpWhy(n,pu.k)}. Вода в стояках зупинилась і остигає (≈${dg(h.ts)}).`+(r.mzk&&z===1?' ⚠ У такий мороз є ризик, що замерзнуть батареї в коридорах верхньої зони.':'')});
+    else out.push({ic:'🔥',lv:'bad',t:`Батареї холонуть · ≈${dg(h.ti)} у квартирі`,w:`Насос опалення ${zn} зони ${pumpWhy(n,pu.k)}. ${z===1?'«Велике колесо» верхньої зони без насоса стоїть: гаряча вода лишається внизу, у підвалі, і сюди не доходить':'Вода в стояках зупинилась і остигає'} (≈${dg(h.ts)}).`+(r.mzk&&z===1?' ⚠ У такий мороз є ризик, що замерзнуть батареї в коридорах верхньої зони.':'')});
   }
   // cold
   const c=r.cold[z],cfl=c.state==='ok'?'ok':(floor<=c.reach?'weak':'none'),pc='cold'+(z+1);
@@ -1056,16 +1129,17 @@ function statHtml(items){return items.map(i=>`<div class="stat"><div class="ic $
 
 /* ---------- me ---------- */
 function renderMePickers(){
-  const ss=$('#me-sec');ss.innerHTML=cfg.secs.map((S,i)=>`<option value="${i}">Секція ${i+1} · ${S.f} пов.</option>`).join('');
   if(me.s==null||!cfg.secs[me.s])me.s=3;
-  ss.value=me.s;
   const S=cfg.secs[me.s];me.f=clamp(me.f||1,1,S.f);
-  $('#me-floor').innerHTML=Array.from({length:S.f},(_,i)=>`<option value="${i+1}">${i+1} поверх${i+1===1?' (напряму)':''} · ${i+1<=S.z?'I':'II'} зона</option>`).join('');
+  $('#q-secs').innerHTML=cfg.secs.map((X,i)=>`<button type="button" data-qs="${i}" aria-pressed="${i===me.s}" aria-label="Секція ${i+1}">${i+1}</button>`).join('');
+  $('#me-floor').innerHTML=Array.from({length:S.f},(_,i)=>`<option value="${i+1}">${i+1} поверх · ${i+1<=S.z?'I':'II'} зона${i+1===1?' (напряму)':''}</option>`).join('');
   $('#me-floor').value=me.f;
 }
 function renderMe(){
   const s=me.s,f=me.f,S=cfg.secs[s],n=NODE_OF[s],z=f<=S.z?0:1,F=FEEDS[FEED_OF(s)];
-  $('#me-meta').innerHTML=`<b>Секція ${s+1}, ${f} поверх</b> — ${ROMAN[z]} зона (${z?`${S.z+1}–${S.f}`:`1–${S.z}`} пов.)<br>Тепловий пункт: <b>${NODES[n].name}</b>${NODES[n].note?' ('+NODES[n].note+')':''}<br>Електрика: <b>${F.name}</b>, ${F.sub} (YASNO ${F.yasno})`;
+  const P=PRESETS.find(p=>p.id===activePreset);
+  $('#q-title').textContent=`Секція ${s+1}, ${f} поверх · ${P?P.t.replace(/^\S+\s/,''):'ваша ситуація зі схеми'}`;
+  $('#me-meta').textContent=`${ROMAN[z]} зона (${z?`${S.z+1}–${S.f}`:`1–${S.z}`} пов.) · ${NODES[n].name}${NODES[n].note?' ('+NODES[n].note+')':''} · електрика: ${F.name}, ${F.sub}, у YASNO ${F.yasno}`;
   $('#me-list').innerHTML=statHtml(explain(s,f));
 }
 
@@ -1073,7 +1147,7 @@ function renderMe(){
 function renderMatrix(R){
   const c=(lv,txt)=>`<td class="${lv}">${txt}</td>`;
   const head=`<tr><td class="rh"></td>${cfg.secs.map((S,i)=>`<th scope="col">${i+1}<small>${S.f} пов. · I: 1–${S.z}</small></th>`).join('')}</tr>`;
-  const heatTxt=h=>h.state==='summer'?'літо':h.state==='nocirc'?'стоїть, '+dg(h.ti):h.state==='nokte'?'без тепла, '+dg(h.ti):'≈'+dg(h.ti);
+  const heatTxt=h=>h.state==='summer'?'літо':h.state==='conv'?'само, '+Math.round(h.tiHi)+'–'+dg(h.tiLo):h.state==='nocirc'?'стоїть, '+dg(h.ti):h.state==='nokte'?'без тепла, '+dg(h.ti):'≈'+dg(h.ti);
   const coldTxt=x=>x.state==='ok'?'є':x.state==='weak'?'до '+x.reach+' пов.':'немає';
   const hotTxt=x=>x.state==='ok'?dg(x.temp):x.state==='flush'?'після зливу':x.state==='cold'?'холодна':'немає';
   const bt=src=>src==='bat'?' 🔋':'';
@@ -1201,7 +1275,7 @@ function buildFlow(){
   o.push(pp('fl-ss','M370 70 H760 V96',5,'heat'),pp('fl-sr','M760 122 V110 H370',5,'heat'));
   o.push(`<g class="pump" id="fl-pump"><circle class="ring" cx="470" cy="70" r="13"/><path class="imp" d="M470 70 q4 -4 0 -9 M470 70 q6 2.5 8 4.5 M470 70 q-6 2 -8 4.5"/></g>`+lbl(470,98,'насос (циркуляція)'));
   o.push(`<g id="fl-rad">${[0,1,2,3,4].map(i=>`<rect x="${738+i*9}" y="96" width="7" height="26" rx="2" stroke="var(--ink)" stroke-width="1.2"/>`).join('')}</g>`);
-  o.push(lbl(660,36,'квартира'),`<text id="fl-ti" x="660" y="60" text-anchor="middle" class="big" font-size="30"></text>`);
+  o.push(lbl(660,36,'квартира'),`<text id="fl-ti" x="660" y="60" text-anchor="middle" class="big" font-size="26"></text>`);
   o.push(`<text id="fl-ts" x="560" y="62" text-anchor="middle" class="lbl-s"></text><text id="fl-tr" x="560" y="128" text-anchor="middle" class="lbl-s"></text>`);
   o.push(lbl(840,80,'вода в батареях','lbl-s','start'),lbl(840,98,'ходить по колу','lbl-s','start'),lbl(840,116,'й не змішується','lbl-s','start'),lbl(840,134,'з міською','lbl-s','start'));
   // water row
@@ -1218,12 +1292,12 @@ function buildFlow(){
   F.innerHTML=o.join('');
 }
 function updateFlow(R){
-  const r=R.secs[me.s]||R.secs[0],z=me.f<=cfg.secs[me.s].z?0:1,h=me.f===1?r.f1:r.heat[z],w=r.hot[z],c=r.cold[z],N=R.nodes[r.n];
+  const r=R.secs[me.s]||R.secs[0],z=me.f<=cfg.secs[me.s].z?0:1,h=floorHeat(R,me.s,me.f),w=r.hot[z],c=r.cold[z],N=R.nodes[r.n];
   const kt=st.kte?tColor(st.tMains):null;
   setPipe('fl-ps',kt,st.kte?'run':'empty',1);setPipe('fl-pr',st.kte?tColor(st.tMains-22):null,st.kte?'run':'empty',1);
   $('#fl-tp').textContent=st.kte?`з міста ≈${st.tMains}°`:'КТЕ не подає тепло';
   if(h.state==='summer'){setPipe('fl-ss','#d9d2c4','stop');setPipe('fl-sr','#d9d2c4','stop');$('#fl-ti').textContent='літо';$('#fl-ts').textContent='';$('#fl-tr').textContent='';$$('#fl-rad rect').forEach(e=>e.style.fill='#ebe5da');$('#fl-pump').classList.remove('on');$('#fl-pump').style.setProperty('--pc','#bdb6c6');}
-  else{const m=h.circ?'run':'stop';setPipe('fl-ss',tColor(h.ts),m,1.2);setPipe('fl-sr',tColor(h.tr),m,1.2);$('#fl-ti').textContent='≈'+dg(h.ti);$('#fl-ts').textContent='подача ≈'+dg(h.ts);$('#fl-tr').textContent='зворотка ≈'+dg(h.tr);$$('#fl-rad rect').forEach(e=>e.style.fill=tColor((h.ts+h.tr)/2));
+  else{const m=h.circ||h.conv?'run':'stop',fd=h.conv?3.6:1.2;setPipe('fl-ss',tColor(h.ts),m,fd);setPipe('fl-sr',tColor(h.tr),m,fd);$('#fl-ti').textContent='≈'+dg(h.ti);$('#fl-ts').textContent='подача ≈'+dg(h.ts);$('#fl-tr').textContent='зворотка ≈'+dg(h.tr);$$('#fl-rad rect').forEach(e=>e.style.fill=tColor((h.ts+h.tr)/2));
     const pu=me.f===1?null:N.pumps['heat'+(z+1)];$('#fl-pump').classList.toggle('on',!!(pu&&pu.on));$('#fl-pump').style.setProperty('--pc',!pu?'#8b8495':pu.src==='grid'?'#4f9d69':pu.src==='bat'?'#e9a23b':'#e4572e');}
   const cp=N.pumps['cold'+(z+1)],hp=N.pumps['dhw'+(z+1)];
   setPipe('fl-w',BLUE,!st.water?'empty':c.state==='ok'?'run':c.state==='weak'?'run':'stop',c.state==='weak'?3:1.4);
@@ -1232,6 +1306,91 @@ function updateFlow(R){
   setPipe('fl-wh',tColor(w.riser),w.state==='none'?'empty':w.circ?'run':'stop',1.3);setPipe('fl-whr',tColor(w.riser-6),w.state==='none'?'empty':w.circ?'run':'stop',1.3);
   $('#fl-hp').classList.toggle('on',hp.on);$('#fl-hp').style.setProperty('--pc',hp.src==='grid'?'#4f9d69':hp.src==='bat'?'#e9a23b':hp.src==='off'?'#bdb6c6':'#e4572e');
   $('#fl-th').textContent=w.state==='none'?'немає':w.state==='cold'?'холодна':'≈'+dg(w.temp);
+}
+
+/* ---------- two wheels demo ---------- */
+const WG=380,WN=40,WTH=72,WTC=14;
+const WHL=[{cx:420,cy:WG-86,r:84,lbl:'мале колесо · I зона'},{cx:690,cy:WG-163,r:160,lbl:'велике колесо · II зона'}];
+const WB={x:84,w:110,fh:13,F:25,Z:13};
+const W={heat:true,p:[true,true],run:true,kick:[0,0]};
+let wT=[[],[]],wIv=0,wLast='',wSegs=[[],[]],wFl=[];
+const wPt=(c,th,r)=>[c.cx+r*Math.sin(th),c.cy+r*Math.cos(th)];
+function wSpin(i,now){return W.p[i]||(i===0&&W.heat&&W.run)||now<W.kick[i];}
+function wTarget(i,j,spin){
+  const u=(j+.5)/WN,h=(1-Math.cos(2*Math.PI*u))/2;
+  if(spin){if(!W.heat)return WTC;return WTH-4-(W.p[i]?12:34)*u;}
+  return W.heat?WTC+(WTH-WTC)*Math.exp(-h*7):WTC;
+}
+function buildWheels(){
+  const o=[],b=WB,top=WG-b.F*b.fh,zy=WG-b.Z*b.fh,s0=WHL[0],L=WHL[1];
+  o.push(`<rect x="0" y="${WG}" width="900" height="70" fill="url(#earth)"/><path d="M0 ${WG} H900" stroke="#6f9a4e" stroke-width="3"/>`);
+  o.push(`<rect x="${b.x}" y="${top}" width="${b.w}" height="${b.F*b.fh}" fill="#fffbf2" stroke="var(--ink)" stroke-width="2" filter="url(#rough)"/>`);
+  for(let k=1;k<=b.F;k++)o.push(`<rect data-wf="${k}" x="${b.x+10}" y="${WG-k*b.fh+2}" width="${b.w-20}" height="${b.fh-4}" rx="2"/>`);
+  o.push(`<path d="M${b.x-4} ${zy} H${b.x+b.w+4}" class="zline"/>`);
+  o.push(`<text x="${b.x-8}" y="${(top+zy)/2+4}" text-anchor="end" class="lbl-s" fill="#6b4c96">II зона</text><text x="${b.x-8}" y="${(zy+WG)/2+4}" text-anchor="end" class="lbl-s" fill="#2f5aa0">I зона</text>`);
+  o.push(`<text x="${b.x+b.w/2}" y="${top-10}" text-anchor="middle" class="lbl-s">квартири</text>`);
+  o.push(`<path d="M${b.x+b.w+6} ${(zy+WG)/2} H${s0.cx-s0.r-10}" class="ann-l" stroke-dasharray="4 4"/>`);
+  o.push(`<path d="M${b.x+b.w+6} ${(top+zy)/2} C 380 ${(top+zy)/2} 440 ${L.cy-30} ${L.cx-L.r-10} ${L.cy-30}" class="ann-l" stroke-dasharray="4 4"/>`);
+  o.push(`<g id="w-heater" class="w-click" data-w="heat"><title>Нагрівач: натисніть, щоб увімкнути або вимкнути</title><rect x="340" y="${WG+6}" width="440" height="36" rx="10" stroke="var(--ink)" stroke-width="2"/><text x="560" y="${WG+30}" text-anchor="middle" class="lbl" font-weight="800">🔥 нагрівач — теплообмінник ІТП</text></g>`);
+  WHL.forEach((c,i)=>{
+    let seg='';for(let j=0;j<WN;j++){const a0=j*2*Math.PI/WN,a1=(j+1)*2*Math.PI/WN+.012;const [x0,y0]=wPt(c,a0,c.r),[x1,y1]=wPt(c,a1,c.r);seg+=`<path data-ws="${i}-${j}" d="M${x0.toFixed(1)} ${y0.toFixed(1)} A${c.r} ${c.r} 0 0 0 ${x1.toFixed(1)} ${y1.toFixed(1)}" fill="none" stroke-width="${i?20:16}"/>`;}
+    o.push(`<g>${seg}</g>`);
+    let sp='';for(let k=0;k<8;k++){const [x,y]=wPt(c,k*Math.PI/4,c.r-13);sp+=`<line x1="${c.cx}" y1="${c.cy}" x2="${x.toFixed(1)}" y2="${y.toFixed(1)}"/>`;}
+    o.push(`<g class="wheel-spin" id="w-rot-${i}"><circle cx="${c.cx}" cy="${c.cy}" r="${c.r}" fill="none" stroke="#fff" stroke-width="3" stroke-dasharray="5 16"/><g stroke="#a39cab" stroke-width="2">${sp}</g><circle cx="${c.cx}" cy="${c.cy}" r="9" fill="#fff" stroke="var(--ink)" stroke-width="2"/></g>`);
+    const [px,py]=wPt(c,.9,c.r);
+    o.push(`<g class="pump w-click" id="w-pump-${i}" data-w="p${i}"><title>Насос: натисніть, щоб увімкнути або вимкнути</title><circle class="ring" cx="${px.toFixed(1)}" cy="${py.toFixed(1)}" r="15"/><path class="imp" d="M${px.toFixed(1)} ${py.toFixed(1)} q4 -4 0 -10 M${px.toFixed(1)} ${py.toFixed(1)} q6 2.5 9 5 M${px.toFixed(1)} ${py.toFixed(1)} q-6 2 -9 5"/></g>`);
+    o.push(`<text x="${c.cx}" y="${c.cy-c.r-14}" text-anchor="middle" class="lbl" font-weight="800">${c.lbl}</text>`);
+  });
+  o.push(`<text x="890" y="${WG+62}" text-anchor="end" class="lbl-xs">колір обода — температура води · натисніть на насос або нагрівач</text>`);
+  const WS=$('#wheels');WS.innerHTML=o.join('');
+  wSegs=[0,1].map(i=>Array.from({length:WN},(_,j)=>$(`[data-ws="${i}-${j}"]`,WS)));
+  wFl=Array.from({length:WB.F},(_,k)=>$(`[data-wf="${k+1}"]`,WS));
+  for(let i=0;i<2;i++)for(let j=0;j<WN;j++)wT[i][j]=wTarget(i,j,wSpin(i,0));
+  WS.addEventListener('click',e=>{const el=e.target.closest('[data-w]');if(!el)return;const k=el.dataset.w;wToggle(k==='heat'?'heat':+k.slice(1));});
+  $('#w-heat').addEventListener('click',()=>wToggle('heat'));
+  $('#w-p1').addEventListener('click',()=>wToggle(0));
+  $('#w-p2').addEventListener('click',()=>wToggle(1));
+  $('#w-push').addEventListener('click',wPush);
+  $('#w-reset').addEventListener('click',()=>{W.heat=true;W.p=[true,true];W.run=true;W.kick=[0,0];wSync();});
+  wSync();wPaint();
+  const run=on=>{if(on&&!wIv)wIv=setInterval(wStep,100);if(!on&&wIv){clearInterval(wIv);wIv=0;}};
+  if('IntersectionObserver' in window)new IntersectionObserver(es=>es.forEach(en=>run(en.isIntersecting))).observe(WS);else run(true);
+}
+function wToggle(k){
+  const now=performance.now();
+  if(k==='heat'){W.heat=!W.heat;if(!W.heat)W.run=false;}
+  else{const was=wSpin(k,now);W.p[k]=!W.p[k];if(k===0&&!W.p[0]&&was&&W.heat)W.run=true;}
+  wSync();
+}
+function wPush(){const now=performance.now();for(let i=0;i<2;i++)if(!W.p[i])W.kick[i]=now+3500;if(W.heat)W.run=true;wSync();}
+function wSync(){
+  const now=performance.now();
+  $('#w-heat').setAttribute('aria-checked',W.heat?'true':'false');$('#w-p1').setAttribute('aria-checked',W.p[0]?'true':'false');$('#w-p2').setAttribute('aria-checked',W.p[1]?'true':'false');
+  for(let i=0;i<2;i++){const sp=wSpin(i,now),g=$('#w-rot-'+i);g.classList.toggle('paused',!sp);g.style.setProperty('--wd',(W.p[i]?(i?6:4):(i?6:12))+'s');
+    const pm=$('#w-pump-'+i);pm.classList.toggle('on',W.p[i]);pm.style.setProperty('--pc',W.p[i]?'#4f9d69':'#e4572e');}
+  $('#w-heater rect').setAttribute('fill',W.heat?'#ffd2b8':'#e6e1ea');
+  wStatus();
+}
+function wStep(){
+  const now=performance.now();
+  for(let i=0;i<2;i++){const sp=wSpin(i,now),k=sp?(W.p[i]?.12:.05):.035;for(let j=0;j<WN;j++)wT[i][j]+=(wTarget(i,j,sp)-wT[i][j])*k;
+    if($('#w-rot-'+i).classList.contains('paused')===sp)wSync();}
+  wPaint();
+}
+function wPaint(){
+  for(let i=0;i<2;i++)for(let j=0;j<WN;j++)wSegs[i][j].setAttribute('stroke',tColor(wT[i][j]));
+  for(let k=1;k<=WB.F;k++){const i=k<=WB.Z?0:1,hf=(k-.5)/(i?WB.F:WB.Z),j=Math.min(WN-1,Math.floor(hf/2*WN));wFl[k-1].setAttribute('fill',tColor(wT[i][j]));}
+}
+function wStatus(){
+  const now=performance.now(),s0=wSpin(0,now),s1=wSpin(1,now);let a,b;
+  if(W.p[0])a=W.heat?'🟢 <b>Мале колесо</b> (I зона) крутить насос — тепло доходить до всіх нижніх квартир.':'⚪ <b>Мале колесо</b> крутиться, але нагрівач вимкнено — вода холоне.';
+  else if(s0&&W.heat&&W.run)a='🟡 <b>Мале колесо</b> крутиться <b>саме</b> — самоконвекція: гаряча вода легша й піднімається, охолола опускається. Унизу тепло, ближче до межі зон — прохолодніше.';
+  else if(s0)a='🟡 <b>Мале колесо</b> штовхнули, але без нагрівача воно зупиниться.';
+  else a=W.heat?'🔴 <b>Мале колесо</b> стоїть — гріється тільки низ. Натисніть «Штовхнути».':'🔴 <b>Мале колесо</b> стоїть, нагрівач вимкнено — усе холоне.';
+  if(W.p[1])b=W.heat?'🟢 <b>Велике колесо</b> (II зона) крутить насос — тепло доходить до верхніх поверхів.':'⚪ <b>Велике колесо</b> крутиться, але нагрівач вимкнено.';
+  else if(s1)b='🟡 <b>Велике колесо</b> штовхнули — але без насоса воно зараз зупиниться: надто велике, щоб крутитися саме.';
+  else b='🔴 <b>Велике колесо</b> стоїть: тепло лишається внизу, верхні квартири холонуть. Йому насос потрібен постійно.';
+  const html=a+'<br>'+b;if(html!==wLast){$('#w-stat').innerHTML=html;wLast=html;}
 }
 
 /* ---------- legend & zone table ---------- */
@@ -1254,6 +1413,7 @@ function syncControls(){
   $$('[data-season]').forEach(b=>b.setAttribute('aria-pressed',b.dataset.season===st.season?'true':'false'));
   $$('[data-sun]').forEach(b=>b.setAttribute('aria-pressed',b.dataset.sun===st.sun?'true':'false'));
   $$('#presets .chip').forEach(b=>b.setAttribute('aria-pressed',b.dataset.preset===activePreset?'true':'false'));
+  $$('#q-scen .chip').forEach(b=>{const id=b.dataset.q,want=id==='mysec'?(me.s<3?'off1':'off2'):id;b.setAttribute('aria-pressed',activePreset===want?'true':'false');});
   $$('.layers .chip').forEach(b=>b.setAttribute('aria-pressed',(b.dataset.focus||'')===(ui.focus||'')?'true':'false'));
   const broken=!st.g[0]||!st.g[1]||!st.kte||!st.water;
   $('#t-hint').textContent=broken?'Впливає на заряд батарей і на те, як швидко холонуть батареї й квартири.':'Зараз усе працює — час ні на що не впливає. Вимкніть щось угорі.';
@@ -1268,7 +1428,12 @@ function rebuild(){buildScene();renderMePickers();renderZtable();refresh();}
 
 function bindControls(){
   $('#presets').innerHTML=PRESETS.map(p=>`<button class="chip" type="button" data-preset="${p.id}">${p.t}</button>`).join('');
-  $('#presets').addEventListener('click',e=>{const b=e.target.closest('[data-preset]');if(!b)return;const p=PRESETS.find(x=>x.id===b.dataset.preset);stopPlay();st=fixSt(merge(DEF_ST,Object.assign(JSON.parse(JSON.stringify(BASE_ST)),{bk:st.bk},JSON.parse(JSON.stringify(p.s)))));activePreset=p.id;refresh();});
+  $('#presets').addEventListener('click',e=>{const b=e.target.closest('[data-preset]');if(!b)return;qMySec=false;applyPreset(b.dataset.preset);});
+  $('#q-scen').innerHTML=QSCEN.map(q=>`<button class="chip" type="button" data-q="${q.id}">${q.t}</button>`).join('');
+  $('#q-scen').addEventListener('click',e=>{const b=e.target.closest('[data-q]');if(!b)return;qMySec=b.dataset.q==='mysec';applyPreset(qMySec?(me.s<3?'off1':'off2'):b.dataset.q);});
+  $('#q-secs').addEventListener('click',e=>{const b=e.target.closest('[data-qs]');if(!b)return;me.s=+b.dataset.qs;renderMePickers();lsSet(LS_ME,me);if(qMySec&&(activePreset==='off1'||activePreset==='off2'))applyPreset(me.s<3?'off1':'off2');else refresh();});
+  const stepFloor=d=>{const nf2=clamp(me.f+d,1,cfg.secs[me.s].f);if(nf2!==me.f){me.f=nf2;$('#me-floor').value=me.f;lsSet(LS_ME,me);refresh();}};
+  $('#fl-dn').addEventListener('click',()=>stepFloor(-1));$('#fl-up').addEventListener('click',()=>stepFloor(1));
   const tog=(id,fn)=>$('#'+id).addEventListener('click',()=>change(fn));
   tog('sw-g0',()=>st.g[0]=!st.g[0]);tog('sw-g1',()=>st.g[1]=!st.g[1]);tog('sw-bk',()=>st.bk=!st.bk);tog('sw-kte',()=>st.kte=!st.kte);tog('sw-water',()=>st.water=!st.water);
   $('#r-tm').style.background=tGradient(35,110);$('#r-to').style.background=tGradient(-25,32);
@@ -1279,9 +1444,9 @@ function bindControls(){
   $$('[data-sun]').forEach(b=>b.addEventListener('click',()=>change(()=>st.sun=b.dataset.sun)));
   $$('.layers .chip').forEach(b=>b.addEventListener('click',()=>{ui.focus=b.dataset.focus||'';lsSet(LS_UI,ui);syncControls();SV.dataset.focus=ui.focus;}));
   $('#play').addEventListener('click',()=>{if(playT){stopPlay();return;}if(st.t>=24)st.t=0;$('#play').textContent='❚❚';playT=setInterval(()=>{const keep=activePreset;st.t=Math.min(24,st.t+.25);refresh();activePreset=keep;syncControls();if(st.t>=24)stopPlay();},140);});
-  $('#me-sec').addEventListener('change',e=>{me.s=+e.target.value;renderMePickers();lsSet(LS_ME,me);refresh();});
   $('#me-floor').addEventListener('change',e=>{me.f=+e.target.value;lsSet(LS_ME,me);refresh();});
 }
+function applyPreset(id){const p=PRESETS.find(x=>x.id===id);if(!p)return;stopPlay();st=fixSt(merge(DEF_ST,Object.assign(JSON.parse(JSON.stringify(BASE_ST)),{bk:st.bk},JSON.parse(JSON.stringify(p.s)))));activePreset=p.id;refresh();}
 let playT=0;function stopPlay(){if(playT){clearInterval(playT);playT=0;}$('#play').textContent='▶';}
 
 /* ---------- popovers ---------- */
@@ -1304,7 +1469,7 @@ function infoFor(key){
     case 'vk':return {t:'Міський водогін',h:`<p>Звідси вода йде на насоси холодної води кожного вузла. Без насосів міського тиску вистачає хіба що на нижні поверхи (оцінка: до ${R.cityFloors}-го, змінюється в налаштуваннях).</p>${live(st.water?'💧 Вода є':'🚱 Води немає')}`};
     case 'bundle':return {t:'Труби в підвалі',h:`<p>Від теплового пункту до стояків кожної секції — десятки метрів труб. Якщо вони погано ізольовані, гріють підвал, а це тепло всі оплачують у складі МЗК.</p>`};
     case 'riser':{const s=+b;if(a==='transit')return {t:'Транзитні труби II зони',h:`<p>Труби верхньої зони проходять крізь нижні поверхи «транзитом» — до своїх квартир вони підключені лише вище межі зон (секція ${s+1}: з ${cfg.secs[s].z+1}-го поверху).</p>`};
-      if(a==='heat')return {t:'Стояки опалення',h:`<p>Ліва труба кожної пари — подача (гаряча, вгору), права — зворотка (холодніша, вниз). Нагорі вони з'єднуються: коло замкнене. Перший поверх підключений напряму.</p>`};
+      if(a==='heat')return {t:'Стояки опалення',h:`<p>Дві пари труб: ліва — нижня зона («мале колесо»), права — верхня («велике колесо»). У кожній парі подача йде вгору, зворотка — вниз, нагорі вони з'єднуються: коло замкнене.</p><p>Мале колесо без насоса може крутитися саме (самоконвекція), велике — лише з насосом. Перший поверх підключений напряму.</p>`};
       return {t:a==='c'?'Стояк холодної води':'Стояк гарячої води',h:`<p>Окремі стояки для I і II зон. Вода в стояку зупиняється, коли насос зупинився${a==='w'?'; гаряча при цьому поступово холоне':''}.</p><p>Перший кран від стояка і все після нього — зона відповідальності власника квартири.</p>`};}
     case 'zone':{const S=cfg.secs[+a];return {t:`Межа зон, секція ${+a+1}`,h:`<p>I зона — поверхи 1–${S.z}, II зона — ${S.z+1}–${S.f}. Для верхньої зони — окремі насоси холодної, гарячої води й опалення, бо одним насосом на таку висоту тиск був би завеликий унизу.</p>`};}
     case 'lift':{const s=+a,L=R.secs[s].lift,S=cfg.secs[s];return {t:`Ліфти секції ${s+1}`,h:`<p>Ліфтів у секції: ${S.lifts}, на резервному живленні: ${L.bkN}.${s<3?' Ліфти секцій 1–3 залежать від диспетчерської (ОДС) у секції 5.':''}</p>${live(`Працює ${L.work} з ${L.total}${L.src==='bat'?' — від батареї':L.src==='ods'?' — ОДС без живлення':''}`)}`};}
@@ -1414,7 +1579,7 @@ async function boot(){
   const m=lsGet(LS_ME);if(m&&typeof m.s==='number'&&typeof m.f==='number')me={s:m.s,f:m.f};
   const u=lsGet(LS_UI);if(u&&typeof u.focus==='string')ui.focus=u.focus;
   if(!saved)activePreset='normal';
-  buildPlan();buildScene();buildFlow();indexPipes();renderLegend();renderZtable();renderMePickers();bindControls();bindPop();bindDrawer();
+  buildPlan();buildScene();buildFlow();buildWheels();indexPipes();renderLegend();renderZtable();renderMePickers();bindControls();bindPop();bindDrawer();
   refresh();
   const hm=location.hash.match(/[#&]cfg=([A-Za-z0-9_-]+)/);
   if(hm){history.replaceState(null,'',location.pathname+location.search);await applyCode(hm[1]);}
