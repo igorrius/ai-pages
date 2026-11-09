@@ -255,7 +255,7 @@ input[type=range]:focus-visible{outline:3px solid var(--blue);outline-offset:3px
 .tl-list li.future{color:var(--ink-2)}
 .tl-list li.nowrow{font-weight:900;color:var(--red)}
 .tl-list li.nowrow::before{background:var(--red);border-color:var(--red)}
-.tl-list .tm{display:inline-block;min-width:44px;font-weight:900;font-variant-numeric:tabular-nums;color:var(--ink)}
+.tl-list .tm{display:inline-block;min-width:52px;margin-right:6px;white-space:nowrap;font-weight:900;font-variant-numeric:tabular-nums;color:var(--ink)}
 
 /* matrix */
 .matrix{overflow-x:auto}
@@ -518,6 +518,7 @@ input[type=range]:focus-visible{outline:3px solid var(--blue);outline-offset:3px
       </div>
       <div>
         <h3 class="pb-h">⏱ Що відбувається за плейбуком</h3>
+        <button class="sw" role="switch" id="pb-clock" type="button"><span class="tr"></span><span>Час за годинником<small>вимкніть, щоб рахувати від початку відключення</small></span></button>
         <div id="pb-tl" aria-live="polite"></div>
       </div>
     </div>
@@ -774,7 +775,7 @@ function fixSt(s){s.tMains=clamp(Math.round(s.tMains),35,110);s.tOut=clamp(Math.
 const LS='k7home.v1',LS_ME='k7home.me',LS_UI='k7home.ui';
 function lsGet(k){try{return JSON.parse(localStorage.getItem(k));}catch(e){return null;}}
 function lsSet(k,v){try{localStorage.setItem(k,JSON.stringify(v));}catch(e){}}
-let cfg,st,me={s:3,f:10},ui={focus:''},LAST=null,activePreset='',qMySec=false;
+let cfg,st,me={s:3,f:10},ui={focus:'',clock:true},LAST=null,activePreset='',qMySec=false;
 const QSCEN=[{id:'normal',t:'☀️ Усе працює'},{id:'mysec',t:'🔌 Немає світла в моїй секції'},{id:'black',t:'⚫ Блекаут у всьому будинку'},{id:'long',t:'🕯 Блекаут 9 годин у мороз'},{id:'frost',t:'🥶 Мороз, теплоносій ледь теплий'},{id:'nowater',t:'🚱 Немає води в місті'}];
 let saveT=0;
 function save(){clearTimeout(saveT);saveT=setTimeout(()=>lsSet(LS,{c:cfg,s:st}),150);}
@@ -1303,7 +1304,7 @@ function renderMatrix(R){
 function renderBackup(R){
   const m=cfg.month,totPv=cfg.nodes.reduce((a,x)=>a+x.pv,0),max=24;
   const pos=h=>clamp((h===Infinity?max:h)/max*100,0,100),tg=pos(cfg.targetH);
-  const val=h=>h===Infinity?'∞':h>=48?'48+ год':fmtClock(h);
+  const val=(h,live)=>h===Infinity?'∞':h>=48?'48+ год':live&&ui.clock?tLabel(h):fmtClock(h);
   let weakest=null;
   $('#bk-grid').innerHTML=R.nodes.map((N,n)=>{
     const C=cfg.nodes[n],live=N.sim.used,sm=live?N.sim:N.plan,soc=live?N.at.soc:(C.kwh>0?100:0);
@@ -1318,7 +1319,7 @@ function renderBackup(R){
     else meta.push(live?'🔋 Світла немає — працює від батареї.':'🔌 Світло є — батарея заряджена. Смужки — що буде, якщо світло зникне в усьому вузлі:');
     let rows='';
     if(sm.has&&sm.used){
-      const row=(lbl,end,note)=>`<div class="gr"><span class="gl">${lbl}</span><span class="gb"><i style="width:${pos(end)}%"></i><span class="tg" style="left:${tg}%"></span>${live?`<span class="now" style="left:calc(${pos(st.t)}% - 1px)"></span>`:''}</span><span class="gv">${val(end)}${note?' 📋':''}</span></div>`;
+      const row=(lbl,end,note)=>`<div class="gr"><span class="gl">${lbl}</span><span class="gb"><i style="width:${pos(end)}%"></i><span class="tg" style="left:${tg}%"></span>${live?`<span class="now" style="left:calc(${pos(st.t)}% - 1px)"></span>`:''}</span><span class="gv">${val(end,live)}${note?' 📋':''}</span></div>`;
       if(sm.hasLift)rows+=row('🛗 ліфти',Math.min(sm.liftOffAt,sm.stopAt),sm.liftOffAt<sm.stopAt);
       if(sm.items.some(i=>i.id==='cold2'||i.id==='dhw2'))rows+=row('💧 вода II зона',Math.min(sm.shedAt,sm.stopAt),sm.shedAt<sm.stopAt);
       if(sm.items.some(i=>i.id==='cold1'||i.id==='dhw1'))rows+=row('💧 вода I зона',sm.stopAt,false);
@@ -1343,8 +1344,17 @@ function renderBackup(R){
 /* ---------- playbook ---------- */
 function secList(a){a=[...a].sort((x,y)=>x-y);const out=[];for(let i=0;i<a.length;){let j=i;while(j+1<a.length&&a[j+1]===a[j]+1)j++;out.push(j>i+1?`${a[i]+1}–${a[j]+1}`:j===i+1?`${a[i]+1}, ${a[j]+1}`:`${a[i]+1}`);i=j+1;}return out.join(', ');}
 const fmtClock=h=>{const m=Math.round(h*60);return Math.floor(m/60)+':'+String(m%60).padStart(2,'0');};
+// час за годинником пристрою: «зараз» — це st.t від початку відключення
+const hm=d=>d.toLocaleTimeString('uk-UA',{hour:'2-digit',minute:'2-digit'});
+function tLabel(h){
+  if(!ui.clock)return fmtClock(h);
+  const d=new Date(Date.now()+(h-st.t)*3600e3),n=new Date();
+  const dd=Math.round((new Date(d.getFullYear(),d.getMonth(),d.getDate())-new Date(n.getFullYear(),n.getMonth(),n.getDate()))/864e5);
+  return dd===0?hm(d):dd===1?'завтра '+hm(d):dd===-1?'вчора '+hm(d):hm(d)+` (${dd>0?'+':''}${dd} д)`;
+}
 function renderPlaybook(R){
   const P=cfg.pb;
+  $('#pb-clock').setAttribute('aria-checked',ui.clock?'true':'false');
   $('#pb-rules').classList.toggle('disabled',!P.on);
   $$('#pb-card [data-pb]').forEach(b=>b.setAttribute('aria-checked',P[b.dataset.pb]?'true':'false'));
   $$('#pb-card [data-pbn]').forEach(i=>{if(i!==document.activeElement)i.value=P[i.dataset.pbn];});
@@ -1354,17 +1364,19 @@ function renderPlaybook(R){
   for(const e of R.events){const k=e.key+'|'+Math.round(e.time*20)+'|'+e.txt;const g=groups.get(k);if(g){if(e.sec!=null)g.secs.push(e.sec);}else groups.set(k,Object.assign({},e,{secs:e.sec!=null?[e.sec]:[]}));}
   const list=[...groups.values()].sort((a,b)=>a.time-b.time);
   let h='<ol class="tl-list">',nowDone=false;
-  const nowRow=`<li class="nowrow"><span class="tm">${fmtClock(st.t)}</span>▶ зараз</li>`;
+  const nowRow=`<li class="nowrow"><span class="tm">${tLabel(st.t)}</span>▶ зараз</li>`;
   for(const e of list){
     if(!nowDone&&e.time>st.t+1e-6){h+=nowRow;nowDone=true;}
     const who=e.secs.length?`Секці${e.secs.length>1?'ї':'я'} ${secList(e.secs)}: `:'';
-    h+=`<li class="${e.time<=st.t+1e-6?'done':'future'}"><span class="tm">${fmtClock(e.time)}</span>${e.ico} ${esc(who+e.txt)}</li>`;
+    h+=`<li class="${e.time<=st.t+1e-6?'done':'future'}"><span class="tm">${tLabel(e.time)}</span>${e.ico} ${esc(who+e.txt)}</li>`;
   }
   if(!nowDone)h+=nowRow;
-  $('#pb-tl').innerHTML=h+'</ol><p class="hint">Час — від початку відключення. Повзунок «Минуло» на схемі рухає позначку «зараз». Хочете порівняти — вимкніть «Діяти за плейбуком».</p>';
+  $('#pb-tl').innerHTML=h+'</ol><p class="hint">'+(ui.clock?`Час — за годинником вашого пристрою: відключення почалося о ${hm(new Date(Date.now()-st.t*3600e3))}. Повзунок «Минуло» змінює, як давно це сталося.`:'Час — від початку відключення. Повзунок «Минуло» на схемі рухає позначку «зараз».')+' Хочете порівняти — вимкніть «Діяти за плейбуком».</p>';
 }
 function bindPlaybook(){
   const card=$('#pb-card');
+  $('#pb-clock').addEventListener('click',()=>{ui.clock=!ui.clock;lsSet(LS_UI,ui);renderPlaybook(LAST);renderBackup(LAST);});
+  setInterval(()=>{if(ui.clock&&LAST){renderPlaybook(LAST);renderBackup(LAST);}},60000);
   card.addEventListener('click',e=>{
     const a=e.target.closest('[data-apply]');if(a){qMySec=false;applyPreset(a.dataset.apply);return;}
     const b=e.target.closest('[data-pb]');if(!b)return;const k=b.dataset.pb;cfg.pb[k]=!cfg.pb[k];fixCfg(cfg);refresh();
@@ -1736,7 +1748,7 @@ async function boot(){
   const saved=lsGet(LS);
   cfg=fixCfg(merge(DEFAULTS,saved&&saved.c));st=fixSt(merge(DEF_ST,saved&&saved.s));
   const m=lsGet(LS_ME);if(m&&typeof m.s==='number'&&typeof m.f==='number')me={s:m.s,f:m.f};
-  const u=lsGet(LS_UI);if(u&&typeof u.focus==='string')ui.focus=u.focus;
+  const u=lsGet(LS_UI);if(u&&typeof u.focus==='string')ui.focus=u.focus;if(u&&typeof u.clock==='boolean')ui.clock=u.clock;
   if(!saved)activePreset='normal';
   buildPlan();buildScene();buildFlow();buildWheels();indexPipes();renderLegend();renderZtable();renderMePickers();bindControls();bindPlaybook();bindPop();bindDrawer();
   refresh();
