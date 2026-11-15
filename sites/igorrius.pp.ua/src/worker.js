@@ -7,7 +7,7 @@ export default {
   async fetch(request, env) {
     const url = new URL(request.url);
 
-    const isLocal = url.hostname === "localhost" || url.hostname === "127.0.0.1";
+    const isLocal = env.DEV === "1"; // set in .dev.vars; wrangler dev rewrites the host to the route
     if (!isLocal && (url.hostname.startsWith("www.") || url.protocol === "http:")) {
       url.hostname = url.hostname.replace(/^www\./, "");
       url.protocol = "https:";
