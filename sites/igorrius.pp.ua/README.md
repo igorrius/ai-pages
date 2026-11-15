@@ -20,6 +20,7 @@
 TURNSTILE_SITE_KEY=1x00000000000000000000AA
 TURNSTILE_SECRET_KEY=1x0000000000000000000000000000000AA
 MAIL_TO=dev@example.com
+DEV=1
 ```
 
 `npx wrangler dev` — листи зберігаються у `.wrangler/tmp/email/`.

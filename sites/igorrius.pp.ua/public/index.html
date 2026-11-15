@@ -127,6 +127,25 @@
     #f-status { font-size: 14px; }
     #f-status.ok { color: var(--ok); }
     #f-status.err { color: #d14343; }
+    .qr-block {
+      display: grid; grid-template-columns: 220px 1fr; gap: 20px; align-items: start;
+      border-top: 1px solid var(--line); padding: 18px 0 16px;
+    }
+    .qr-img { display: grid; gap: 10px; justify-items: center; }
+    #qr-canvas { background: #fff; padding: 10px; border-radius: 12px; border: 1px solid var(--line); line-height: 0; }
+    #qr-canvas svg, #qr-canvas img { width: 196px; height: 196px; display: block; }
+    .qr-open { text-decoration: none; text-align: center; }
+    .qr-form h3 { font-size: 16px; margin: 0 0 6px; }
+    .qr-form .note { margin: 0 0 12px; }
+    .qr-form label { display: grid; gap: 5px; font-size: 14px; color: var(--muted); margin-bottom: 10px; }
+    .qr-form .opt { font-size: 12px; }
+    .qr-form input, .qr-form textarea {
+      font: inherit; font-size: 16px; color: var(--text); background: var(--bg);
+      border: 1px solid var(--line); border-radius: 9px; padding: 8px 11px; width: 100%;
+    }
+    .qr-form textarea { resize: vertical; }
+    .qr-form input:focus, .qr-form textarea:focus { outline: 2px solid var(--accent); outline-offset: -1px; border-color: transparent; }
+    .qr-error { font-size: 13px; color: #d14343; }
     a { color: var(--accent); }
     footer { color: var(--muted); font-size: 13px; margin-top: 28px; text-align: center; }
     footer p { margin: 4px 0; }
@@ -139,6 +158,7 @@
       .row dd { grid-column: 1; }
       section.card > h2 { flex-wrap: wrap; }
       .field-row { grid-template-columns: 1fr; }
+      .qr-block { grid-template-columns: 1fr; }
     }
 
     @media print {
@@ -148,8 +168,11 @@
       .row { grid-template-columns: 200px 1fr; }
       section.card { break-inside: avoid; border-color: #bbb; }
       .wrap { padding: 0; }
+      .qr-block { grid-template-columns: 220px 1fr; }
+      .qr-form label, .qr-form .note { display: none; }
     }
   </style>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js"></script>
   <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
 </head>
 <body>
@@ -214,6 +237,24 @@
       <div class="row"><dt>Валюта</dt><dd id="p-cur">UAH</dd><span></span></div>
       <div class="row"><dt>Призначення платежу</dt><dd id="p-purpose">Оплата за послуги згідно з рахунком № ___ від ___, без ПДВ</dd><button class="copy" data-copy="#p-purpose">Копіювати</button></div>
     </dl>
+
+    <div class="qr-block" id="qr">
+      <div class="qr-img">
+        <div id="qr-canvas" role="img" aria-label="QR-код для оплати за стандартом НБУ"></div>
+        <a id="qr-link" class="btn qr-open no-print" href="#" rel="noopener">Відкрити в застосунку банку</a>
+      </div>
+      <div class="qr-form">
+        <h3>QR-код для оплати (стандарт НБУ)</h3>
+        <p class="note">Відскануйте камерою телефона або в застосунку банку — реквізити підставляться автоматично. Суму та призначення можна змінити тут, QR оновиться.</p>
+        <label><span>Сума, грн <span class="opt">(необовʼязково)</span></span>
+          <input id="qr-amount" inputmode="decimal" placeholder="напр. 1500.00" maxlength="12" autocomplete="off">
+        </label>
+        <label>Призначення платежу
+          <textarea id="qr-purpose" rows="2" maxlength="140">Оплата за послуги, без ПДВ</textarea>
+        </label>
+        <span id="qr-error" class="qr-error" role="status" aria-live="polite"></span>
+      </div>
+    </div>
   </section>
 
   <section class="card" id="contacts">
@@ -283,6 +324,60 @@
       });
       copy(lines.join('\n'), e.currentTarget);
     });
+
+
+    // ---- NBU payment QR (Правила НБУ, версія 002, кодування 2 = Windows-1251) ----
+    var NBU = { name: 'ФОП Артасевич Ігор Володимирович', iban: 'UA023220010000026007300011797', code: '2958310313' };
+    var CP1251 = { 'Ё': 0xA8, 'ё': 0xB8, 'Є': 0xAA, 'є': 0xBA, 'І': 0xB2, 'і': 0xB3, 'Ї': 0xAF, 'ї': 0xBF,
+      'Ґ': 0xA5, 'ґ': 0xB4, '«': 0xAB, '»': 0xBB, '№': 0xB9, '—': 0x97, '–': 0x96,
+      '\u2019': 0x92, '\u02BC': 0x92, '\u2018': 0x91, '\u201C': 0x93, '\u201D': 0x94 };
+    function toCp1251(str) {
+      var out = [];
+      for (var i = 0; i < str.length; i++) {
+        var ch = str[i], c = str.charCodeAt(i);
+        if (c < 0x80) out.push(c);
+        else if (c >= 0x410 && c <= 0x44F) out.push(c - 0x350);
+        else if (CP1251[ch] !== undefined) out.push(CP1251[ch]);
+        else out.push(0x3F);
+      }
+      return out;
+    }
+    function b64url(bytes) {
+      var bin = '';
+      for (var i = 0; i < bytes.length; i++) bin += String.fromCharCode(bytes[i]);
+      return btoa(bin).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+    }
+    function nbuUrl(amount, purpose) {
+      var lines = ['BCD', '002', '2', 'UCT', '', NBU.name, NBU.iban, amount ? 'UAH' + amount : '', NBU.code, '', '', purpose, ''];
+      return 'https://bank.gov.ua/qr/' + b64url(toCp1251(lines.join('\r\n')));
+    }
+    function normAmount(v) {
+      v = v.replace(/\s+/g, '').replace(',', '.');
+      if (!v) return '';
+      if (!/^\d{1,9}(\.\d{1,2})?$/.test(v) || Number(v) <= 0) return null;
+      return String(Number(v)) === v ? v : Number(v).toFixed(2).replace(/\.00$/, '');
+    }
+    var qrAmount = document.getElementById('qr-amount');
+    var qrPurpose = document.getElementById('qr-purpose');
+    var qrError = document.getElementById('qr-error');
+    function renderQr() {
+      var amount = normAmount(qrAmount.value);
+      var purpose = qrPurpose.value.replace(/\s+/g, ' ').trim();
+      if (amount === null) { qrError.textContent = 'Сума — число, до двох знаків після крапки.'; return; }
+      if (!purpose) { qrError.textContent = 'Призначення платежу обовʼязкове.'; return; }
+      qrError.textContent = '';
+      var url = nbuUrl(amount, purpose);
+      document.getElementById('qr-link').href = url;
+      if (typeof qrcode !== 'function') return;
+      var qr = qrcode(0, 'M');
+      qr.addData(url, 'Byte');
+      qr.make();
+      document.getElementById('qr-canvas').innerHTML = qr.createSvgTag({ cellSize: 4, margin: 0, scalable: true });
+    }
+    qrAmount.addEventListener('input', renderQr);
+    qrPurpose.addEventListener('input', renderQr);
+    renderQr();
+    window.__nbuUrl = nbuUrl;
 
     var form = document.getElementById('contact-form');
     var status = document.getElementById('f-status');
