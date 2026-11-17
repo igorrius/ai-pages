@@ -1,0 +1,953 @@
+<!doctype html>
+<html lang="uk">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Як налаштувати батареї в квартирі · 3D-посібник</title>
+<meta name="description" content="Інтерактивна 3D-модель квартирного опалення: дві труби в коридорі, кран біля лічильника, регулятор перепаду тиску з імпульсною трубкою, термоголовки й балансування батарей нижніми кранами.">
+<meta name="theme-color" content="#fbf6ea">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='88'%3E%F0%9F%94%A5%3C/text%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+:root{
+  --paper:#fbf6ea; --card:#fffdf8; --ink:#2d2a32; --ink-2:#5d5866; --muted:#8b8495; --rule:#e2d8c3;
+  --red:#e4572e; --orange:#f29e4c; --yellow:#f6c344; --green:#4f9d69; --blue:#3d7dd8; --navy:#2f4b7c; --copper:#b87333;
+  --sans:'Nunito',system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;
+  --r:16px;
+}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;font-family:var(--sans);color:var(--ink);background:var(--paper);line-height:1.55;font-size:16px;
+  background-image:linear-gradient(rgba(61,125,216,.06) 1px,transparent 1px),linear-gradient(90deg,rgba(61,125,216,.06) 1px,transparent 1px);background-size:26px 26px}
+a{color:var(--navy)}
+button,input,select{font-family:inherit;font-size:inherit}
+.wrap{max-width:1320px;margin:0 auto;padding:0 16px}
+.topbar{display:flex;gap:8px;flex-wrap:wrap;padding:14px 0 4px;font-size:14px;color:var(--ink-2)}
+.topbar a{color:var(--ink-2);text-decoration:none}.topbar a:hover{color:var(--navy);text-decoration:underline}
+.hero{padding:6px 0 14px}
+.hero h1{font-weight:900;font-size:clamp(28px,4.6vw,48px);line-height:1.1;letter-spacing:-.5px;margin:0 0 8px}
+.hero h1 .u{background:linear-gradient(transparent 60%,rgba(242,158,76,.55) 60%,rgba(242,158,76,.55) 90%,transparent 90%);padding:0 4px}
+.hero p{margin:0;color:var(--ink-2);font-size:17px;max-width:72ch}
+
+.scen{display:flex;flex-wrap:wrap;gap:8px;margin:14px 0 14px}
+.scen span{font-weight:800;color:var(--ink-2);align-self:center;margin-right:4px}
+.chip{border:1.5px solid var(--rule);background:var(--card);border-radius:999px;padding:6px 12px;cursor:pointer;font-weight:700;color:var(--ink);transition:.15s}
+.chip:hover{border-color:var(--orange)}
+.chip.on{background:var(--ink);color:#fff;border-color:var(--ink)}
+
+.lab{display:grid;grid-template-columns:minmax(0,1fr) 400px;gap:16px;align-items:start}
+@media (max-width:980px){.lab{grid-template-columns:1fr}}
+.stagecol{position:sticky;top:10px}
+@media (max-width:980px){.stagecol{position:static}}
+.stage{position:relative;height:min(68vh,640px);min-height:380px;border-radius:var(--r);overflow:hidden;border:1.5px solid var(--rule);background:#e9eef3;touch-action:none}
+.stage canvas{display:block;width:100%;height:100%}
+.hud{position:absolute;top:10px;left:10px;right:10px;display:flex;flex-wrap:wrap;gap:6px;pointer-events:none}
+.hud > *{pointer-events:auto}
+.hbtn{background:rgba(255,253,248,.92);border:1px solid var(--rule);border-radius:10px;padding:5px 9px;font-weight:800;font-size:13px;cursor:pointer;color:var(--ink)}
+.hbtn.on{background:var(--ink);color:#fff;border-color:var(--ink)}
+.clock{background:rgba(255,253,248,.92);border:1px solid var(--rule);border-radius:10px;padding:5px 9px;font-weight:800;font-size:13px;margin-left:auto;font-variant-numeric:tabular-nums}
+.lbl{position:absolute;left:0;top:0;transform:translate(-50%,-100%);pointer-events:none;white-space:nowrap;font-size:12px;font-weight:800;padding:2px 7px;border-radius:8px;background:rgba(255,253,248,.9);border:1px solid var(--rule);color:var(--ink);box-shadow:0 2px 6px rgba(0,0,0,.08)}
+.lbl.s{color:#b23a1a}.lbl.r{color:#24589f}.lbl.c{color:#8a531f}
+.lbl.room{font-size:12px;background:rgba(45,42,50,.82);color:#fff;border-color:transparent}
+.lbl.hide{display:none}
+.toast{position:absolute;left:10px;bottom:10px;max-width:min(440px,calc(100% - 20px));background:rgba(255,253,248,.96);border:1.5px solid var(--rule);border-radius:12px;padding:10px 34px 10px 12px;font-size:14px;box-shadow:0 6px 18px rgba(0,0,0,.12);display:none}
+.toast.show{display:block}
+.toast b{display:block;margin-bottom:2px}
+.toast .x{position:absolute;top:4px;right:6px;border:0;background:none;font-size:18px;cursor:pointer;color:var(--muted)}
+.nogl{position:absolute;inset:0;display:none;align-items:center;justify-content:center;padding:24px;text-align:center;color:var(--ink-2)}
+
+.tour{margin-top:12px;background:var(--card);border:1.5px solid var(--rule);border-radius:var(--r);padding:14px 16px}
+.tour .th{display:flex;align-items:center;gap:10px;margin-bottom:4px}
+.tour .num{flex:none;width:30px;height:30px;border-radius:50%;background:var(--orange);color:#fff;font-weight:900;display:grid;place-items:center}
+.tour h3{margin:0;font-size:18px;font-weight:900}
+.tour p{margin:4px 0 10px;color:var(--ink-2)}
+.tour .nav{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.tour .dots{display:flex;gap:5px;margin-right:auto;flex-wrap:wrap}
+.tour .dots button{width:10px;height:10px;border-radius:50%;border:0;background:var(--rule);padding:0;cursor:pointer}
+.tour .dots button.on{background:var(--orange)}
+.btn{border:1.5px solid var(--ink);background:var(--ink);color:#fff;border-radius:10px;padding:7px 14px;font-weight:800;cursor:pointer}
+.btn.ghost{background:transparent;color:var(--ink)}
+.btn.try{background:var(--orange);border-color:var(--orange)}
+.btn:disabled{opacity:.35;cursor:default}
+
+.panel{display:flex;flex-direction:column;gap:12px}
+.box{background:var(--card);border:1.5px solid var(--rule);border-radius:var(--r);padding:14px}
+.box h3{margin:0 0 8px;font-size:15px;font-weight:900;display:flex;align-items:center;gap:6px}
+.box h3 small{font-weight:700;color:var(--muted);margin-left:auto;font-size:12px}
+.kpis{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.kpi{background:#fff;border:1px solid var(--rule);border-radius:12px;padding:8px}
+.kpi .v{font-size:20px;font-weight:900;font-variant-numeric:tabular-nums;line-height:1.1}
+.kpi .k{font-size:12px;color:var(--ink-2);font-weight:700}
+.noise{height:8px;border-radius:6px;background:#eee;overflow:hidden;margin-top:6px}
+.noise i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--green),var(--yellow),var(--red));transition:width .3s}
+.pbar{display:flex;height:26px;border-radius:8px;overflow:hidden;margin-top:6px;border:1px solid var(--rule);font-size:11px;font-weight:800;color:#fff}
+.pbar div{display:flex;align-items:center;justify-content:center;overflow:hidden;white-space:nowrap;transition:flex-grow .3s;min-width:0}
+.legend{display:flex;flex-wrap:wrap;gap:4px 12px;font-size:12px;color:var(--ink-2);margin-top:6px}
+.legend i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:4px;vertical-align:-1px}
+.diag{margin:10px 0 0;padding:0;list-style:none;display:flex;flex-direction:column;gap:6px;font-size:14px}
+.diag li{background:#fff;border:1px solid var(--rule);border-left:4px solid var(--green);border-radius:8px;padding:6px 9px}
+.diag li.w{border-left-color:var(--orange)}.diag li.b{border-left-color:var(--red)}.diag li.i{border-left-color:var(--blue)}
+
+.ctl{margin:10px 0 0}
+.ctl label{display:flex;justify-content:space-between;gap:8px;font-weight:800;font-size:14px}
+.ctl label output{font-variant-numeric:tabular-nums;color:var(--navy)}
+.ctl .hint{font-size:12px;color:var(--muted);margin-top:1px}
+input[type=range]{width:100%;accent-color:var(--orange);margin:4px 0 0;height:22px}
+.seg{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}
+.seg button{border:1.5px solid var(--rule);background:#fff;border-radius:9px;padding:5px 9px;font-weight:800;font-size:13px;cursor:pointer}
+.seg button.on{background:var(--ink);color:#fff;border-color:var(--ink)}
+.rad{border:1px solid var(--rule);border-radius:12px;padding:10px;background:#fff;margin-top:8px;transition:box-shadow .3s}
+.rad.flash{box-shadow:0 0 0 3px var(--orange)}
+.rad .rh{display:flex;align-items:baseline;gap:8px;flex-wrap:wrap}
+.rad .rh b{font-size:15px}
+.rad .rh .st{margin-left:auto;font-size:13px;font-weight:800;font-variant-numeric:tabular-nums}
+.rad .meta{font-size:12px;color:var(--ink-2);font-variant-numeric:tabular-nums}
+.rad .two{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.rad .ctl{margin-top:6px}
+.rad .ctl label{font-size:13px}
+.row{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+.rad button.air{margin-top:6px;width:100%;text-align:left;border:1px dashed var(--rule);background:transparent;border-radius:8px;padding:5px 8px;font-size:12px;font-weight:700;color:var(--muted);cursor:pointer}
+.rad button.air.on{border:1.5px solid var(--orange);background:#fff4e6;color:var(--ink)}
+.tbl{width:100%;border-collapse:separate;border-spacing:0;background:var(--card);border:1.5px solid var(--rule);border-radius:var(--r);overflow:hidden;font-size:14px}
+.tbl th,.tbl td{padding:9px 11px;text-align:left;vertical-align:top;border-bottom:1px solid var(--rule)}
+.tbl th{background:#f3ead8;font-weight:900;font-size:13px}
+.tbl tr:last-child td{border-bottom:0}
+.tbl td:first-child{font-weight:800;white-space:nowrap}
+.tbl .who{display:inline-block;font-size:12px;font-weight:800;border-radius:6px;padding:1px 6px;background:#e6f2ea;color:#2d6b43}
+.tbl .who.no{background:#fde7e1;color:#a63a1d}.tbl .who.mid{background:#fff1d6;color:#8a5a12}
+.tblwrap{overflow-x:auto}
+@media (max-width:760px){.tbl thead{display:none}.tbl,.tbl tbody,.tbl tr,.tbl td{display:block;width:100%}.tbl tr{border-bottom:1px solid var(--rule);padding:6px 0}.tbl td{border:0;padding:3px 12px}.tbl td:first-child{white-space:normal;font-size:16px}.tbl td[data-h]::before{content:attr(data-h)": ";font-weight:800;color:var(--muted)}}
+
+section.txt{margin:34px 0}
+section.txt h2{font-size:clamp(22px,3vw,30px);font-weight:900;margin:0 0 12px}
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:12px}
+.card{background:var(--card);border:1.5px solid var(--rule);border-radius:var(--r);padding:14px 16px}
+.card h3{margin:0 0 6px;font-size:17px;font-weight:900}
+.card p{margin:0 0 6px;color:var(--ink-2)}
+ol.steps{counter-reset:s;list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:10px}
+ol.steps li{counter-increment:s;background:var(--card);border:1.5px solid var(--rule);border-radius:var(--r);padding:12px 14px 12px 56px;position:relative}
+ol.steps li::before{content:counter(s);position:absolute;left:14px;top:12px;width:30px;height:30px;border-radius:50%;background:var(--ink);color:#fff;font-weight:900;display:grid;place-items:center}
+ol.steps li b{display:block}
+.warn{background:#fff4e6;border:1.5px solid #f3c99a;border-radius:var(--r);padding:12px 16px}
+.warn ul{margin:6px 0 0;padding-left:20px}
+details.orig{background:var(--card);border:1.5px solid var(--rule);border-radius:var(--r);padding:12px 16px}
+details.orig summary{cursor:pointer;font-weight:800}
+details.orig blockquote{margin:10px 0 0;padding:0 0 0 14px;border-left:4px solid var(--orange);color:var(--ink-2)}
+footer{padding:26px 0 40px;color:var(--muted);font-size:14px;text-align:center}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+</style>
+<script type="importmap">
+{"imports":{
+  "three":"https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js",
+  "three/addons/":"https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/"
+}}
+</script>
+</head>
+<body>
+<div class="wrap">
+  <nav class="topbar" aria-label="Навігація"><a href="../../index.html">AI Pages</a><span>/</span><a href="./index.html">Дім</a><span>/</span><span>Батареї в 3D</span></nav>
+
+  <header class="hero">
+    <h1>Як <span class="u">налаштувати батареї</span> в квартирі</h1>
+    <p>3D-модель квартирного опалення: дві труби в коридорі, кран біля лічильника, регулятор перепаду тиску з тонкою мідною трубкою і чотири батареї з термоголовками та нижніми кранами. Крутіть крани — і дивіться, як змінюються проток, тепло в кімнатах і шум.</p>
+  </header>
+
+  <div class="scen" role="group" aria-label="Готові ситуації">
+    <span>Ситуації:</span>
+    <button class="chip" data-scen="default" type="button">🏠 Як є</button>
+    <button class="chip" data-scen="good" type="button">✅ Налаштовано</button>
+    <button class="chip" data-scen="noisy" type="button">🔊 Свистить</button>
+    <button class="chip" data-scen="cold" type="button">🥶 Дальня холодна</button>
+    <button class="chip" data-scen="clog" type="button">🚫 Забита трубка</button>
+    <button class="chip" data-scen="air" type="button">💨 Повітря</button>
+    <button class="chip" data-scen="filter" type="button">🧺 Забитий фільтр</button>
+    <button class="chip" data-scen="dirt" type="button">🟤 Багато бруду</button>
+  </div>
+
+  <div class="lab">
+    <div class="stagecol">
+      <div class="stage" id="stage">
+        <div class="hud">
+          <button class="hbtn" id="b-play" type="button" title="Пауза / пуск">⏸</button>
+          <button class="hbtn" id="b-speed" type="button" title="Швидкість часу">×1</button>
+          <button class="hbtn on" id="b-lbl" type="button">🏷 Підписи</button>
+          <button class="hbtn" id="b-snd" type="button" title="Звук свисту">🔇 Звук</button>
+          <button class="hbtn" id="b-cam" type="button">🎥 Загальний вигляд</button>
+          <span class="clock" id="clock" title="Модельний час: 1 секунда ≈ 15 хвилин">⏱ 0:00</span>
+        </div>
+        <div id="labels"></div>
+        <div class="toast" id="toast" role="status"><button class="x" type="button" aria-label="Закрити">×</button><div id="toast-t"></div></div>
+        <div class="nogl" id="nogl">Не вдалося запустити 3D (WebGL). Решта сторінки працює — пояснення нижче.</div>
+      </div>
+
+      <div class="tour" id="tour" aria-live="polite">
+        <div class="th"><span class="num" id="t-num">1</span><h3 id="t-title"></h3></div>
+        <p id="t-text"></p>
+        <div class="nav">
+          <div class="dots" id="t-dots"></div>
+          <button class="btn try" id="t-try" type="button" hidden></button>
+          <button class="btn ghost" id="t-prev" type="button">◀</button>
+          <button class="btn" id="t-next" type="button">Далі ▶</button>
+        </div>
+      </div>
+    </div>
+
+    <aside class="panel" aria-label="Керування моделлю">
+      <div class="box">
+        <h3>📟 Що зараз <small id="mode"></small></h3>
+        <div class="kpis">
+          <div class="kpi"><div class="v" id="k-q">0</div><div class="k">л/год на квартиру</div></div>
+          <div class="kpi"><div class="v" id="k-dp">0</div><div class="k">кПа на батареях</div></div>
+          <div class="kpi"><div class="v" id="k-n">тихо</div><div class="k">шум</div><div class="noise"><i id="k-nb"></i></div></div>
+        </div>
+        <div style="margin-top:10px;font-size:13px;font-weight:800">Куди «йде» дельта стояка <span id="k-dpall" style="color:var(--muted)"></span></div>
+        <div class="pbar" id="pbar" aria-hidden="true">
+          <div style="background:#c96d2c" id="pb1"></div><div style="background:#9a8f7c" id="pb2"></div><div style="background:#e4572e" id="pb3"></div><div style="background:#3d7dd8" id="pb4"></div>
+        </div>
+        <div class="legend"><span><i style="background:#c96d2c"></i>кран 1</span><span><i style="background:#9a8f7c"></i>лічильник і труби</span><span><i style="background:#e4572e"></i>батареї</span><span><i style="background:#3d7dd8"></i>кран 2 «з'їдає» зайве</span></div>
+        <ul class="diag" id="diag"></ul>
+      </div>
+
+      <div class="box">
+        <h3>🏢 Будинок <small>не у вашій владі</small></h3>
+        <div class="ctl"><label for="c-dp">Дельта в стояку (подача − обратка) <output id="o-dp"></output></label>
+          <input type="range" id="c-dp" min="20" max="90" step="1"><div class="hint">Різна на різних поверхах і в різний час — регулятор має це згладжувати.</div></div>
+        <div class="ctl"><label for="c-ts">Температура подачі <output id="o-ts"></output></label><input type="range" id="c-ts" min="45" max="85" step="1"></div>
+        <div class="ctl"><label for="c-to">На вулиці <output id="o-to"></output></label><input type="range" id="c-to" min="-20" max="10" step="1"></div>
+      </div>
+
+      <div class="box">
+        <h3>🔧 Вхід у квартиру <small>щит у коридорі</small></h3>
+        <div class="ctl"><label>Кульові крани на вводі</label>
+          <div class="seg" id="c-ball"><button type="button" data-v="1">Відкриті</button><button type="button" data-v="0">Закриті</button></div>
+          <div class="hint">Тільки «відкрито / закрито» — для ремонту й чистки фільтра.</div></div>
+        <div class="ctl"><label>Сітчастий фільтр</label>
+          <div class="seg" id="c-filter"><button type="button" data-v="ok">🧺 Чистий</button><button type="button" data-v="bad">🟤 Забитий</button></div></div>
+        <div class="ctl"><label for="c-v1">Кран 1 біля лічильника — обмеження протоку <output id="o-v1"></output></label>
+          <input type="range" id="c-v1" min="5" max="100" step="5"><div class="hint">Задає, скільки максимум може пройти на квартиру.</div></div>
+        <div class="ctl"><label for="c-set">Кран 2 на обратці — дельта на квартиру <output id="o-set"></output></label>
+          <input type="range" id="c-set" min="5" max="25" step="1"><div class="hint">Менше — тихіше, але гірше прокачуються дальні батареї. Крутити поступово.</div></div>
+        <div class="ctl"><label>Стан регулятора (крана 2)</label>
+          <div class="seg" id="c-reg">
+            <button type="button" data-reg="ok">✅ Справний</button>
+            <button type="button" data-reg="torn">💥 Мембрана порвана</button>
+            <button type="button" data-reg="clog">🚫 Трубка забита</button>
+          </div></div>
+        <div class="ctl"><label for="c-dirt">Бруд у системі <output id="o-dirt"></output></label><input type="range" id="c-dirt" min="0" max="100" step="5"></div>
+      </div>
+
+      <div class="box">
+        <h3>♨️ Батареї <small>від щита → до найдальшої</small></h3>
+        <div id="rads"></div>
+        <div class="row">
+          <button class="btn" id="b-bal" type="button">⚖️ Підібрати нижні крани</button>
+          <button class="btn ghost" id="b-open" type="button">Відкрити всі нижні</button>
+        </div>
+        <div class="hint" style="font-size:12px;color:var(--muted);margin-top:6px">«Підібрати» прикриває ближні батареї так, щоб кожна отримувала проток під свій розмір — дальня лишається відкритою повністю.</div>
+      </div>
+    </aside>
+  </div>
+
+  <section class="txt" aria-labelledby="h-how">
+    <h2 id="h-how">Як це влаштовано</h2>
+    <div class="cards">
+      <div class="card"><h3>🔴🔵 Дві труби в коридорі</h3><p>Подача і обратка — обидві під тиском, у подачі він більший. Батареї гріють не «від тиску», а від <b>різниці тиску</b> між цими трубами: вона проштовхує гарячу воду крізь квартиру.</p></div>
+      <div class="card"><h3>🔧 Кран 1 — біля лічильника</h3><p>Стоїть на подачі. Обмежує <b>максимальний проток</b> теплоносія на квартиру — щоб одна квартира не «забирала» воду в сусідів.</p></div>
+      <div class="card"><h3>🎛️ Кран 2 — на обратці</h3><p>Регулятор перепаду тиску: усередині мембрана й пружина. Тримає задану <b>дельту на ваших батареях</b>: тиск у стояку виріс — регулятор прикрився, впав — відкрився.</p></div>
+      <div class="card"><h3>🟠 Тонка мідна трубка</h3><p>Імпульсна трубка від місця крана 1 до мембрани крана 2. Нею регулятор «відчуває» тиск подачі. Забилася трубка або порвалася мембрана — регулятор перестає регулювати.</p></div>
+      <div class="card"><h3>♨️ Батареї — паралельно</h3><p>Кожна батарея — окрема доріжка від подачі до обратки. Вода йде легшим шляхом, тож <b>ближні до щита</b> продавлюються краще, а найдальша — гірше.</p></div>
+      <div class="card"><h3>🌡️ Зверху — термоголовка, знизу — кран</h3><p>Термоголовка тримає температуру кімнати (3 ≈ 20 °C) і сама прикривається, коли тепло. Нижнім краном балансують: ближні батареї трохи призакривають, щоб дальнім дісталося більше.</p></div>
+    </div>
+  </section>
+
+  <section class="txt" aria-labelledby="h-all">
+    <h2 id="h-all">Усі органи керування — від стояка до кімнати</h2>
+    <div class="tblwrap"><table class="tbl">
+      <thead><tr><th>Що</th><th>Де</th><th>Що робить</th><th>Хто і коли крутить</th><th>Ознаки проблеми</th></tr></thead>
+      <tbody>
+        <tr><td>🏭 Температура подачі, дельта в стояку</td><td data-h="Де">Тепловий пункт будинку</td><td data-h="Що робить">Скільки тепла й тиску взагалі приходить на поверх</td><td data-h="Хто"><span class="who no">не ви</span> ОСББ / керуюча компанія / тепломережа</td><td data-h="Проблеми">Холодно в усіх сусідів, а не лише у вас</td></tr>
+        <tr><td>🔴🔵 Кульові крани</td><td data-h="Де">Щит, одразу біля стояків</td><td data-h="Що робить">Відкрито / закрито — відрізають квартиру</td><td data-h="Хто"><span class="who mid">обережно</span> лише для ремонту чи чистки фільтра; не для регулювання</td><td data-h="Проблеми">Прикритий наполовину кран шумить і зношується</td></tr>
+        <tr><td>🧺 Сітчастий фільтр</td><td data-h="Де">Щит, перед лічильником</td><td data-h="Що робить">Ловить бруд, щоб не забились лічильник і крани</td><td data-h="Хто"><span class="who mid">сантехнік</span> чистка при перекритих кульових кранах</td><td data-h="Проблеми">Проток упав на всю квартиру одразу</td></tr>
+        <tr><td>🔧 Кран 1</td><td data-h="Де">Щит, на подачі біля лічильника</td><td data-h="Що робить">Обмежує максимальний проток на квартиру</td><td data-h="Хто"><span class="who">власник</span> рідко; часто вже налаштований і опломбований</td><td data-h="Проблеми">Сильно прикритий — бракує протоку всім батареям</td></tr>
+        <tr><td>📟 Лічильник тепла</td><td data-h="Де">Щит, поряд із краном 1</td><td data-h="Що робить">Показує проток і спожите тепло</td><td data-h="Хто"><span class="who no">не крутити</span> лише читати</td><td data-h="Проблеми">Проток 0 при відкритих кранах — шукайте засмічення</td></tr>
+        <tr><td>🎛️ Кран 2 — регулятор ΔP</td><td data-h="Де">Щит, на обратці</td><td data-h="Що робить">Тримає задану дельту на батареях</td><td data-h="Хто"><span class="who">власник</span> поступово, коли шумить або бракує протоку</td><td data-h="Проблеми">Налаштування ні на що не впливає — мембрана, трубка чи сам кран</td></tr>
+        <tr><td>🟠 Мідна імпульсна трубка</td><td data-h="Де">Від місця крана 1 до крана 2</td><td data-h="Що робить">Передає тиск подачі на мембрану регулятора</td><td data-h="Хто"><span class="who no">не чіпати</span> не перегинати й не відкручувати</td><td data-h="Проблеми">Забита — регулятор «застиг»</td></tr>
+        <tr><td>🌡️ Термоголовка</td><td data-h="Де">Угорі батареї, на подачі</td><td data-h="Що робить">Тримає температуру кімнати (3 ≈ 20 °C)</td><td data-h="Хто"><span class="who">ви</span> будь-коли — це «пульт» кімнати</td><td data-h="Проблеми">Свист на прикритому клапані — завелика дельта</td></tr>
+        <tr><td>⚖️ Нижній кран</td><td data-h="Де">Знизу батареї, на обратці</td><td data-h="Що робить">Балансує батареї: прикривають ближні до щита</td><td data-h="Хто"><span class="who">власник</span> один раз налаштувати, потім не чіпати</td><td data-h="Проблеми">Дальня батарея холодна, ближні гарячі</td></tr>
+        <tr><td>💨 Кран Маєвського</td><td data-h="Де">Угорі батареї, з протилежного боку</td><td data-h="Що робить">Випускає повітря</td><td data-h="Хто"><span class="who">ви</span> на початку сезону і коли верх холодний</td><td data-h="Проблеми">Верх холодний, низ теплий, дзюрчання</td></tr>
+      </tbody>
+    </table></div>
+  </section>
+
+  <section class="txt" aria-labelledby="h-steps">
+    <h2 id="h-steps">Порядок налаштування</h2>
+    <ol class="steps">
+      <li><b>Сфотографуйте або позначте, як усе стоїть зараз.</b>Положення крана 1, крана 2 і всіх нижніх кранів — щоб можна було повернути як було.</li>
+      <li><b>Перевірте, чи живий регулятор.</b>Поверніть налаштування крана 2 на невеликий крок і почекайте: якщо шум чи прогрів батарей не змінюються взагалі, можливо, порвана мембрана, забита мідна трубка або несправний сам кран — це справа для сантехніка.</li>
+      <li><b>Спустіть повітря.</b>Пройдіться краном Маєвського по всіх батареях — інакше балансування покаже неправду.</li>
+      <li><b>Відкрийте термоголовки на максимум.</b>Так ви бачите «чисту» гідравліку — без того, що термостати прикриваються самі.</li>
+      <li><b>Збалансуйте нижні крани.</b>Найдальшу батарею лишіть відкритою повністю. Ближні до щита потроху призакривайте — по чверті оберту, з перервою на кілька годин, щоб усе встигло прогрітися.</li>
+      <li><b>Боріться з шумом краном 2 — поступово.</b>Свистять зазвичай термоклапани, коли на них зависока дельта. Зменшуйте її невеликими кроками й щоразу перевіряйте, що найдальша батарея все ще гаряча.</li>
+      <li><b>Поставте термоголовки на комфорт.</b>3 ≈ 20 °C, кожна поділка ≈ ±4 °C. Далі вони тримають температуру самі.</li>
+    </ol>
+  </section>
+
+  <section class="txt" aria-labelledby="h-real">
+    <h2 id="h-real">Чого чекати від не нової системи</h2>
+    <div class="warn">
+      <b>Ідеалу може не бути.</b> Система вже не нова: всередині батарей і труб буває багато бруду (з однієї знятої батареї його вилилось стільки, що автор пояснення був шокований). Тому:
+      <ul>
+        <li>шум можна побороти, зменшивши дельту, — але ціною гіршої прокачки дальніх батарей; це компроміс;</li>
+        <li>регулювання працює, лише якщо мембрана ціла, мідна трубка не забита і сам кран справний;</li>
+        <li>лічильник і крани, найімовірніше, належать квартирі (так розуміє автор пояснення) — але краще уточнити в ОСББ чи керуючої компанії, перш ніж щось крутити або міняти;</li>
+        <li>не чіпайте крани на самих стояках будинку і, якщо крапає чи щось не крутиться, — кличте сантехніка.</li>
+      </ul>
+    </div>
+    <p style="color:var(--muted);font-size:14px;margin-top:10px">Модель спрощена: тиски, протоки й потужності умовні, порядок величин — як у типовій двотрубній системі з регулятором перепаду тиску. Вона пояснює принцип, а не замінює замір і сантехніка.</p>
+  </section>
+
+  <section class="txt">
+    <details class="orig">
+      <summary>Оригінальне пояснення з чату будинку</summary>
+      <blockquote>
+        <p>Система опалення. В коридорі є дві труби, одна подача, друга обратка, обидві під тиском (подача має більший тиск), батареї працюють на різниці тиску між цими трубами. Кожна квартира під'єднана через два крани, один біля лічильника, він регулює максимальний проток теплоносія на вашу квартиру. Другий кран стоїть на виході з вашої квартири на трубі обратки, до нього ще має йти така тонка мідна трубка від локації першого крану. Так от другий кран як раз і регулює різницю тиску (дельту), що подається на ваші батареї. Обережно поступово регулюючи той другий кран (на обратці) можна знижувати загальний тиск теплоносія на батареях. Це за умови, що мембрана ціла, та трубка маленька мідна не забита і сам кран справний. Наскільки я правильно розумію сам лічильник і ті крани власність квартири.</p>
+        <p>Окремо на самій батареї можна налаштувати згори термостат головку на температуру, а нижнім краном як раз балансувати під'єднані батареї до мережі. Так як батареї під'єднані паралельно, то сама дальня батарея від входу у квартиру буде гірше продавлюватися, тому на перших (ближчих до щита коридорного) батареї іноді трохи призакривають нижнім краном збільшуючи їх гідравлічний опір. Це теж налаштування, що має робити власник квартири.</p>
+        <p>Система вже не нова, тому можна побороти шум, але і втратити нормальну прокачку батарей при цьому. Коли знімав одну батарею свого часу, під час заміни вікна, то з неї вилив таку кількість бруду, що був трохи шокований. Тому вимагати ідеальної роботи цієї системи налаштування тиску мабуть вже складно.</p>
+      </blockquote>
+    </details>
+  </section>
+
+  <footer>© <span id="year"></span> AI Pages · <a href="./index.html">Дім</a></footer>
+</div>
+
+<noscript><p style="text-align:center">Для 3D-моделі потрібен JavaScript.</p></noscript>
+
+<script type="module">
+import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+
+document.getElementById('year').textContent = new Date().getFullYear();
+const $ = id => document.getElementById(id);
+const clamp = (v,a,b) => Math.min(b,Math.max(a,v));
+const fmt = (v,d=0) => v.toLocaleString('uk-UA',{minimumFractionDigits:d,maximumFractionDigits:d});
+
+/* ================= МОДЕЛЬ ================= */
+const ROOMS = [
+  {name:'Кухня',    x0:0, x1:3,  need:900},
+  {name:'Спальня',  x0:3, x1:6,  need:1100},
+  {name:'Дитяча',   x0:6, x1:9,  need:1300},
+  {name:'Вітальня', x0:9, x1:12, need:1700},
+];
+const N = ROOMS.length;
+const HEAD_T = [7,12,16,20,24,28,99];        // ❄,1..5 — типова шкала термоголовки; 6 = головку знято
+const HEAD_L = ['❄','1','2','3','4','5','без'];
+// Kv (м³/год при 1 бар). Q[л/год] = 100·Kv·√ΔP[кПа]  →  ΔP = S·Q²
+const KT=0.35, KL=1.6, KR=2.5, KSEG=1.8, KIN=2.6, KM=4.5, K1=3, K2=3, KF_OK=6, KF_BAD=0.9, AIR_KV=0.7, AIR_HEAT=0.45;
+const S = kv => kv<=1e-6 ? Infinity : 1/(1e4*kv*kv);
+const inv = s => s===Infinity ? 0 : 1/Math.sqrt(s);
+const TAU = 6*3600;                            // теплова інерція кімнати, с
+ROOMS.forEach(r=>{ r.UA = r.need/26; r.C = r.UA*TAU; r.UAr = 0.633*r.need/20; r.qd = r.need/20*3600/4186; });
+
+const st = {
+  dp:50, tsup:70, tout:-5, v1:100, set:12, reg:'ok', dirt:20, S2frozen:null, ball:true, filter:'ok',
+  rads: ROOMS.map(()=>({head:3, ls:4, air:false, open:1, T:18, tm:18, q:0, P:0, dpT:0, tret:40})),
+  running:true, speed:1, simT:0, sound:false, labels:true,
+};
+
+function hydraulics(openings, s=st){
+  const dirt = 1 - 0.65*s.dirt/100;
+  const Sb = s.rads.map((r,i)=> S(KT*openings[i]*dirt) + S(KL*r.ls/4*dirt) + S(KR*dirt*(r.air?AIR_KV:1)));
+  const Sseg = 2*S(KSEG*dirt);
+  const Seq = new Array(N); Seq[N-1] = Sb[N-1];
+  for(let k=N-2;k>=0;k--){ const kv = inv(Sb[k]) + inv(Seq[k+1]+Sseg); Seq[k] = kv===0 ? Infinity : 1/(kv*kv); }
+  const Sin = 2*S(KIN*dirt) + S(KM) + S(s.filter==='ok'?KF_OK:KF_BAD);
+  const SA = Sin + Seq[0], S1 = S(K1*s.v1/100), SL = s.ball ? S1 + SA : Infinity, S2min = S(K2);
+  let Q=0, mode='ok', S2=S2min;
+  if(SL!==Infinity){
+    if(s.reg==='ok'){
+      const Qs = Math.sqrt(s.set/SL);
+      if(s.dp - s.set >= Qs*Qs*S2min){ Q=Qs; S2=(s.dp-s.set)/(Q*Q); mode='reg'; }
+      else { Q=Math.sqrt(s.dp/(SL+S2min)); mode='sat'; }
+    } else {
+      S2 = s.reg==='torn' ? S2min : (s.S2frozen ?? S2min);
+      Q = Math.sqrt(s.dp/(SL+S2)); mode = s.reg;
+    }
+  } else { mode = s.reg==='ok'?'reg':s.reg; S2 = s.reg==='clog' ? (s.S2frozen ?? S2min) : S2min; }
+  const q=[], dpT=[], seg=[];
+  let dpN = Q*Q*Seq[0];
+  for(let k=0;k<N;k++){
+    const qr = Math.sqrt(dpN)*inv(Sb[k]); q.push(qr);
+    dpT.push(qr*qr*S(KT*openings[k]*dirt) || 0);
+    if(k<N-1){ const qd = Math.sqrt(dpN)*inv(Seq[k+1]+Sseg); seg.push(qd); dpN = qd*qd*Seq[k+1]; }
+  }
+  return {Q, q, dpT, seg, mode, S2, kv2: inv(S2)/K2,
+    dp1:Q*Q*S1, dpIn:Q*Q*Sin, dpR:Q*Q*Seq[0], dpReg: s.dp - Q*Q*SL};
+}
+
+let H = hydraulics(st.rads.map(r=>r.open));
+
+function stepPhysics(dtSim){
+  H = hydraulics(st.rads.map(r=>r.open));
+  const sub = Math.max(1, Math.ceil(dtSim/120)), dt = dtSim/sub;
+  for(let i=0;i<N;i++){
+    const r = st.rads[i], R = ROOMS[i];
+    r.q = H.q[i]; r.dpT = H.dpT[i];
+    for(let k=0;k<sub;k++){
+      const mc = r.q/3600*4186;
+      const UAr = R.UAr*(r.air?AIR_HEAT:1);
+      r.P = mc>0.01 ? mc*(st.tsup - r.T)*(1-Math.exp(-UAr/mc)) : 0;
+      r.T += (r.P - R.UA*(r.T - st.tout))/R.C*dt;
+      const target = r.head===6 ? 1 : clamp((HEAD_T[r.head] + 1 - r.T)/2, 0, 1);
+      r.open += (target - r.open)*Math.min(1, dt/600);
+    }
+    const mc = r.q/3600*4186;
+    r.tret = mc>0.01 ? st.tsup - r.P/mc : r.T;
+  }
+}
+
+/* ================= UI: керування ================= */
+const radsBox = $('rads');
+ROOMS.forEach((R,i)=>{
+  const d = document.createElement('div'); d.className='rad'; d.id='rad'+i;
+  d.innerHTML = `<div class="rh"><b>${i+1}. ${R.name}</b><span class="st" id="r${i}-st"></span></div>
+    <div class="meta" id="r${i}-m"></div>
+    <div class="two">
+      <div class="ctl"><label for="r${i}-h">Термоголовка <output id="r${i}-ho"></output></label><input type="range" id="r${i}-h" min="0" max="6" step="1"></div>
+      <div class="ctl"><label for="r${i}-l">Нижній кран <output id="r${i}-lo"></output></label><input type="range" id="r${i}-l" min="0" max="4" step="0.1"></div>
+    </div>
+    <button class="air" type="button" id="r${i}-air"></button>`;
+  radsBox.appendChild(d);
+  $(`r${i}-air`).addEventListener('click', ()=>{ const r=st.rads[i];
+    if(r.air){ r.air=false; toast('💨 Повітря спущено',`Кран Маєвського на батареї «${R.name}» відкрили, доки не пішла вода без бульбашок. Тепер вона гріється на всю висоту.`); }
+    else { r.air=true; toast('💨 У батареї повітря',`Верх батареї «${R.name}» холодний, може дзюрчати. Лікується краном Маєвського вгорі батареї — кнопка ще раз.`); }
+    syncUI(); });
+  $(`r${i}-h`).addEventListener('input', e=>{ st.rads[i].head=+e.target.value; syncUI(); });
+  $(`r${i}-l`).addEventListener('input', e=>{ st.rads[i].ls=+e.target.value; syncUI(); });
+});
+const bind = (id, key, fmtFn) => { const el=$('c-'+id); el.addEventListener('input',()=>{ st[key]=+el.value; syncUI(); }); return {el, out:$('o-'+id), key, fmtFn}; };
+const ctrls = [
+  bind('dp','dp', v=>`${v} кПа`),
+  bind('ts','tsup', v=>`${v} °C`),
+  bind('to','tout', v=>`${v>0?'+':''}${v} °C`),
+  bind('v1','v1', v=>`${v}%`),
+  bind('set','set', v=>`${v} кПа`),
+  bind('dirt','dirt', v=>`${v}%`),
+];
+document.querySelectorAll('#c-reg button').forEach(b=>b.addEventListener('click',()=>setReg(b.dataset.reg)));
+document.querySelectorAll('#c-ball button').forEach(b=>b.addEventListener('click',()=>{ st.ball = b.dataset.v==='1'; syncUI(); }));
+document.querySelectorAll('#c-filter button').forEach(b=>b.addEventListener('click',()=>{ st.filter = b.dataset.v; syncUI(); }));
+function setReg(mode){
+  // регулятор «застигає» там, де стояв при повному протоку (термоголовки відкриті)
+  if(mode==='clog' && st.reg!=='clog'){ const h=hydraulics(st.rads.map(()=>1), {...st, reg:'ok'}); st.S2frozen = st.reg==='torn' ? S(K2) : h.S2; }
+  st.reg = mode; syncUI();
+}
+function syncUI(){
+  ctrls.forEach(c=>{ c.el.value = st[c.key]; c.out.textContent = c.fmtFn(st[c.key]); });
+  document.querySelectorAll('#c-reg button').forEach(b=>b.classList.toggle('on', b.dataset.reg===st.reg));
+  document.querySelectorAll('#c-ball button').forEach(b=>b.classList.toggle('on', (b.dataset.v==='1')===st.ball));
+  document.querySelectorAll('#c-filter button').forEach(b=>b.classList.toggle('on', b.dataset.v===st.filter));
+  st.rads.forEach((r,i)=>{
+    $(`r${i}-h`).value = r.head; $(`r${i}-ho`).textContent = r.head===6 ? 'знято' : `${HEAD_L[r.head]} ≈ ${HEAD_T[r.head]}°`;
+    $(`r${i}-l`).value = r.ls; $(`r${i}-lo`).textContent = r.ls===0 ? 'закритий' : `${fmt(r.ls,1)} об.`;
+    const ab=$(`r${i}-air`); ab.classList.toggle('on', r.air); ab.textContent = r.air ? '💨 Є повітря — спустити краном Маєвського' : '💨 Кран Маєвського: повітря немає';
+  });
+  H = hydraulics(st.rads.map(r=>r.open));
+}
+
+function balance(){
+  const f = st.rads.map(()=>1);
+  for(let it=0; it<120; it++){
+    const tmp = {...st, rads: st.rads.map((r,i)=>({...r, ls:4*f[i]}))};
+    const h = hydraulics(st.rads.map(()=>1), tmp);
+    const ratio = h.q.map((q,i)=>q/ROOMS[i].qd);
+    const rmin = Math.min(...ratio);
+    for(let i=0;i<N;i++) f[i] = clamp(f[i]*Math.pow(rmin/ratio[i],0.6), 0.04, 1);
+    const fm = Math.max(...f); for(let i=0;i<N;i++) f[i]/=fm;
+  }
+  st.rads.forEach((r,i)=> r.ls = Math.max(0.1, Math.round(f[i]*40)/10));
+  syncUI();
+}
+$('b-bal').addEventListener('click', ()=>{ balance(); toast('⚖️ Нижні крани підібрано','Ближні до щита батареї прикрито, найдальша — відкрита повністю. Подивіться, як вирівнялись протоки (л/год у кожній батареї).'); });
+$('b-open').addEventListener('click', ()=>{ st.rads.forEach(r=>r.ls=4); syncUI(); });
+
+const SCEN = {
+  default: { dp:50, tsup:70, tout:-5, v1:100, set:12, reg:'ok', dirt:20, heads:3, ls:[4,4,4,4], T:18 },
+  good:    { dp:50, tsup:70, tout:-5, v1:100, set:12, reg:'ok', dirt:20, heads:3, bal:true, T:19.5 },
+  noisy:   { dp:60, tsup:75, tout:0,  v1:100, set:12, reg:'torn', dirt:20, heads:3, ls:[4,4,4,4], T:21.5,
+             msg:['💥 Порвана мембрана','Регулятор більше не тримає дельту — на батареї йде майже вся різниця тиску стояка. Кімнати прогрілись, термоголовки прикрились — і на вузькій щілині термоклапана свистить. Увімкніть 🔇 Звук угорі, щоб почути.'] },
+  cold:    { dp:50, tsup:65, tout:-8, v1:100, set:8, reg:'ok', dirt:30, heads:3, ls:[4,4,4,4], T:17,
+             msg:['🥶 Дельту зменшили, щоб не шуміло','Кран 2 прикрутили майже до мінімуму, у системі трохи бруду, нижні крани всі відкриті. Ближні батареї забирають воду, а дальній Вітальні не вистачає — навіть з відкритою термоголовкою. Спробуйте «Підібрати нижні крани» і трохи підняти дельту.'] },
+  clog:    { dp:50, tsup:70, tout:-5, v1:100, set:12, reg:'ok', dirt:20, heads:3, bal:true, T:20.5, clogThenDp:80,
+             msg:['🚫 Мідна трубка забита','Регулятор «застиг» у тому положенні, де був, і більше не реагує. Тиск у стояку виріс з 50 до 80 кПа — і весь цей приріст пішов на батареї. Порухайте «Дельта в стояку»: регулятор нічого не компенсує.'] },
+  air:     { dp:50, tsup:70, tout:-5, v1:100, set:12, reg:'ok', dirt:20, heads:3, bal:true, T:18, air:[1,3],
+             msg:['💨 Повітря в батареях','У Спальні й Вітальні верх батарей холодний (сіра «подушка» на моделі) — тепла менше, навіть коли проток є. Натисніть «Кран Маєвського» в рядку батареї, щоб спустити повітря.'] },
+  filter:  { dp:50, tsup:70, tout:-8, v1:100, set:12, reg:'ok', dirt:20, heads:3, bal:true, T:18, filter:'bad',
+             msg:['🧺 Забитий фільтр у щиті','Сітка фільтра перед лічильником забилась брудом — проток упав на всю квартиру одразу. Регулятор додати тиску не може: він тримає дельту на ділянці, куди входить і фільтр. Фільтр чистять, перекривши кульові крани.'] },
+  dirt:    { dp:50, tsup:70, tout:-10, v1:100, set:12, reg:'ok', dirt:95, heads:3, ls:[4,4,4,4], T:18,
+             msg:['🟤 Багато бруду','Бруд звужує проходи в батареях і кранах — опір росте, проток падає всюди. Налаштуваннями це компенсується лише частково: батареї й фільтри треба промивати.'] },
+};
+function applyScen(key){
+  const c = SCEN[key];
+  Object.assign(st, {dp:c.dp, tsup:c.tsup, tout:c.tout, v1:c.v1, set:c.set, dirt:c.dirt, reg:'ok', S2frozen:null, simT:0, ball:true, filter:c.filter||'ok'});
+  st.rads.forEach((r,i)=>{ r.head=c.heads; r.ls = c.ls ? c.ls[i] : 4; r.air = !!(c.air && c.air.includes(i)); r.T = c.T; r.tm = c.T; r.open = clamp((HEAD_T[r.head]+1-r.T)/2,0,1); });
+  if(c.bal) balance();
+  if(c.reg && c.reg!=='ok') setReg(c.reg);
+  if(c.clogThenDp){ setReg('clog'); st.dp = c.clogThenDp; }
+  syncUI();
+  document.querySelectorAll('.chip').forEach(b=>b.classList.toggle('on', b.dataset.scen===key));
+  if(c.msg) toast(...c.msg); else hideToast();
+  if(key==='noisy') fly(VIEWS.rad1); else if(key==='cold'||key==='air') fly(VIEWS.rads); else if(key==='clog') fly(VIEWS.v2); else if(key==='filter') fly(VIEWS.v1); else if(key==='good'||key==='default') fly(VIEWS.over);
+}
+document.querySelectorAll('.chip').forEach(b=>b.addEventListener('click',()=>applyScen(b.dataset.scen)));
+
+/* toast */
+function toast(title, text){ $('toast-t').innerHTML = `<b>${title}</b>${text}`; $('toast').classList.add('show'); }
+function hideToast(){ $('toast').classList.remove('show'); }
+$('toast').querySelector('.x').addEventListener('click', hideToast);
+
+/* ================= 3D ================= */
+const stage = $('stage');
+let renderer;
+try { renderer = new THREE.WebGLRenderer({antialias:true}); }
+catch(e){ $('nogl').style.display='flex'; }
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0xe9eef3);
+const camera = new THREE.PerspectiveCamera(42, 1, 0.05, 200);
+let controls;
+if(renderer){
+  renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+  renderer.shadowMap.enabled = true;
+  renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+  stage.prepend(renderer.domElement);
+  controls = new OrbitControls(camera, renderer.domElement);
+  controls.enableDamping = true; controls.maxPolarAngle = Math.PI*0.49; controls.minDistance = 0.6; controls.maxDistance = 30;
+}
+
+scene.add(new THREE.HemisphereLight(0xffffff, 0xb9a98f, 1.6));
+const sun = new THREE.DirectionalLight(0xffffff, 1.6);
+sun.position.set(8, 14, 10); sun.castShadow = true;
+sun.shadow.mapSize.set(2048,2048); Object.assign(sun.shadow.camera,{left:-10,right:16,top:12,bottom:-8,near:1,far:40});
+scene.add(sun);
+
+const M = (color, o={}) => new THREE.MeshStandardMaterial({color, roughness:.75, metalness:0, ...o});
+const mWall = M(0xf3ece0), mWallTop = M(0xd9cdb8), mCorr = M(0xcfd3d8), mMetal = M(0x9aa3ad,{metalness:.6,roughness:.4});
+const mBrass = () => M(0xc9a24a,{metalness:.7,roughness:.35});
+const mChrome = () => M(0xd8dde2,{metalness:.85,roughness:.2});
+const mGlass = new THREE.MeshStandardMaterial({color:0xa9d4f5, transparent:true, opacity:.35, roughness:.1});
+const mPipeS = () => M(0xe4572e,{transparent:true, opacity:.38, roughness:.3});
+const mPipeR = () => M(0x3d7dd8,{transparent:true, opacity:.38, roughness:.3});
+
+function box(w,h,d,mat,x,y,z,parent=scene,shadow=true){
+  const m = new THREE.Mesh(new THREE.BoxGeometry(w,h,d), mat); m.position.set(x,y,z);
+  m.castShadow = shadow; m.receiveShadow = true; parent.add(m); return m;
+}
+const UP = new THREE.Vector3(0,1,0);
+function cyl(a,b,r,mat,parent=scene,seg=16){
+  const d = new THREE.Vector3().subVectors(b,a), len = d.length();
+  const m = new THREE.Mesh(new THREE.CylinderGeometry(r,r,len,seg), mat);
+  m.position.copy(a).addScaledVector(d,.5); m.quaternion.setFromUnitVectors(UP, d.clone().normalize());
+  parent.add(m); return m;
+}
+const V = (x,y,z) => new THREE.Vector3(x,y,z);
+function pipe(pts, r, mat, parent=scene){
+  const g = new THREE.Group(); parent.add(g);
+  for(let i=0;i<pts.length-1;i++) cyl(pts[i], pts[i+1], r, mat, g);
+  for(let i=1;i<pts.length-1;i++){ const s = new THREE.Mesh(new THREE.SphereGeometry(r,14,10), mat); s.position.copy(pts[i]); g.add(s); }
+  return g;
+}
+
+/* ---- підлога і стіни ---- */
+const WH = 1.05, SILL = .74;
+const floorMats = ROOMS.map(()=>M(0xe8dcc4));
+ROOMS.forEach((R,i)=>{ const f = box(R.x1-R.x0, .04, 6, floorMats[i], (R.x0+R.x1)/2, -.02, 3, scene, false); f.userData.pick = 'room'+i; });
+box(15, .04, 2.2, mCorr, 4.6, -.02, 7.1, scene, false);
+const ground = new THREE.Mesh(new THREE.PlaneGeometry(80,80), M(0xdfe5ea)); ground.rotation.x=-Math.PI/2; ground.position.y=-.05; ground.receiveShadow=true; scene.add(ground);
+
+function wallX(x0,x1,z,h,t=.15){ box(x1-x0,h,t,mWall,(x0+x1)/2,h/2,z); box(x1-x0,.02,t+.01,mWallTop,(x0+x1)/2,h+.01,z,scene,false); }
+function wallZ(z0,z1,x,h,t=.15){ box(t,h,z1-z0,mWall,x,h/2,(z0+z1)/2); box(t+.01,.02,z1-z0,mWallTop,x,h+.01,(z0+z1)/2,scene,false); }
+// зовнішня стіна з вікнами (z = 0)
+wallX(-.15, 12.15, -.075, SILL);
+let xs = -.15;
+ROOMS.forEach(R=>{ const c=(R.x0+R.x1)/2, w=1.5; wallXseg(xs, c-w/2); box(w, WH-SILL, .06, mGlass, c, SILL+(WH-SILL)/2, -.075, scene, false); box(w,.04,.22,mWallTop,c,SILL+.02,-.05,scene,false); xs = c+w/2; });
+wallXseg(xs, 12.15);
+function wallXseg(a,b){ if(b-a<.01) return; box(b-a, WH-SILL, .15, mWall, (a+b)/2, SILL+(WH-SILL)/2, -.075); box(b-a,.02,.16,mWallTop,(a+b)/2,WH+.01,-.075,scene,false); }
+wallZ(0, 6.15, -.075, WH); wallZ(0, 6.15, 12.075, WH);
+// стіна з коридором (z = 6) з дверима
+wallX(-2.6, .9, 6.075, WH); wallX(1.8, 12.15, 6.075, WH);
+// перегородки з дверними прорізами
+[3,6,9].forEach(x=>{ wallZ(1.0, 4.3, x, WH*.8, .1); wallZ(5.2, 6, x, WH*.8, .1); });
+
+/* ---- стояки і щит у коридорі ---- */
+const XS=-1.9, XR=-1.65, ZRI=6.42;
+const riserS = pipe([V(XS,-.3,ZRI), V(XS,2.5,ZRI)], .055, mPipeS());
+const riserR = pipe([V(XR,2.5,ZRI), V(XR,-.3,ZRI)], .055, mPipeR());
+riserS.userData.pick='riserS'; riserR.userData.pick='riserR';
+const shield = new THREE.Group(); scene.add(shield);
+const mSh = M(0xb8c0c8,{metalness:.3,roughness:.6});
+box(2.3, 1.7, .03, mSh, -1.05, 1.3, 6.17, shield);              // задня стінка
+box(.03, 1.7, .5, mSh, -2.2, 1.3, 6.4, shield); box(.03,1.7,.5,mSh,.1,1.3,6.4,shield);
+box(2.3,.03,.5,mSh,-1.05,2.15,6.4,shield); box(2.3,.03,.5,mSh,-1.05,.45,6.4,shield);
+const door = new THREE.Group(); door.position.set(.1,1.3,6.65); scene.add(door);
+box(2.3,1.7,.03,mSh,-1.15,0,0,door); door.rotation.y = -1.9;
+
+/* ---- квартирна гілка ---- */
+const XT = [], XRr = [];
+const radW = ROOMS.map(R=> .5 + R.need/1700*.9);
+ROOMS.forEach((R,i)=>{ const c=(R.x0+R.x1)/2; XT.push(c - radW[i]/2 - .1); XRr.push(c + radW[i]/2 + .1); });
+const YS=.14, YR=.06, ZS=.32, ZR=.48, YB=1.0, YBS=1.6;
+const supIn = [V(XS,YBS,ZRI), V(XS,YBS,6.3), V(-.35,YBS,6.3), V(-.35,YS,6.3), V(.2,YS,6.3), V(.2,YS,ZS), V(XT[0],YS,ZS)];
+const retOut = [V(XRr[0],YR,ZR), V(.4,YR,ZR), V(.4,YR,6.52), V(-.2,YR,6.52), V(-.2,YB,6.52), V(XR,YB,6.52), V(XR,YB,ZRI)];
+const pSup = mPipeS(), pRet = mPipeR();
+pipe(supIn, .035, pSup); pipe(retOut, .035, pRet);
+pipe([V(XT[0],YS,ZS), V(XT[N-1],YS,ZS)], .035, pSup);
+pipe([V(XRr[N-1],YR,ZR), V(XRr[0],YR,ZR)], .035, pRet);
+
+/* кульові крани на вводі */
+function ballValve(x,y,z,color,pick){
+  const g = new THREE.Group(); g.position.set(x,y,z); scene.add(g); g.userData.pick=pick;
+  const m = mBrass(); cyl(V(-.06,0,0),V(.06,0,0),.05,m,g); cyl(V(0,0,0),V(0,.07,0),.015,m,g);
+  const lev = new THREE.Group(); lev.position.y=.075; g.add(lev); box(.17,.018,.035,M(color),.06,0,0,lev,false);
+  return {g, lev};
+}
+const ballS = ballValve(-1.78,YBS,6.3,0xd23b1d,'ball'), ballR = ballValve(-1.42,YB,6.52,0x2a5fbf,'ball');
+/* фільтр (косий, сітчастий) */
+const filt = new THREE.Group(); filt.position.set(-1.48,YBS,6.3); scene.add(filt); filt.userData.pick='filter';
+const fm = mBrass(); cyl(V(-.06,0,0),V(.06,0,0),.045,fm,filt); cyl(V(0,0,0),V(.06,-.11,0),.032,fm,filt);
+const fCap = new THREE.Mesh(new THREE.CylinderGeometry(.036,.036,.02,6), M(0x6b4a2b)); fCap.position.set(.065,-.12,0); fCap.rotation.z=.5; filt.add(fCap);
+/* кран 1 */
+const v1 = new THREE.Group(); v1.position.set(-1.25,YBS,6.3); scene.add(v1); v1.userData.pick='v1';
+const v1m = mBrass();
+cyl(V(-.1,0,0),V(.1,0,0),.06,v1m,v1); cyl(V(0,0,0),V(0,.12,0),.025,v1m,v1);
+const v1h = new THREE.Group(); v1h.position.y=.13; v1.add(v1h);
+const v1hm = M(0x4f9d69); cyl(V(0,0,0),V(0,.04,0),.06,v1hm,v1h); box(.13,.02,.025,M(0xffffff),0,.045,0,v1h,false);
+/* лічильник */
+const meter = new THREE.Group(); meter.position.set(-.72,YBS,6.3); scene.add(meter); meter.userData.pick='meter';
+const meterM = M(0xf4f4f4);
+box(.3,.22,.18,meterM,0,0,0,meter); cyl(V(-.22,0,0),V(.22,0,0),.045,mBrass(),meter);
+const mCan = document.createElement('canvas'); mCan.width=256; mCan.height=128;
+const mTex = new THREE.CanvasTexture(mCan); mTex.colorSpace = THREE.SRGBColorSpace;
+const scr = new THREE.Mesh(new THREE.PlaneGeometry(.22,.11), new THREE.MeshBasicMaterial({map:mTex})); scr.position.set(0,.02,.092); meter.add(scr);
+function drawMeter(){
+  const c = mCan.getContext('2d'); c.fillStyle='#1f3a2c'; c.fillRect(0,0,256,128);
+  c.fillStyle='#9ff0b8'; c.font='bold 46px monospace'; c.textAlign='right';
+  c.fillText(Math.round(H.Q)+' л/г', 244, 56);
+  const P = st.rads.reduce((a,r)=>a+r.P,0)/1000;
+  c.font='bold 38px monospace'; c.fillText(P.toFixed(2)+' кВт', 244, 108); mTex.needsUpdate = true;
+}
+/* кран 2 — регулятор перепаду */
+const v2 = new THREE.Group(); v2.position.set(-1.0,YB,6.52); scene.add(v2); v2.userData.pick='v2';
+const v2m = mBrass();
+cyl(V(-.11,0,0),V(.11,0,0),.065,v2m,v2); cyl(V(0,0,0),V(0,.1,0),.03,v2m,v2);
+const dome = new THREE.Mesh(new THREE.CylinderGeometry(.11,.11,.07,28), M(0x2b2b2b,{roughness:.5})); dome.position.y=.14; v2.add(dome);
+const domeTop = new THREE.Mesh(new THREE.CylinderGeometry(.06,.11,.04,28), M(0x3a3a3a,{roughness:.5})); domeTop.position.y=.195; v2.add(domeTop);
+const spindle = new THREE.Mesh(new THREE.CylinderGeometry(.012,.012,.08,10), mChrome()); spindle.position.y=.25; v2.add(spindle);
+const crack = new THREE.Mesh(new THREE.TorusGeometry(.112,.012,8,40), M(0xff3b1f,{emissive:0xff2200, emissiveIntensity:1})); crack.rotation.x=Math.PI/2; crack.position.y=.14; crack.visible=false; v2.add(crack);
+/* мідна імпульсна трубка */
+const capCurve = new THREE.CatmullRomCurve3([V(-1.63,YBS+.04,6.3), V(-1.63,YBS+.22,6.42), V(-1.3,YBS+.18,6.6), V(-1.05,1.45,6.62), V(-1.0,1.22,6.52)]);
+const capMat = M(0xb87333,{metalness:.8,roughness:.3});
+const cap = new THREE.Mesh(new THREE.TubeGeometry(capCurve,60,.009,8), capMat); scene.add(cap); cap.userData.pick='cap';
+const plug = new THREE.Mesh(new THREE.SphereGeometry(.03,12,10), M(0x6b4a2b)); plug.position.copy(capCurve.getPoint(.55)); plug.visible=false; scene.add(plug);
+const capDots = [0,1,2].map(()=>{ const s=new THREE.Mesh(new THREE.SphereGeometry(.018,10,8), new THREE.MeshBasicMaterial({color:0xffc06a})); scene.add(s); return s; });
+
+/* батареї */
+const radObjs = ROOMS.map((R,i)=>{
+  const g = new THREE.Group(); scene.add(g); g.userData.pick='rad'+i;
+  const c = (R.x0+R.x1)/2, w = radW[i], n = Math.round(w/.08);
+  const mat = M(0xdfe3e8,{roughness:.45});
+  for(let k=0;k<n;k++) box(.065,.5,.08,mat, c-w/2+.04+k*(w-.08)/(n-1), .4, .12, g);
+  box(w,.04,.06,mat,c,.62,.12,g); box(w,.04,.06,mat,c,.18,.12,g);
+  // подача до термоклапана і зворотка від нижнього крана
+  pipe([V(XT[i],YS,ZS), V(XT[i],YS,.12), V(XT[i],.6,.12)], .03, pSup);
+  pipe([V(XRr[i],.2,.12), V(XRr[i],YR,.12), V(XRr[i],YR,ZR)], .03, pRet);
+  // термоклапан і головка
+  const tv = mChrome(); cyl(V(XT[i],.6,.12), V(c-w/2,.6,.12), .03, tv, g);
+  const head = new THREE.Group(); head.position.set(XT[i],.6,.12); g.add(head); head.userData.pick='head'+i;
+  const hm = M(0xfafafa,{roughness:.35});
+  cyl(V(0,0,0), V(0,0,.16), .045, hm, head, 24);
+  const ring = new THREE.Mesh(new THREE.TorusGeometry(.046,.006,6,24), M(0x9aa3ad)); ring.position.z=.12; head.add(ring);
+  const mark = box(.012,.02,.01,M(0xe4572e),0,.045,.14,head,false);
+  // нижній кран (запірно-балансувальний)
+  const lv = mChrome(); cyl(V(c+w/2,.2,.12), V(XRr[i],.2,.12), .028, lv, g);
+  const lock = new THREE.Group(); lock.position.set(XRr[i],.2,.12); g.add(lock); lock.userData.pick='lock'+i;
+  cyl(V(0,0,0), V(0,0,.09), .03, lv, lock);
+  const hex = new THREE.Mesh(new THREE.CylinderGeometry(.034,.034,.03,6), M(0x6b7580,{metalness:.6,roughness:.4})); hex.rotation.x=Math.PI/2; hex.position.z=.1; lock.add(hex);
+  // кран Маєвського і повітряна «подушка»
+  const mv = new THREE.Group(); mv.position.set(c+w/2+.01,.6,.12); g.add(mv); mv.userData.pick='air'+i;
+  cyl(V(0,0,0),V(.05,0,0),.014,mChrome(),mv); cyl(V(.05,0,0),V(.05,.035,0),.01,M(0x333333),mv);
+  const airBox = new THREE.Mesh(new THREE.BoxGeometry(w+.02,.18,.13), new THREE.MeshStandardMaterial({color:0xdde4ec,transparent:true,opacity:.95,roughness:.3}));
+  airBox.position.set(c,.56,.12); airBox.visible=false; g.add(airBox);
+  // тепле повітря над батареєю
+  const hc = document.createElement('canvas'); hc.width=4; hc.height=64; const hx=hc.getContext('2d');
+  const gr=hx.createLinearGradient(0,64,0,0); gr.addColorStop(0,'rgba(255,120,60,0.9)'); gr.addColorStop(1,'rgba(255,170,90,0)'); hx.fillStyle=gr; hx.fillRect(0,0,4,64);
+  const heat = new THREE.Mesh(new THREE.PlaneGeometry(w,.7), new THREE.MeshBasicMaterial({map:new THREE.CanvasTexture(hc), transparent:true, opacity:0, depthWrite:false, side:THREE.DoubleSide}));
+  heat.position.set(c,1.0,.2); scene.add(heat);
+  // шумові хвилі
+  const waves = [0,1,2].map(k=>{ const t=new THREE.Mesh(new THREE.TorusGeometry(.08+k*.06,.007,6,32,Math.PI*.8), new THREE.MeshBasicMaterial({color:0xe4572e,transparent:true,opacity:0})); t.position.set(XT[i],.6,.32); t.rotation.z=Math.PI*.1; scene.add(t); return t; });
+  return {g, mat, head, hex, heat, waves, hm, lv, c, w, airBox, mv};
+});
+
+/* ---- потік: частинки по трубах ---- */
+class Path{
+  constructor(pts, kind){ this.pts=pts; this.kind=kind; this.cum=[0];
+    for(let i=1;i<pts.length;i++) this.cum.push(this.cum[i-1]+pts[i].distanceTo(pts[i-1]));
+    this.len=this.cum.at(-1); this.flow=0; }
+  at(s,out){ s = ((s%this.len)+this.len)%this.len; let i=1; while(i<this.cum.length-1 && this.cum[i]<s) i++;
+    const t=(s-this.cum[i-1])/(this.cum[i]-this.cum[i-1]||1); return out.lerpVectors(this.pts[i-1],this.pts[i],t); }
+}
+const paths = [];
+const pRiserS = new Path([V(XS,-.3,ZRI),V(XS,2.5,ZRI)],'riser'); paths.push(pRiserS);
+const pRiserR = new Path([V(XR,2.5,ZRI),V(XR,-.3,ZRI)],'riserR'); paths.push(pRiserR);
+const pIn = new Path(supIn,'s'); paths.push(pIn);
+const pOut = new Path(retOut,'r'); paths.push(pOut);
+const pSupSeg=[], pRetSeg=[], pRad=[];
+for(let k=0;k<N-1;k++){ const a=new Path([V(XT[k],YS,ZS),V(XT[k+1],YS,ZS)],'s'); pSupSeg.push(a); paths.push(a);
+  const b=new Path([V(XRr[k+1],YR,ZR),V(XRr[k],YR,ZR)],'r'); pRetSeg.push(b); paths.push(b); }
+for(let i=0;i<N;i++){ const R=ROOMS[i], c=(R.x0+R.x1)/2, w=radW[i];
+  const p=new Path([V(XT[i],YS,ZS),V(XT[i],YS,.12),V(XT[i],.6,.12),V(c-w/2,.6,.2),V(c+w/2,.6,.2),V(c+w/2,.2,.2),V(XRr[i],.2,.12),V(XRr[i],YR,.12),V(XRr[i],YR,ZR)],'rad'); p.i=i; pRad.push(p); paths.push(p); }
+const parts = [];
+paths.forEach(p=>{ const n=Math.max(2,Math.round(p.len/.16)); for(let k=0;k<n;k++) parts.push({p, s:k*p.len/n}); });
+const pMesh = new THREE.InstancedMesh(new THREE.SphereGeometry(.022,8,6), new THREE.MeshBasicMaterial(), parts.length);
+scene.add(pMesh);
+const cS = new THREE.Color(0xff5a2a), cR = new THREE.Color(0x2f6fe0), tmpC = new THREE.Color(), tmpV = new THREE.Vector3(), mtx = new THREE.Matrix4();
+const TC0 = new THREE.Color(0x2f6fe0), TC1 = new THREE.Color(0xb07ad0), TC2 = new THREE.Color(0xf29e4c), TC3 = new THREE.Color(0xe8401c);
+function tempColor(t, out){ // 15 °C синій → фіолетовий → помаранч → 75 °C червоний
+  const a = clamp((t-15)/60,0,1)*3;
+  return a<1 ? out.lerpColors(TC0,TC1,a) : a<2 ? out.lerpColors(TC1,TC2,a-1) : out.lerpColors(TC2,TC3,a-2);
+}
+
+/* ---- підписи ---- */
+const labelsEl = $('labels');
+const labels = [];
+function addLabel(text, pos, cls=''){ const el=document.createElement('div'); el.className='lbl '+cls; el.textContent=text; labelsEl.appendChild(el); const L={el,pos}; labels.push(L); return L; }
+addLabel('Подача', V(XS,2.55,ZRI),'s');
+addLabel('Обратка', V(XR,2.35,ZRI+.1),'r');
+addLabel('Кран 1', V(-1.25,1.84,6.3));
+addLabel('Кульовий', V(-1.78,1.75,6.3));
+addLabel('Фільтр', V(-1.48,1.37,6.3));
+addLabel('Лічильник', V(-.72,1.8,6.3));
+addLabel('Кран 2 · регулятор ΔP', V(-1.0,.88,6.62));
+addLabel('мідна трубка', V(-1.12,1.42,6.66),'c');
+const roomLbls = ROOMS.map((R,i)=> addLabel('', V((R.x0+R.x1)/2, 1.4, .25), 'room'));
+
+/* ---- камера і тур ---- */
+const VIEWS = {
+  over:  {p:V(-3.2,7.6,13.2), t:V(4.4,0,2.9)},
+  corr:  {p:V(-.4,2.3,9.6), t:V(-1.0,1.25,6.4)},
+  v1:    {p:V(-1.1,2.0,7.85), t:V(-1.2,1.5,6.35)},
+  v2:    {p:V(-1.05,1.75,7.55), t:V(-1.15,1.2,6.5)},
+  rads:  {p:V(8.6,5.4,7.6), t:V(6.2,.2,.6)},
+  rad1:  {p:V(1.9,1.2,2.0), t:V(1.25,.45,.2)},
+  far:   {p:V(10.9,1.4,2.6), t:V(10.5,.45,.2)},
+};
+let flyAnim = null;
+function fly(v, dur=1.2){ if(!controls) return; flyAnim = {p0:camera.position.clone(), t0:controls.target.clone(), p1:v.p, t1:v.t, k:0, dur}; }
+camera.position.copy(VIEWS.over.p); if(controls){ controls.target.copy(VIEWS.over.t); controls.update(); }
+$('b-cam').addEventListener('click', ()=>fly(VIEWS.over));
+
+const TOUR = [
+  {t:'Загальна картина', v:'over', hl:[], x:'Квартира підключена до двох труб у коридорі. Вода з подачі проходить крізь усі батареї й повертається в обратку. Кульки в трубах — це рух теплоносія: що швидше біжать, то більший проток. Модель можна крутити пальцем чи мишею.'},
+  {t:'Дві труби в коридорі', v:'corr', hl:['riserS','riserR'], x:'Червона — подача, синя — обратка. Обидві під тиском, але в подачі він більший. Батареї працюють саме на різниці тиску між цими трубами (дельті): вона проштовхує воду крізь квартиру.'},
+  {t:'Кульові крани і фільтр', v:'v1', hl:['ball','filter'], x:'Одразу біля стояків — кульові крани на подачі й обратці: ручка вздовж труби — відкрито, поперек — закрито. Ними відрізають квартиру, а не регулюють. Далі — косий сітчастий фільтр: ловить бруд перед лічильником.', tryL:'Показати забитий фільтр', tryF:()=>applyScen('filter')},
+  {t:'Кран 1 — біля лічильника', v:'v1', hl:['v1','meter'], x:'Стоїть на подачі поряд із лічильником тепла. Він обмежує максимальний проток теплоносія на квартиру. Лічильник показує проток і скільки тепла ви зараз берете.'},
+  {t:'Кран 2 — на обратці', v:'v2', hl:['v2'], x:'На виході з квартири, на трубі обратки. Це регулятор перепаду тиску: під чорною «шапкою» — мембрана й пружина. Він тримає задану дельту на ваших батареях — що б не робилось у стояку.', tryL:'Порухати тиск у стояку', tryF:()=>{ st.dp = st.dp>60?40:75; syncUI(); toast('Дельта в стояку змінилась','Подивіться на смужку «Куди йде дельта»: синю частину «з’їдає» кран 2, а дельта на батареях лишається майже такою ж.'); }},
+  {t:'Тонка мідна трубка', v:'v2', hl:['cap'], x:'Іде від місця крана 1 до мембрани крана 2 і передає їй тиск подачі — жовті імпульси на трубці. Якщо трубка забита або мембрана порвана, регулятор «сліпне» і дельта на батареях більше не тримається.', tryL:'Показати забиту трубку', tryF:()=>applyScen('clog')},
+  {t:'Батареї — паралельно', v:'rads', hl:['rads'], x:'Кожна батарея — окрема доріжка між подачею й обраткою. Вода йде легшим шляхом, тож ближні до щита (Кухня) продавлюються краще, а найдальша (Вітальня) — гірше. Порівняйте л/год у панелі праворуч.', tryL:'Показати дальню холодну', tryF:()=>applyScen('cold')},
+  {t:'Термоголовка зверху', v:'rad1', hl:['heads'], x:'Задає температуру кімнати: ❄ ≈ 7 °C, 3 ≈ 20 °C, 5 ≈ 28 °C. Коли кімната прогрілась, головка сама прикриває клапан. Але якщо дельта завелика, на вузькій щілині клапана свистить.', tryL:'Показати свист', tryF:()=>applyScen('noisy')},
+  {t:'Нижній кран — балансування', v:'far', hl:['locks'], x:'Знизу з іншого боку батареї — запірно-балансувальний кран. На ближніх батареях його трохи призакривають, збільшуючи їхній опір, — і дальнім дістається більше. Це налаштування робить власник квартири.', tryL:'⚖️ Підібрати нижні крани', tryF:()=>{ balance(); toast('⚖️ Нижні крани підібрано','Ближні прикриті, дальня відкрита повністю — протоки вирівнялись.'); }},
+  {t:'Кран Маєвського — спуск повітря', v:'far', hl:['air'], x:'Маленький кранчик угорі батареї. Якщо верх батареї холодний, а низ теплий або чути дзюрчання — там повітря. Підставте ганчірку, відкрийте кран викруткою чи ключем, доки замість шипіння не піде вода, і закрийте.', tryL:'Показати повітря', tryF:()=>applyScen('air')},
+  {t:'Реальність старої системи', v:'over', hl:['v2','rads'], x:'Бруд у трубах і батареях, втомлена мембрана, забита трубка — і ідеалу вже не буде. Зменшуючи дельту краном 2, можна побороти шум, але й втратити нормальну прокачку дальніх батарей. Крутіть поступово й перевіряйте найдальшу.', tryL:'Показати бруд', tryF:()=>applyScen('dirt')},
+];
+let tourI = 0, highlight = [];
+const dots = $('t-dots');
+TOUR.forEach((s,i)=>{ const b=document.createElement('button'); b.type='button'; b.setAttribute('aria-label',`Крок ${i+1}: ${s.t}`); b.addEventListener('click',()=>showStep(i)); dots.appendChild(b); });
+function showStep(i){
+  tourI = clamp(i,0,TOUR.length-1); const s = TOUR[tourI];
+  $('t-num').textContent = tourI+1; $('t-title').textContent = s.t; $('t-text').textContent = s.x;
+  [...dots.children].forEach((b,k)=>b.classList.toggle('on',k===tourI));
+  $('t-prev').disabled = tourI===0; $('t-next').textContent = tourI===TOUR.length-1 ? 'Спочатку ↺' : 'Далі ▶';
+  const tb = $('t-try'); tb.hidden = !s.tryL; if(s.tryL) tb.textContent = '▶ '+s.tryL;
+  highlight = s.hl; fly(VIEWS[s.v]);
+}
+$('t-prev').addEventListener('click',()=>showStep(tourI-1));
+$('t-next').addEventListener('click',()=>showStep(tourI===TOUR.length-1?0:tourI+1));
+$('t-try').addEventListener('click',()=>TOUR[tourI].tryF());
+
+/* матеріали, що підсвічуються */
+const HL = {
+  riserS:[riserS], riserR:[riserR], v1:[v1], meter:[meter], v2:[v2], cap:[cap], ball:[ballS.g, ballR.g], filter:[filt], air:radObjs.map(r=>r.mv),
+  rads: radObjs.map(r=>r.g), heads: radObjs.map(r=>r.head), locks: radObjs.map(r=>r.hex),
+};
+function setGlow(obj, k){ obj.traverse(o=>{ if(o.isMesh && o.material.emissive && o!==crack){ o.material.emissive.setRGB(k,k*.55,0); } }); }
+
+/* ---- клік по об'єктах ---- */
+const INFO = {
+  riserS:['🔴 Подача','Гаряча вода від теплового пункту. Тиск тут більший, ніж в обратці.'],
+  riserR:['🔵 Обратка','Охолола вода повертається назад. Різниця тиску подача − обратка — це «двигун» вашого опалення.'],
+  v1:['🔧 Кран 1','Обмежує максимальний проток на квартиру. Повзунок «Кран 1» у панелі праворуч.'],
+  meter:['📟 Лічильник тепла','Показує, скільки води йде через квартиру і скільки тепла ви зараз берете.'],
+  v2:['🎛️ Кран 2 — регулятор перепаду тиску','Тримає задану дельту на батареях. Мембрана під чорною шапкою порівнює тиск подачі (з мідної трубки) і обратки.'],
+  cap:['🟠 Імпульсна мідна трубка','Передає тиск подачі на мембрану регулятора. Забилась — регулятор не реагує.'],
+  ball:['🔴🔵 Кульові крани на вводі','Тільки «відкрито / закрито»: ручка вздовж труби — відкрито. Ними відрізають квартиру для ремонту чи чистки фільтра, а не регулюють.'],
+  filter:['🧺 Сітчастий фільтр','Ловить бруд перед лічильником і кранами. Забився — падає проток на всю квартиру. Чистять, перекривши обидва кульові крани.'],
+};
+const ray = new THREE.Raycaster(), ptr = new THREE.Vector2(); let downAt=null;
+if(renderer){
+  renderer.domElement.addEventListener('pointerdown', e=>{ downAt=[e.clientX,e.clientY]; });
+  renderer.domElement.addEventListener('pointerup', e=>{
+    if(!downAt || Math.hypot(e.clientX-downAt[0], e.clientY-downAt[1])>6) return;
+    const r = renderer.domElement.getBoundingClientRect();
+    ptr.set(((e.clientX-r.left)/r.width)*2-1, -((e.clientY-r.top)/r.height)*2+1);
+    ray.setFromCamera(ptr, camera);
+    const hit = ray.intersectObjects(scene.children, true).find(h=>{ let o=h.object; while(o){ if(o.userData.pick) return true; o=o.parent; } });
+    if(!hit) return;
+    let o=hit.object; while(!o.userData.pick) o=o.parent; const id=o.userData.pick;
+    const m = id.match(/^(rad|head|lock|room|air)(\d)$/);
+    if(m){ const i=+m[2], el=$('rad'+i); el.scrollIntoView({behavior:'smooth',block:'center'}); el.classList.add('flash'); setTimeout(()=>el.classList.remove('flash'),1400);
+      const r=st.rads[i]; toast(`♨️ ${ROOMS[i].name}`, `${m[1]==='head'?'Термоголовка: ':m[1]==='lock'?'Нижній кран: ':m[1]==='air'?'Кран Маєвського (спуск повітря). ':''}${fmt(r.q)} л/год, кімната ${fmt(r.T,1)} °C. Налаштування — у панелі «Батареї».`); }
+    else if(INFO[id]) toast(...INFO[id]);
+  });
+}
+
+/* ---- звук свисту ---- */
+let ac=null, osc, gain;
+$('b-snd').addEventListener('click',()=>{
+  st.sound=!st.sound; $('b-snd').textContent = st.sound?'🔊 Звук':'🔇 Звук'; $('b-snd').classList.toggle('on',st.sound);
+  if(st.sound && !ac){ ac = new (window.AudioContext||window.webkitAudioContext)(); osc=ac.createOscillator(); osc.type='sine'; osc.frequency.value=2300;
+    const lfo=ac.createOscillator(); lfo.frequency.value=5; const lg=ac.createGain(); lg.gain.value=40; lfo.connect(lg).connect(osc.frequency); lfo.start();
+    gain=ac.createGain(); gain.gain.value=0; osc.connect(gain).connect(ac.destination); osc.start(); }
+  if(ac) (st.sound?ac.resume():ac.suspend());
+});
+$('b-play').addEventListener('click',()=>{ st.running=!st.running; $('b-play').textContent=st.running?'⏸':'▶'; });
+$('b-speed').addEventListener('click',()=>{ st.speed = st.speed===1?4:st.speed===4?12:1; $('b-speed').textContent='×'+st.speed; });
+$('b-lbl').addEventListener('click',()=>{ st.labels=!st.labels; $('b-lbl').classList.toggle('on',st.labels); });
+
+/* ---- панель показників ---- */
+let noiseLvl = 0;
+function updatePanel(){
+  $('k-q').textContent = fmt(H.Q);
+  const dpRads = H.dpR; $('k-dp').textContent = fmt(dpRads,1);
+  $('k-n').textContent = noiseLvl<.05?'тихо':noiseLvl<.4?'чутно':noiseLvl<.75?'свистить':'дуже';
+  $('k-nb').style.width = (noiseLvl*100)+'%';
+  const tot = st.dp, parts=[H.dp1, H.dpIn, H.dpR, Math.max(0,H.dpReg)];
+  ['pb1','pb2','pb3','pb4'].forEach((id,k)=>{ const el=$(id); el.style.flexGrow = Math.max(parts[k],.001); el.textContent = parts[k]/tot>.1 ? fmt(parts[k],1) : ''; });
+  $('k-dpall').textContent = `(${st.dp} кПа)`;
+  $('mode').textContent = {reg:'регулятор тримає дельту', sat:'регулятор відкритий повністю', torn:'регулятор не працює', clog:'регулятор застиг', ok:''}[H.mode];
+  st.rads.forEach((r,i)=>{
+    const R = ROOMS[i], tset = HEAD_T[r.head];
+    const icon = r.dpT>20 && r.q>2 ? '🔊' : r.air ? '💨' : r.T < Math.min(tset,24)-1.5 ? '🥶' : r.T > tset+1.5 ? '🥵' : '🙂';
+    $(`r${i}-st`).textContent = `${icon} ${fmt(r.T,1)} °C`;
+    $(`r${i}-m`).textContent = `${fmt(r.q)} л/год (під розмір треба ~${fmt(R.qd)}) · клапан відкритий ${fmt(r.open*100)}% · на клапані ${fmt(r.dpT,1)} кПа`;
+  });
+  // діагностика
+  const D = [];
+  if(st.simT < 5400) D.push(['i','⏳ Кімнати ще прогріваються — дайте моделі «прожити» кілька годин (кнопка ×4 угорі).']);
+  if(!st.ball) D.push(['b','⛔ Кульові крани на вводі закриті — квартира відрізана, батареї холонуть. Ці крани тільки «відкрито / закрито», ними не регулюють.']);
+  if(st.filter!=='ok') D.push(['w','🧺 Фільтр у щиті забитий — проток падає на всю квартиру. Перекрийте кульові крани й почистіть сітку.']);
+  st.rads.forEach((r,i)=>{ if(r.air) D.push(['w',`💨 У батареї «${ROOMS[i].name}» повітря: верх холодний. Спустіть його краном Маєвського.`]); });
+  if(st.rads.some(r=>r.head===6)) D.push(['i','🔓 Де знято термоголовку, клапан відкритий завжди — кімната перегрівається, а дальнім батареям дістається менше.']);
+  if(st.reg==='torn') D.push(['b',`💥 Мембрана порвана: регулятор відкрився повністю, і на батареї йде майже вся дельта стояка (${fmt(H.dpR,1)} з ${st.dp} кПа).`]);
+  if(st.reg==='clog') D.push(['b','🚫 Імпульсна трубка забита: регулятор застиг і не реагує на зміни тиску в стояку. Будь-який стрибок тиску тепер іде прямо на батареї.']);
+  if(H.mode==='sat') D.push(['w','📉 У стояку замало тиску для заданої дельти — регулятор і так відкритий повністю.']);
+  const noisy = st.rads.map((r,i)=>[r,i]).filter(([r])=>r.dpT>20 && r.q>2);
+  if(noisy.length){ const [r,i] = noisy.sort((a,b)=>b[0].dpT-a[0].dpT)[0];
+    D.push(['b',`🔊 Свистить термоклапан у кімнаті «${ROOMS[i].name}»: на ньому ${fmt(r.dpT,0)} кПа, комфортно — до ~20. ${st.reg==='ok'?'Зменште дельту краном 2 — поступово.':'Спершу треба полагодити регулятор.'}`]); }
+  if(H.Q>380) D.push(['w',`🌊 Великий проток (${fmt(H.Q)} л/год) — може шуміти вода в трубах.`]);
+  if(st.simT >= 5400) st.rads.forEach((r,i)=>{ const tset=Math.min(HEAD_T[r.head],24);
+    if(r.T < tset-1.5 && r.open>.9) D.push(['w',`🥶 «${ROOMS[i].name}» не догрівається: клапан відкритий повністю, а протоку замало (${fmt(r.q)} л/год). ${st.v1<40?'Кран 1 сильно прикритий. ':''}${i>0?'Прикрийте нижні крани ближніх батарей або трохи підніміть дельту.':'Підніміть дельту або відкрийте кран 1.'}${st.dirt>=60?' Бруд теж «з’їдає» проток.':''}`]); });
+  if(!D.some(d=>d[0]==='b'||d[0]==='w') && st.simT>=5400) D.push(['', '✅ Кімнати тримають задану температуру, шуму немає.']);
+  $('diag').innerHTML = D.map(([c,t])=>`<li class="${c}">${t}</li>`).join('');
+}
+
+/* ---- головний цикл ---- */
+const clock = new THREE.Clock();
+let panelT = 0, meterT = 0;
+function resize(){ if(!renderer) return; const w=stage.clientWidth, h=stage.clientHeight; renderer.setSize(w,h,false); camera.aspect=w/h; camera.fov = w/h<1 ? 62 : 42; camera.updateProjectionMatrix(); }
+new ResizeObserver(resize).observe(stage); resize();
+
+let now = 0;
+function frame(){ tick(Math.min(clock.getDelta(), .05)); requestAnimationFrame(frame); }
+function tick(dt){
+  now += dt;
+  if(st.running){ const dts = dt*900*st.speed; st.simT += dts; stepPhysics(dts); }
+  else H = hydraulics(st.rads.map(r=>r.open));
+
+  // шум
+  let n = 0; st.rads.forEach(r=>{ if(r.q>2) n=Math.max(n, clamp((r.dpT-16)/24,0,1)); });
+  n = Math.max(n, clamp((H.Q-380)/300,0,1)*.5);
+  noiseLvl += (n-noiseLvl)*Math.min(1,dt*3);
+  if(ac && gain) gain.gain.setTargetAtTime(st.sound ? noiseLvl*.05 : 0, ac.currentTime, .1);
+
+  if(renderer){
+    // протоки на шляхах
+    pIn.flow = H.Q; pOut.flow = H.Q; pRiserS.flow = 250; pRiserR.flow = 250;
+    for(let k=0;k<N-1;k++){ pSupSeg[k].flow = H.seg[k]; const down = H.q.slice(k+1).reduce((a,b)=>a+b,0); pRetSeg[k].flow = down; }
+    pRad.forEach(p=>p.flow = H.q[p.i]);
+    const sv = st.running ? 1 : 0;
+    parts.forEach((pt,i)=>{
+      const p = pt.p; pt.s += dt*sv*Math.min(2.5, p.flow*.011*(p.kind==='rad'?1.6:1));
+      p.at(pt.s, tmpV); mtx.makeTranslation(tmpV.x,tmpV.y,tmpV.z); pMesh.setMatrixAt(i, mtx);
+      if(p.kind==='rad'){ const r=st.rads[p.i]; const f=((pt.s%p.len)+p.len)%p.len/p.len; tempColor(st.tsup + (r.tret-st.tsup)*clamp((f-.3)/.5,0,1), tmpC); }
+      else if(p.kind==='r'||p.kind==='riserR'){ const tr = H.Q>0 ? st.rads.reduce((a,r)=>a+r.tret*r.q,0)/H.Q : 30; tempColor(p.kind==='r'?tr:st.tsup-22, tmpC); }
+      else tempColor(st.tsup, tmpC);
+      if(p.flow<.5) tmpC.lerp(new THREE.Color(0x888888), .6);
+      pMesh.setColorAt(i, tmpC);
+    });
+    pMesh.instanceMatrix.needsUpdate = true; pMesh.instanceColor.needsUpdate = true;
+
+    // батареї, кімнати, головки, крани
+    radObjs.forEach((o,i)=>{
+      const r = st.rads[i], R=ROOMS[i];
+      const tmTarget = r.T + r.P/(R.UAr*(r.air?AIR_HEAT:1)); r.tm += (tmTarget - r.tm)*Math.min(1,dt*2);
+      tempColor(r.tm, tmpC); o.mat.color.copy(tmpC).lerp(new THREE.Color(0xe6e8eb), .35);
+      o.airBox.visible = r.air;
+      o.heat.material.opacity = clamp(r.P/R.need,0,1.3)*.45; o.heat.position.y = 1.0 + Math.sin(now*2+i)*.02;
+      o.head.rotation.z = r.head/5*Math.PI*1.5;
+      o.hex.rotation.y = r.ls/4*Math.PI*2;
+      const wn = r.q>2 ? clamp((r.dpT-16)/24,0,1) : 0;
+      o.waves.forEach((w,k)=>{ const ph=(now*1.6+k/3)%1; w.material.opacity = wn*(1-ph)*.9; w.scale.setScalar(.6+ph*.9); });
+      const dev = r.T-21, fc = floorMats[i].color;
+      fc.set(0xe8dcc4); if(dev<0) fc.lerp(new THREE.Color(0x9cc3ec), clamp(-dev/6,0,1)*.8); else fc.lerp(new THREE.Color(0xf2a679), clamp(dev/6,0,1)*.8);
+    });
+    v1h.rotation.y = (1-st.v1/100)*Math.PI*.5;
+    ballS.lev.rotation.y = ballR.lev.rotation.y = st.ball ? 0 : -Math.PI/2;
+    fCap.material.color.set(st.filter==='ok'?0x6b4a2b:0x3a2614);
+    spindle.position.y = .23 + H.kv2*.04;
+    crack.visible = st.reg==='torn'; crack.material.emissiveIntensity = .6+.6*Math.sin(now*8);
+    plug.visible = st.reg==='clog';
+    capDots.forEach((d,k)=>{ if(st.reg==='clog'){ d.position.copy(capCurve.getPoint(.12+k*.12)); d.material.color.set(0x8a6a4a); }
+      else { d.position.copy(capCurve.getPoint(((now*.45)+k/3)%1)); d.material.color.set(0xffc06a); } });
+
+    // підсвітка туру
+    const pulse = .25+.25*Math.sin(now*5);
+    Object.entries(HL).forEach(([id,objs])=>objs.forEach(o=>setGlow(o, highlight.includes(id)?pulse:0)));
+
+    if(now-meterT>.5){ drawMeter(); meterT=now; }
+
+    if(flyAnim){ flyAnim.k = Math.min(1, flyAnim.k + dt/flyAnim.dur); const e = 1-Math.pow(1-flyAnim.k,3);
+      camera.position.lerpVectors(flyAnim.p0, flyAnim.p1, e); controls.target.lerpVectors(flyAnim.t0, flyAnim.t1, e);
+      if(flyAnim.k>=1) flyAnim=null; }
+    controls.update();
+    renderer.render(scene, camera);
+
+    // підписи
+    const w = stage.clientWidth, h = stage.clientHeight;
+    roomLbls.forEach((L,i)=>{ const r=st.rads[i]; L.el.textContent = `${ROOMS[i].name} · ${fmt(r.T,1)}° · ${fmt(r.q)} л/г`; });
+    labels.forEach(L=>{ tmpV.copy(L.pos).project(camera); const vis = st.labels && tmpV.z<1 && Math.abs(tmpV.x)<1.1 && Math.abs(tmpV.y)<1.1;
+      L.el.classList.toggle('hide', !vis); if(vis) L.el.style.transform = `translate(${(tmpV.x*.5+.5)*w}px,${(-tmpV.y*.5+.5)*h}px) translate(-50%,-100%)`; });
+  }
+
+  if(now-panelT>.25){ updatePanel(); panelT=now;
+    const hh = Math.floor(st.simT/3600), mm = Math.floor(st.simT%3600/60);
+    $('clock').textContent = `⏱ ${hh}:${String(mm).padStart(2,'0')} год`; }
+}
+// для налагодження в консолі: __rad.run(секунд) проганяє модель без анімації
+window.__rad = { st, camera, get controls(){ return controls; }, get fly(){ return flyAnim; }, applyScen, showStep, balance, get H(){ return H; }, run(sec){ for(let t=0;t<sec;t+=.05) tick(.05); } };
+
+applyScen('default');
+showStep(0);
+requestAnimationFrame(frame);
+</script>
+</body>
+</html>
