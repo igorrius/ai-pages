@@ -38,9 +38,40 @@ button,input,select{font-family:inherit;font-size:inherit}
 .chip.on{background:var(--ink);color:#fff;border-color:var(--ink)}
 
 .lab{display:grid;grid-template-columns:minmax(0,1fr) 400px;gap:16px;align-items:start}
-@media (max-width:980px){.lab{grid-template-columns:1fr}}
+@media (max-width:980px){.lab{grid-template-columns:minmax(0,1fr)}}
+.stagecol,.panel{min-width:0}
 .stagecol{position:sticky;top:10px}
 @media (max-width:980px){.stagecol{position:static}}
+.jump{display:flex;align-items:center;gap:6px;margin-top:10px;overflow-x:auto;padding-bottom:2px;scrollbar-width:thin}
+.jump button{flex:none;border:1.5px solid var(--rule);background:var(--card);border-radius:10px;padding:6px 10px;font-weight:800;font-size:13px;cursor:pointer;color:var(--ink);white-space:nowrap}
+.jump button:hover{border-color:var(--orange)}
+.jump button.on{background:var(--orange);border-color:var(--orange);color:#fff}
+.jump .arr{background:var(--ink);color:#fff;border-color:var(--ink);padding:6px 11px}
+.jump .sep{flex:none;width:1px;height:22px;background:var(--rule)}
+.navhint{font-size:12px;color:var(--muted);margin-top:4px}
+.focus{position:absolute;top:52px;right:10px;width:280px;max-height:calc(100% - 64px);overflow:auto;background:rgba(255,253,248,.97);border:1.5px solid var(--rule);border-radius:14px;padding:10px 12px;box-shadow:0 8px 22px rgba(0,0,0,.14);display:none;z-index:2}
+.focus.show{display:block}
+.focus .fh{display:flex;align-items:center;gap:6px;margin-bottom:2px}
+.focus .fh b{font-size:15px;font-weight:900}
+.focus .fh button{border:0;background:none;cursor:pointer;font-size:16px;padding:2px 6px;color:var(--ink-2)}
+.focus .fh .x{margin-left:auto;color:var(--muted);font-size:18px}
+.focus .fs{font-size:13px;font-weight:800;font-variant-numeric:tabular-nums}
+.focus .fm{font-size:12px;color:var(--ink-2);font-variant-numeric:tabular-nums}
+.focus .ctl{margin-top:8px}.focus .ctl label{font-size:13px}
+.focus .fx{font-size:12px;color:var(--ink-2);margin:4px 0 0}
+.focus button.air{margin-top:8px;width:100%;text-align:left;border:1px dashed var(--rule);background:transparent;border-radius:8px;padding:5px 8px;font-size:12px;font-weight:700;color:var(--muted);cursor:pointer}
+.focus button.air.on{border:1.5px solid var(--orange);background:#fff4e6;color:var(--ink)}
+@media (max-width:980px){.focus{position:static;width:auto;max-height:none;margin-top:10px;box-shadow:none}}
+.mm{position:absolute;right:10px;bottom:10px;width:190px;background:rgba(255,253,248,.92);border:1px solid var(--rule);border-radius:10px;padding:4px 4px 2px}
+.mm svg{display:block;width:100%;height:auto;cursor:pointer}
+.mm .room{stroke:#b9ab90;stroke-width:.05;transition:fill .5s}
+.mm .room:hover{stroke:var(--orange);stroke-width:.12}
+.mm .room.cur{stroke:var(--orange);stroke-width:.18}
+.mm text{font:800 .62px Nunito,system-ui,sans-serif;fill:#2d2a32;pointer-events:none}
+.mm .cap{font-size:11px;font-weight:800;color:var(--ink-2);padding:0 2px}
+@media (max-width:640px){.mm{display:none}.toast{max-width:calc(100% - 20px)}}
+.rad .go{border:1px solid var(--rule);background:#fff;border-radius:8px;font-size:12px;font-weight:800;padding:2px 7px;cursor:pointer}
+.rad .go:hover{border-color:var(--orange)}
 .stage{position:relative;height:min(68vh,640px);min-height:380px;border-radius:var(--r);overflow:hidden;border:1.5px solid var(--rule);background:#e9eef3;touch-action:none}
 .stage canvas{display:block;width:100%;height:100%}
 .hud{position:absolute;top:10px;left:10px;right:10px;display:flex;flex-wrap:wrap;gap:6px;pointer-events:none}
@@ -52,7 +83,7 @@ button,input,select{font-family:inherit;font-size:inherit}
 .lbl.s{color:#b23a1a}.lbl.r{color:#24589f}.lbl.c{color:#8a531f}
 .lbl.room{font-size:12px;background:rgba(45,42,50,.82);color:#fff;border-color:transparent}
 .lbl.hide{display:none}
-.toast{position:absolute;left:10px;bottom:10px;max-width:min(440px,calc(100% - 20px));background:rgba(255,253,248,.96);border:1.5px solid var(--rule);border-radius:12px;padding:10px 34px 10px 12px;font-size:14px;box-shadow:0 6px 18px rgba(0,0,0,.12);display:none}
+.toast{position:absolute;left:10px;bottom:10px;max-width:min(440px,calc(100% - 220px));background:rgba(255,253,248,.96);border:1.5px solid var(--rule);border-radius:12px;padding:10px 34px 10px 12px;font-size:14px;box-shadow:0 6px 18px rgba(0,0,0,.12);display:none}
 .toast.show{display:block}
 .toast b{display:block;margin-bottom:2px}
 .toast .x{position:absolute;top:4px;right:6px;border:0;background:none;font-size:18px;cursor:pointer;color:var(--muted)}
@@ -180,7 +211,13 @@ footer{padding:26px 0 40px;color:var(--muted);font-size:14px;text-align:center}
         <div id="labels"></div>
         <div class="toast" id="toast" role="status"><button class="x" type="button" aria-label="Закрити">×</button><div id="toast-t"></div></div>
         <div class="nogl" id="nogl">Не вдалося запустити 3D (WebGL). Решта сторінки працює — пояснення нижче.</div>
+        <div class="mm" id="mm"><div class="cap">🗺 План — клік, щоб перейти</div><svg id="mm-svg" viewBox="-2.8 -0.7 15.3 9.1" role="img" aria-label="План квартири: клікніть кімнату або щит, щоб перейти туди"></svg></div>
       </div>
+
+      <nav class="jump" id="jump" aria-label="Перейти до вузла"></nav>
+      <div class="navhint" id="navhint"></div>
+
+      <div class="focus" id="focus" aria-live="polite"></div>
 
       <div class="tour" id="tour" aria-live="polite">
         <div class="th"><span class="num" id="t-num">1</span><h3 id="t-title"></h3></div>
@@ -411,7 +448,7 @@ function stepPhysics(dtSim){
 const radsBox = $('rads');
 ROOMS.forEach((R,i)=>{
   const d = document.createElement('div'); d.className='rad'; d.id='rad'+i;
-  d.innerHTML = `<div class="rh"><b>${i+1}. ${R.name}</b><span class="st" id="r${i}-st"></span></div>
+  d.innerHTML = `<div class="rh"><b>${i+1}. ${R.name}</b><button class="go" type="button" data-go="rad${i}" title="Показати в 3D">📍 показати</button><span class="st" id="r${i}-st"></span></div>
     <div class="meta" id="r${i}-m"></div>
     <div class="two">
       <div class="ctl"><label for="r${i}-h">Термоголовка <output id="r${i}-ho"></output></label><input type="range" id="r${i}-h" min="0" max="6" step="1"></div>
@@ -454,6 +491,7 @@ function syncUI(){
     const ab=$(`r${i}-air`); ab.classList.toggle('on', r.air); ab.textContent = r.air ? '💨 Є повітря — спустити краном Маєвського' : '💨 Кран Маєвського: повітря немає';
   });
   H = hydraulics(st.rads.map(r=>r.open));
+  if(window.__navReady) mirrorSync();
 }
 
 function balance(){
@@ -522,7 +560,8 @@ if(renderer){
   renderer.shadowMap.type = THREE.PCFSoftShadowMap;
   stage.prepend(renderer.domElement);
   controls = new OrbitControls(camera, renderer.domElement);
-  controls.enableDamping = true; controls.maxPolarAngle = Math.PI*0.49; controls.minDistance = 0.6; controls.maxDistance = 30;
+  controls.enableDamping = true; controls.maxPolarAngle = Math.PI*0.49; controls.minDistance = 0.4; controls.maxDistance = 30;
+  controls.zoomToCursor = true;
 }
 
 scene.add(new THREE.HemisphereLight(0xffffff, 0xb9a98f, 1.6));
@@ -755,8 +794,8 @@ const roomLbls = ROOMS.map((R,i)=> addLabel('', V((R.x0+R.x1)/2, 1.4, .25), 'roo
 const VIEWS = {
   over:  {p:V(-3.2,7.6,13.2), t:V(4.4,0,2.9)},
   corr:  {p:V(-.4,2.3,9.6), t:V(-1.0,1.25,6.4)},
-  v1:    {p:V(-1.1,2.0,7.85), t:V(-1.2,1.5,6.35)},
-  v2:    {p:V(-1.05,1.75,7.55), t:V(-1.15,1.2,6.5)},
+  v1:    {p:V(-.95,2.15,8.25), t:V(-1.1,1.5,6.35)},
+  v2:    {p:V(-.9,1.95,8.05), t:V(-1.1,1.2,6.5)},
   rads:  {p:V(8.6,5.4,7.6), t:V(6.2,.2,.6)},
   rad1:  {p:V(1.9,1.2,2.0), t:V(1.25,.45,.2)},
   far:   {p:V(10.9,1.4,2.6), t:V(10.5,.45,.2)},
@@ -764,7 +803,6 @@ const VIEWS = {
 let flyAnim = null;
 function fly(v, dur=1.2){ if(!controls) return; flyAnim = {p0:camera.position.clone(), t0:controls.target.clone(), p1:v.p, t1:v.t, k:0, dur}; }
 camera.position.copy(VIEWS.over.p); if(controls){ controls.target.copy(VIEWS.over.t); controls.update(); }
-$('b-cam').addEventListener('click', ()=>fly(VIEWS.over));
 
 const TOUR = [
   {t:'Загальна картина', v:'over', hl:[], x:'Квартира підключена до двох труб у коридорі. Вода з подачі проходить крізь усі батареї й повертається в обратку. Кульки в трубах — це рух теплоносія: що швидше біжать, то більший проток. Модель можна крутити пальцем чи мишею.'},
@@ -789,6 +827,7 @@ function showStep(i){
   $('t-prev').disabled = tourI===0; $('t-next').textContent = tourI===TOUR.length-1 ? 'Спочатку ↺' : 'Далі ▶';
   const tb = $('t-try'); tb.hidden = !s.tryL; if(s.tryL) tb.textContent = '▶ '+s.tryL;
   highlight = s.hl; fly(VIEWS[s.v]);
+  if(window.__navReady){ curStop='__'; focusHL=null; jump.querySelectorAll('.on').forEach(b=>b.classList.remove('on')); renderFocus(); }
 }
 $('t-prev').addEventListener('click',()=>showStep(tourI-1));
 $('t-next').addEventListener('click',()=>showStep(tourI===TOUR.length-1?0:tourI+1));
@@ -798,8 +837,120 @@ $('t-try').addEventListener('click',()=>TOUR[tourI].tryF());
 const HL = {
   riserS:[riserS], riserR:[riserR], v1:[v1], meter:[meter], v2:[v2], cap:[cap], ball:[ballS.g, ballR.g], filter:[filt], air:radObjs.map(r=>r.mv),
   rads: radObjs.map(r=>r.g), heads: radObjs.map(r=>r.head), locks: radObjs.map(r=>r.hex),
+  rad0:[radObjs[0].g], rad1:[radObjs[1].g], rad2:[radObjs[2].g], rad3:[radObjs[3].g],
 };
 function setGlow(obj, k){ obj.traverse(o=>{ if(o.isMesh && o.material.emissive && o!==crack){ o.material.emissive.setRGB(k,k*.55,0); if(o.material===capMat) o.material.emissiveIntensity = Math.max(1, capFlash); } }); }
+
+
+/* ================= НАВІГАЦІЯ ================= */
+// зупинки — по шляху води: щит → кран 1 → кран 2 → батареї від ближньої до дальньої
+const STOPS = [
+  {id:'over',   btn:'🏠 Уся квартира', view:VIEWS.over},
+  {id:'shield', btn:'🚪 Щит',          view:VIEWS.corr, title:'🚪 Щит у коридорі'},
+  {id:'v1',     btn:'🔧 Кран 1',       view:VIEWS.v1,   title:'🔧 Кран 1 і лічильник'},
+  {id:'v2',     btn:'🎛️ Кран 2',       view:VIEWS.v2,   title:'🎛️ Кран 2 — регулятор ΔP'},
+  ...ROOMS.map((R,i)=>{ const c=(R.x0+R.x1)/2; return {id:'rad'+i, btn:`${i+1} ${R.name}`, i,
+      view:{p:V(c+.9,1.6,3.1), t:V(c,.4,.2)}, title:`♨️ ${i+1}. ${R.name}`}; }),
+];
+let curStop = 'over', focusHL = null;
+const jump = $('jump');
+jump.innerHTML = `<button class="arr" type="button" data-step="-1" aria-label="Попередній вузол">◀</button>`
+  + STOPS.map((s,k)=>(k===1||k===4?'<span class="sep"></span>':'')+`<button type="button" data-stop="${s.id}">${s.btn}</button>`).join('')
+  + `<button class="arr" type="button" data-step="1" aria-label="Наступний вузол">▶</button>`;
+jump.addEventListener('click', e=>{ const b=e.target.closest('button'); if(!b) return;
+  if(b.dataset.stop) goStop(b.dataset.stop); else stepStop(+b.dataset.step); });
+radsBox.addEventListener('click', e=>{ const b=e.target.closest('[data-go]'); if(!b) return;
+  goStop(b.dataset.go); $('stage').scrollIntoView({behavior:'smooth', block:'nearest'}); });
+const isTouch = matchMedia('(pointer:coarse)').matches;
+$('navhint').textContent = isTouch
+  ? '☝️ Один палець — обертати, два — зсувати й наближати. Кнопки вище — швидкий перехід до вузлів.'
+  : '🖱 Ліва кнопка — обертати · права — зсувати · коліщатко — наблизити до курсора · ← → — по вузлах · 0 — уся квартира · 1–4 — батареї';
+
+function stepStop(d){ const k = STOPS.findIndex(s=>s.id===curStop); goStop(STOPS[(k+d+STOPS.length)%STOPS.length].id); }
+function goStop(id){
+  const s = STOPS.find(x=>x.id===id); if(!s) return;
+  curStop = id; focusHL = /^(rad\d|v1|v2)$/.test(id) ? id : null;
+  // на широкому екрані картка праворуч — зсуваємо кадр, щоб вузол був лівіше від неї
+  let v = s.view;
+  if(s.title && innerWidth>980){ const dir=new THREE.Vector3().subVectors(v.t,v.p), right=new THREE.Vector3().crossVectors(dir,UP).normalize().multiplyScalar(dir.length()*.2);
+    v = {p:v.p.clone().add(right), t:v.t.clone().add(right)}; }
+  fly(v);
+  [...jump.querySelectorAll('[data-stop]')].forEach(b=>{ const on=b.dataset.stop===id; b.classList.toggle('on',on);
+    if(on){ const l=b.offsetLeft-jump.offsetLeft, r=l+b.offsetWidth; if(l<jump.scrollLeft) jump.scrollLeft=l-40; else if(r>jump.scrollLeft+jump.clientWidth) jump.scrollLeft=r-jump.clientWidth+40; } });
+  renderFocus();
+}
+document.addEventListener('keydown', e=>{
+  const t=e.target; if((t.closest && t.closest('input,textarea,select,[contenteditable]')) || e.altKey || e.ctrlKey || e.metaKey) return;
+  if(e.key==='ArrowRight'){ stepStop(1); e.preventDefault(); }
+  else if(e.key==='ArrowLeft'){ stepStop(-1); e.preventDefault(); }
+  else if(e.key==='0' || e.key==='Home'){ goStop('over'); }
+  else if(/^[1-4]$/.test(e.key)) goStop('rad'+(+e.key-1));
+});
+$('b-cam').addEventListener('click', ()=>goStop('over'));
+window.__navReady = true;
+
+/* картка вибраного вузла: копії потрібних регуляторів з панелі, синхронізовані з нею */
+const focusEl = $('focus');
+function mirrorRange(src, out, label){ return `<div class="ctl"><label>${label} <output data-mo="${out}"></output></label><input type="range" data-mr="${src}" aria-label="${label}"></div>`; }
+function mirrorSeg(src, label){ return `<div class="ctl"><label>${label}</label><div class="seg" data-ms="${src}">${[...$(src).children].map((b,k)=>`<button type="button" data-k="${k}">${b.innerHTML}</button>`).join('')}</div></div>`; }
+function renderFocus(){
+  const s = STOPS.find(x=>x.id===curStop);
+  if(!s || !s.title){ focusEl.classList.remove('show'); focusEl.innerHTML=''; return; }
+  let body = '';
+  if(s.id==='shield') body = mirrorSeg('c-ball','Кульові крани') + mirrorSeg('c-filter','Фільтр') + `<p class="fx">Кульові — тільки «відкрито / закрито». Фільтр чистять при закритих кранах.</p>`;
+  if(s.id==='v1') body = mirrorRange('c-v1','o-v1','Обмеження протоку') + `<p class="fx">Скільки максимум може пройти на квартиру. Зі штуцера на цьому крані починається мідна трубка.</p>`;
+  if(s.id==='v2') body = mirrorRange('c-set','o-set','Дельта на квартиру') + mirrorSeg('c-reg','Стан') + `<p class="fx">Менше — тихіше, але гірше прокачуються дальні батареї. Крутити поступово.</p>`;
+  if(s.i!==undefined){ const i=s.i;
+    body = `<div class="fs" data-mt="r${i}-st"></div><div class="fm" data-mt="r${i}-m"></div>`
+      + mirrorRange(`r${i}-h`,`r${i}-ho`,'Термоголовка') + mirrorRange(`r${i}-l`,`r${i}-lo`,'Нижній кран')
+      + `<button class="air" type="button" data-mb="r${i}-air"></button>`; }
+  focusEl.innerHTML = `<div class="fh"><button type="button" data-fs="-1" aria-label="Попередній">◀</button><b>${s.title}</b><button type="button" data-fs="1" aria-label="Наступний">▶</button><button class="x" type="button" aria-label="Закрити">×</button></div>${body}`;
+  focusEl.querySelectorAll('[data-mr]').forEach(inp=>{ const src=$(inp.dataset.mr); ['min','max','step'].forEach(a=>inp.setAttribute(a,src.getAttribute(a)));
+    inp.addEventListener('input',()=>{ src.value=inp.value; src.dispatchEvent(new Event('input')); }); });
+  focusEl.querySelectorAll('[data-ms]').forEach(seg=>seg.addEventListener('click',e=>{ const b=e.target.closest('button'); if(b) $(seg.dataset.ms).children[+b.dataset.k].click(); }));
+  focusEl.querySelectorAll('[data-mb]').forEach(b=>b.addEventListener('click',()=>$(b.dataset.mb).click()));
+  focusEl.querySelector('.x').addEventListener('click',()=>{ curStop='__'; focusHL=null; focusEl.classList.remove('show'); jump.querySelectorAll('.on').forEach(b=>b.classList.remove('on')); });
+  focusEl.querySelectorAll('[data-fs]').forEach(b=>b.addEventListener('click',()=>stepStop(+b.dataset.fs)));
+  focusEl.classList.add('show'); mirrorSync();
+}
+function mirrorSync(){
+  if(!focusEl.classList.contains('show')) return;
+  focusEl.querySelectorAll('[data-mr]').forEach(inp=>{ if(document.activeElement!==inp) inp.value=$(inp.dataset.mr).value; });
+  focusEl.querySelectorAll('[data-mo]').forEach(o=>o.textContent=$(o.dataset.mo).textContent);
+  focusEl.querySelectorAll('[data-ms]').forEach(seg=>[...seg.children].forEach((b,k)=>b.classList.toggle('on',$(seg.dataset.ms).children[k].classList.contains('on'))));
+  focusEl.querySelectorAll('[data-mb]').forEach(b=>{ const src=$(b.dataset.mb); b.textContent=src.textContent; b.classList.toggle('on',src.classList.contains('on')); });
+  focusEl.querySelectorAll('[data-mt]').forEach(el=>el.textContent=$(el.dataset.mt).textContent);
+}
+
+/* міні-план */
+const mmSvg = $('mm-svg'), NS='http://www.w3.org/2000/svg';
+const svgEl = (tag, attrs, parent=mmSvg) => { const e=document.createElementNS(NS,tag); for(const k in attrs) e.setAttribute(k,attrs[k]); parent.appendChild(e); return e; };
+svgEl('rect',{x:-2.6,y:6.15,width:14.75,height:1.9,fill:'#d6dade'});
+svgEl('rect',{x:-.15,y:-.15,width:12.3,height:6.3,fill:'#efe6d4'});
+svgEl('line',{x1:-.15,y1:-.15,x2:12.15,y2:-.15,stroke:'#7fb2e0','stroke-width':.12});
+const mmRooms = ROOMS.map((R,i)=>{ const r=svgEl('rect',{class:'room',x:R.x0+.05,y:.05,width:R.x1-R.x0-.1,height:5.9,'data-stop':'rad'+i});
+  const t=svgEl('title',{},r); t.textContent=`${i+1}. ${R.name}`;
+  svgEl('rect',{x:(R.x0+R.x1)/2-radW[i]/2,y:.1,width:radW[i],height:.22,fill:'#e4572e',rx:.05});
+  svgEl('text',{x:(R.x0+R.x1)/2,y:3.1,'text-anchor':'middle'}).textContent = R.name;
+  const tt = svgEl('text',{x:(R.x0+R.x1)/2,y:3.9,'text-anchor':'middle'}); return {r, tt}; });
+const mmShield = svgEl('rect',{class:'room',x:-2.2,y:6.17,width:2.3,height:.6,fill:'#9aa3ad','data-stop':'shield'});
+svgEl('title',{},mmShield).textContent='Щит';
+svgEl('text',{x:-1.05,y:7.45,'text-anchor':'middle'}).textContent='щит';
+svgEl('text',{x:6,y:7.45,'text-anchor':'middle'}).textContent='коридор';
+const mmRay = svgEl('line',{stroke:'#2d2a32','stroke-width':.09,'stroke-dasharray':'.25 .15'});
+const mmCam = svgEl('circle',{r:.32,fill:'#f29e4c',stroke:'#fff','stroke-width':.08});
+mmSvg.addEventListener('click', e=>{ const t=e.target.closest('[data-stop]'); if(t) goStop(t.dataset.stop); });
+function updateMinimap(){
+  ROOMS.forEach((R,i)=>{ const r=st.rads[i]; const dev=r.T-21, c=new THREE.Color(0xefe6d4);
+    if(dev<0) c.lerp(new THREE.Color(0x9cc3ec), clamp(-dev/6,0,1)); else c.lerp(new THREE.Color(0xf2a679), clamp(dev/6,0,1));
+    mmRooms[i].r.setAttribute('fill','#'+c.getHexString()); mmRooms[i].tt.textContent = `${fmt(r.T,1)}°`;
+    mmRooms[i].r.classList.toggle('cur', curStop==='rad'+i); });
+  mmShield.classList.toggle('cur', /^(shield|v1|v2)$/.test(curStop));
+  if(!controls) return;
+  const cx=clamp(camera.position.x,-2.6,12.3), cz=clamp(camera.position.z,-.6,8.2);
+  mmCam.setAttribute('cx',cx); mmCam.setAttribute('cy',cz);
+  mmRay.setAttribute('x1',cx); mmRay.setAttribute('y1',cz); mmRay.setAttribute('x2',controls.target.x); mmRay.setAttribute('y2',controls.target.z);
+}
 
 /* ---- клік по об'єктах ---- */
 const INFO = {
@@ -824,9 +975,10 @@ if(renderer){
     if(!hit) return;
     let o=hit.object; while(!o.userData.pick) o=o.parent; const id=o.userData.pick;
     const m = id.match(/^(rad|head|lock|room|air)(\d)$/);
-    if(m){ const i=+m[2], el=$('rad'+i); el.scrollIntoView({behavior:'smooth',block:'center'}); el.classList.add('flash'); setTimeout(()=>el.classList.remove('flash'),1400);
-      const r=st.rads[i]; toast(`♨️ ${ROOMS[i].name}`, `${m[1]==='head'?'Термоголовка: ':m[1]==='lock'?'Нижній кран: ':m[1]==='air'?'Кран Маєвського (спуск повітря). ':''}${fmt(r.q)} л/год, кімната ${fmt(r.T,1)} °C. Налаштування — у панелі «Батареї».`); }
-    else if(INFO[id]) toast(...INFO[id]);
+    if(m){ goStop('rad'+m[2]); return; }
+    const stopOf = {v1:'v1', meter:'v1', v2:'v2', cap:'v2', ball:'shield', filter:'shield', riserS:'shield', riserR:'shield'}[id];
+    if(stopOf) goStop(stopOf);
+    if(INFO[id]) toast(...INFO[id]);
   });
 }
 
@@ -944,7 +1096,7 @@ function tick(dt){
 
     // підсвітка туру
     const pulse = .25+.25*Math.sin(now*5);
-    Object.entries(HL).forEach(([id,objs])=>objs.forEach(o=>setGlow(o, highlight.includes(id)?pulse:0)));
+    Object.entries(HL).forEach(([id,objs])=>objs.forEach(o=>setGlow(o, highlight.includes(id)?pulse : id===focusHL ? .05 : 0)));
     if(!highlight.includes('cap')){ capMat.emissive.set(0xff8a2a); capMat.emissiveIntensity = capFlash*.9; }
 
     if(now-meterT>.5){ drawMeter(); meterT=now; }
@@ -962,7 +1114,7 @@ function tick(dt){
       L.el.classList.toggle('hide', !vis); if(vis) L.el.style.transform = `translate(${(tmpV.x*.5+.5)*w}px,${(-tmpV.y*.5+.5)*h}px) translate(-50%,-100%)`; });
   }
 
-  if(now-panelT>.25){ updatePanel(); panelT=now;
+  if(now-panelT>.25){ updatePanel(); mirrorSync(); updateMinimap(); panelT=now;
     const hh = Math.floor(st.simT/3600), mm = Math.floor(st.simT%3600/60);
     $('clock').textContent = `⏱ ${hh}:${String(mm).padStart(2,'0')} год`; }
 }
