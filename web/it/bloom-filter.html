@@ -1,0 +1,1321 @@
+<!doctype html>
+<html lang="uk">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Фільтр Блума простими словами</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<meta name="description" content="Інтерактивний посібник: що таке фільтр Блума, як він за кілька біт на елемент відповідає «точно ні» або «можливо так», як порахувати розмір, де його використовують і чим замінити.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect x='8' y='38' width='16' height='24' rx='3' fill='%233a6ff0'/%3E%3Crect x='30' y='38' width='16' height='24' rx='3' fill='none' stroke='%233a6ff0' stroke-width='5'/%3E%3Crect x='52' y='38' width='16' height='24' rx='3' fill='%233a6ff0'/%3E%3Crect x='74' y='38' width='16' height='24' rx='3' fill='%233a6ff0'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;1,400&family=JetBrains+Mono:wght@400;600&family=Unbounded:wght@500;700&display=swap">
+<style>
+/* Same long-read layout as the Spark / Flink / Pinot guides: sticky section rail on desktop,
+   chip bar on phones, interactive "labs" are the only framed objects. Cobalt accent.
+   Hash functions h1..h5 get fixed categorical hues (orange, aqua, violet, magenta, yellow)
+   and are always labelled, so identity never rests on color alone. */
+:root{
+  --bg:#f3f5f7; --surface:#ffffff; --sunk:#e9edf1; --line:#d6dde4;
+  --ink:#14202b; --muted:#56636f; --faint:#8a96a1;
+  --accent:#2148b0; --accent-strong:#3a6ff0; --accent-soft:#e2eafd;
+  --ok:#0f7a5a; --ok-soft:#dcf2ea; --warn:#a15c00; --warn-soft:#fbefd9; --bad:#b4233a; --bad-soft:#fae1e5;
+  --h1:#eb6834; --h2:#1baf7a; --h3:#6250d6; --h4:#e87ba4; --h5:#eda100;
+  --code-bg:#14202b; --code-ink:#dfe6ec; --code-kw:#a9c1ff; --code-str:#9fd7a8; --code-cm:#7f8f9c; --code-fn:#ffc58c;
+  --f-display:"Unbounded","Arial Black",system-ui,sans-serif;
+  --f-body:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;
+  --f-mono:"JetBrains Mono",ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+  --r:10px;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0e1318; --surface:#151c23; --sunk:#1b242d; --line:#283440;
+  --ink:#e6ecf1; --muted:#9aa8b4; --faint:#6c7a86;
+  --accent:#9db8ff; --accent-strong:#6d93ff; --accent-soft:#18264a;
+  --ok:#4cc79a; --ok-soft:#14322a; --warn:#f0b357; --warn-soft:#3a2c14; --bad:#ff7d8f; --bad-soft:#3d1b22;
+  --h1:#d95926; --h2:#199e70; --h3:#9085e9; --h4:#d55181; --h5:#c98500;
+  --code-bg:#0a0f13; --code-ink:#dfe6ec;
+  color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0e1318; --surface:#151c23; --sunk:#1b242d; --line:#283440;
+  --ink:#e6ecf1; --muted:#9aa8b4; --faint:#6c7a86;
+  --accent:#9db8ff; --accent-strong:#6d93ff; --accent-soft:#18264a;
+  --ok:#4cc79a; --ok-soft:#14322a; --warn:#f0b357; --warn-soft:#3a2c14; --bad:#ff7d8f; --bad-soft:#3d1b22;
+  --h1:#d95926; --h2:#199e70; --h3:#9085e9; --h4:#d55181; --h5:#c98500;
+  --code-bg:#0a0f13; --code-ink:#dfe6ec;
+  color-scheme:dark}
+
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html{scroll-behavior:smooth;scroll-padding-top:72px}
+@media (prefers-reduced-motion: reduce){html{scroll-behavior:auto}*{animation:none!important;transition:none!important}}
+body{margin:0;background:var(--bg);color:var(--ink);font:400 16px/1.65 var(--f-body);-webkit-font-smoothing:antialiased}
+a{color:var(--accent)}
+a:hover{text-decoration-thickness:2px}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:4px}
+code,kbd{font-family:var(--f-mono);font-size:.88em}
+p code,li code,td code,dd code{background:var(--sunk);padding:.08em .35em;border-radius:4px}
+h1,h2,h3{text-wrap:balance;margin:0}
+h2{font:700 clamp(1.45rem,1.1rem + 1.4vw,2rem)/1.2 var(--f-display);letter-spacing:-.01em}
+h3{font:600 1.15rem/1.35 var(--f-body)}
+p{margin:0}
+ul.list{margin:0;padding-left:1.2em;display:grid;gap:6px}
+.muted{color:var(--muted)}
+.mono{font-family:var(--f-mono)}
+.eyebrow{font:600 .72rem/1 var(--f-mono);letter-spacing:.12em;text-transform:uppercase;color:var(--accent)}
+
+/* ---------- top bar ---------- */
+.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:20;background:color-mix(in srgb,var(--bg) 88%,transparent);backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}
+.top-in{max-width:1180px;margin:0 auto;display:flex;align-items:center;gap:12px;padding-block:10px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.crumbs{display:flex;gap:8px;align-items:center;font-size:.9rem;min-width:0;white-space:nowrap;overflow:hidden}
+.crumbs a{color:var(--muted);text-decoration:none}
+.crumbs a:hover{color:var(--accent)}
+.crumbs span{color:var(--faint)}
+.crumbs b{font-weight:600;overflow:hidden;text-overflow:ellipsis}
+.theme{margin-left:auto;flex:none;border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:999px;padding:6px 12px;font:500 .82rem var(--f-body);cursor:pointer}
+.theme:hover{border-color:var(--accent)}
+.chips{display:none}
+@media (max-width:1023px){
+  .chips{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;padding-bottom:10px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+  .chips::-webkit-scrollbar{display:none}
+  .chips a{flex:none;font-size:.8rem;text-decoration:none;color:var(--muted);border:1px solid var(--line);border-radius:999px;padding:4px 10px;background:var(--surface)}
+  .chips a.on{color:var(--accent);border-color:var(--accent)}
+}
+
+/* ---------- page grid ---------- */
+.wrap{max-width:1180px;margin:0 auto;padding-block:0 64px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));display:grid;grid-template-columns:1fr;gap:40px}
+@media (min-width:1024px){.wrap{grid-template-columns:220px minmax(0,1fr);gap:56px}}
+.rail{display:none}
+@media (min-width:1024px){
+  .rail{display:block;position:sticky;top:calc(env(safe-area-inset-top,0px) + 76px);align-self:start;padding-top:40px}
+  .rail ol{list-style:none;margin:0;padding:0;display:grid;gap:2px;counter-reset:s}
+  .rail a{display:flex;gap:10px;align-items:baseline;padding:6px 10px;border-radius:8px;text-decoration:none;color:var(--muted);font-size:.9rem;line-height:1.35}
+  .rail a::before{counter-increment:s;content:counter(s,decimal-leading-zero);font:500 .7rem var(--f-mono);color:var(--faint)}
+  .rail a:hover{color:var(--ink);background:var(--sunk)}
+  .rail a.on{color:var(--ink);background:var(--surface);box-shadow:inset 2px 0 0 var(--accent)}
+  .rail a.on::before{color:var(--accent)}
+}
+main{min-width:0;display:grid;gap:88px;padding-top:40px}
+section{display:grid;gap:22px;min-width:0}
+.sec-head{display:grid;gap:10px}
+.lead{font-size:1.08rem;color:var(--muted);max-width:66ch}
+.prose{display:grid;gap:14px;max-width:68ch}
+
+/* ---------- hero ---------- */
+.hero{display:grid;gap:28px;padding-top:8px}
+.hero h1{font:700 clamp(2.1rem,1.3rem + 3.6vw,3.6rem)/1.05 var(--f-display);letter-spacing:-.02em}
+.hero h1 em{font-style:normal;color:var(--accent-strong)}
+.hero .def{font-size:clamp(1.08rem,1rem + .4vw,1.3rem);max-width:60ch;line-height:1.55}
+.facts{display:flex;flex-wrap:wrap;gap:8px}
+.facts span{font:500 .8rem var(--f-mono);border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:5px 11px;color:var(--muted)}
+.analogy{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:1px;background:var(--line);border:1px solid var(--line);border-radius:var(--r);overflow:hidden}
+.analogy div{background:var(--surface);padding:16px 18px;display:grid;gap:4px;align-content:start}
+.analogy b{font:600 .95rem var(--f-body)}
+.analogy .mono{font-size:.75rem;color:var(--accent)}
+.analogy p{font-size:.92rem;color:var(--muted)}
+
+/* ---------- generic blocks ---------- */
+.lab{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:clamp(16px,2.5vw,26px);display:grid;gap:18px;min-width:0}
+.lab-head{display:flex;flex-wrap:wrap;gap:8px 16px;align-items:baseline;justify-content:space-between}
+.lab-head .eyebrow{color:var(--muted)}
+.grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr));gap:16px}
+.grid3{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,240px),1fr));gap:16px}
+.cell{border-top:2px solid var(--line);padding-top:14px;display:grid;gap:6px;align-content:start;min-width:0}
+.cell h3{font-size:1.02rem}
+.cell p{font-size:.94rem;color:var(--muted)}
+.cell.hot{border-top-color:var(--accent)}
+.cell.good{border-top-color:var(--ok)}
+.cell.risk{border-top-color:var(--bad)}
+.tag{display:inline-block;font:600 .68rem/1 var(--f-mono);letter-spacing:.06em;text-transform:uppercase;padding:4px 7px;border-radius:5px;background:var(--sunk);color:var(--muted);vertical-align:middle}
+.tag.ok{background:var(--ok-soft);color:var(--ok)}
+.tag.bad{background:var(--bad-soft);color:var(--bad)}
+.tag.warn{background:var(--warn-soft);color:var(--warn)}
+.tag.acc{background:var(--accent-soft);color:var(--accent)}
+.small{font-size:.8rem;color:var(--muted)}
+
+pre.code{margin:0;background:var(--code-bg);color:var(--code-ink);border-radius:var(--r);padding:16px 18px;overflow-x:auto;font:400 .84rem/1.7 var(--f-mono);tab-size:4}
+pre.code .k{color:var(--code-kw)} pre.code .s{color:var(--code-str)} pre.code .c{color:var(--code-cm);font-style:italic} pre.code .f{color:var(--code-fn)}
+.tbl{overflow-x:auto;border:1px solid var(--line);border-radius:var(--r)}
+table{border-collapse:collapse;width:100%;font-size:.9rem;min-width:620px}
+th,td{text-align:left;padding:10px 14px;border-bottom:1px solid var(--line);vertical-align:top}
+th{font:600 .74rem var(--f-mono);letter-spacing:.06em;text-transform:uppercase;color:var(--muted);background:var(--sunk)}
+tr:last-child td{border-bottom:0}
+td.num{font-family:var(--f-mono);font-variant-numeric:tabular-nums;white-space:nowrap}
+
+.btn{font:600 .88rem var(--f-body);border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:8px;padding:8px 14px;cursor:pointer;display:inline-flex;gap:6px;align-items:center}
+.btn:hover:not(:disabled){border-color:var(--accent);color:var(--accent)}
+.btn:disabled{opacity:.4;cursor:default}
+.btn.primary{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.btn.primary:hover:not(:disabled){background:var(--accent-strong);border-color:var(--accent-strong);color:#fff}
+.btn.danger:hover:not(:disabled){border-color:var(--bad);color:var(--bad)}
+.seg{display:inline-flex;flex-wrap:wrap;gap:6px}
+.seg button{font:500 .85rem var(--f-body);border:1px solid var(--line);background:var(--surface);color:var(--muted);border-radius:999px;padding:6px 12px;cursor:pointer;text-align:left}
+.seg button:hover{color:var(--ink);border-color:var(--faint)}
+.seg button[aria-pressed="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.ctl{display:flex;flex-wrap:wrap;gap:14px 26px;align-items:center}
+.ctl-g{display:grid;gap:6px}
+.ctl-g > span{font:600 .7rem var(--f-mono);letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+input[type="text"],input[type="number"],select{font:500 .95rem var(--f-body);color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:8px 12px;min-width:0}
+input[type="text"]:focus,input[type="number"]:focus,select:focus{outline:2px solid var(--accent);outline-offset:0;border-color:transparent}
+input[type="range"]{width:100%;accent-color:var(--accent-strong)}
+
+/* ---------- why: flow ---------- */
+.flow{display:grid;gap:10px}
+.flow-row{display:grid;grid-template-columns:170px minmax(0,1fr) auto;gap:12px;align-items:center}
+@media (max-width:620px){.flow-row{grid-template-columns:1fr;gap:6px}}
+.flow-row .who{font-weight:600;font-size:.92rem}
+.steps{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.st{font:500 .78rem var(--f-mono);padding:6px 9px;border-radius:6px;background:var(--accent-soft);color:var(--accent)}
+.disk{font:500 .72rem var(--f-mono);padding:5px 7px;border-radius:6px;background:var(--bad-soft);color:var(--bad)}
+.ram{font:500 .72rem var(--f-mono);padding:5px 7px;border-radius:6px;background:var(--ok-soft);color:var(--ok)}
+.arr{color:var(--faint);font-size:.8rem}
+.flow-row .t{font:600 .85rem var(--f-mono);color:var(--muted);white-space:nowrap}
+
+/* ---------- main lab: bit array ---------- */
+.addrow{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.addrow input{flex:1 1 180px}
+.quick{display:flex;flex-wrap:wrap;gap:6px;align-items:center;font-size:.85rem}
+.quick > span{color:var(--muted);margin-right:2px}
+.quick button{font:500 .8rem var(--f-mono);border:1px dashed var(--line);background:none;color:var(--muted);border-radius:6px;padding:3px 8px;cursor:pointer}
+.quick button:hover{border-color:var(--accent);color:var(--accent)}
+.bits{display:grid;grid-template-columns:repeat(16,minmax(0,1fr));gap:5px}
+@media (max-width:640px){.bits{grid-template-columns:repeat(8,minmax(0,1fr))}}
+.bit{position:relative;aspect-ratio:1/1.15;border:1px solid var(--line);border-radius:7px;background:var(--bg);display:grid;place-items:center;font:600 .95rem var(--f-mono);color:var(--faint);transition:background .25s,border-color .25s,color .25s}
+.bit i{position:absolute;bottom:2px;left:0;right:0;text-align:center;font:500 .55rem var(--f-mono);font-style:normal;color:var(--faint)}
+.bit.on{background:var(--accent-strong);border-color:var(--accent-strong);color:#fff}
+.bit.on i{color:rgba(255,255,255,.75)}
+.bit.hit{border-width:2px;border-color:var(--ink)}
+.bit.hit.zero{border-style:dashed;border-color:var(--bad);background:var(--bad-soft);color:var(--bad)}
+.bit.flash{animation:flash .6s ease-out}
+@keyframes flash{0%{transform:scale(1.15)}100%{transform:scale(1)}}
+.bit .bd{position:absolute;top:-7px;left:50%;transform:translateX(-50%);display:flex;gap:1px;z-index:1}
+.bit .bd b{font:700 .52rem/1 var(--f-mono);color:#fff;border-radius:3px;padding:2px 3px}
+.hc1{background:var(--h1)} .hc2{background:var(--h2)} .hc3{background:var(--h3)} .hc4{background:var(--h4)} .hc5{background:var(--h5)}
+.lab-split{display:grid;grid-template-columns:minmax(0,1fr);gap:18px}
+@media (min-width:1100px){.lab-split{grid-template-columns:minmax(0,1.15fr) minmax(0,1fr)}}
+.explain{border-left:3px solid var(--accent);padding:4px 0 4px 14px;display:grid;gap:8px;align-content:start;min-height:150px}
+.explain h3{font-size:1.05rem}
+.explain p{font-size:.95rem;color:var(--muted)}
+.hl-list{display:grid;gap:4px;font:500 .82rem var(--f-mono)}
+.hl-list div{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.hl-list .sw{font:700 .62rem/1 var(--f-mono);color:#fff;border-radius:3px;padding:3px 5px}
+.hl-list .z{color:var(--bad);font-weight:600}
+.hl-list .o{color:var(--ok);font-weight:600}
+.vd{border-radius:10px;padding:12px 14px;display:grid;gap:4px;border:1px solid var(--line);background:var(--sunk)}
+.vd b{font:700 1rem var(--f-display)}
+.vd p{font-size:.9rem;color:var(--ink)}
+.vd.ok{background:var(--ok-soft);border-color:color-mix(in srgb,var(--ok) 40%,transparent)}
+.vd.no{background:var(--accent-soft);border-color:color-mix(in srgb,var(--accent) 40%,transparent)}
+.vd.warn{background:var(--warn-soft);border-color:color-mix(in srgb,var(--warn) 40%,transparent)}
+.vd.bad{background:var(--bad-soft);border-color:color-mix(in srgb,var(--bad) 40%,transparent)}
+.members{display:flex;flex-wrap:wrap;gap:6px;min-height:28px;align-items:center}
+.members button{font:500 .8rem var(--f-mono);border:1px solid var(--line);background:var(--bg);color:var(--ink);border-radius:999px;padding:3px 10px;cursor:pointer}
+.members button:hover{border-color:var(--accent)}
+.members button.broken{border-color:var(--bad);color:var(--bad);background:var(--bad-soft);text-decoration:line-through}
+.members .n{font-size:.68rem;color:var(--muted)}
+.log{display:grid;gap:3px;font:500 .78rem/1.4 var(--f-mono);color:var(--muted);max-height:180px;overflow:auto}
+.log div{display:flex;gap:8px;align-items:baseline}
+.log .tag{flex:none;font-size:.6rem}
+.stat{display:flex;flex-wrap:wrap;gap:10px 28px}
+.stat div{display:grid}
+.stat b{font:700 1.35rem var(--f-display);font-variant-numeric:tabular-nums}
+.stat span{font-size:.8rem;color:var(--muted)}
+
+/* ---------- stress lab ---------- */
+.sliders{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,220px),1fr));gap:16px 24px}
+.sl{display:grid;gap:4px}
+.sl label{display:flex;justify-content:space-between;gap:8px;font-size:.88rem}
+.sl label b{font:600 .9rem var(--f-mono);font-variant-numeric:tabular-nums}
+.sl .small{font-size:.75rem}
+canvas#bitCanvas{width:100%;display:block;border-radius:8px;background:var(--bg)}
+.chart-wrap{position:relative}
+.chart-wrap svg{width:100%;height:auto;display:block;overflow:visible}
+.chart-wrap svg text{font:500 11px var(--f-mono);fill:var(--muted)}
+.chart-wrap .grid line{stroke:var(--line);stroke-width:1}
+.chart-wrap .axis line{stroke:var(--faint)}
+.tip{position:absolute;pointer-events:none;background:var(--ink);color:var(--bg);font:500 .76rem/1.4 var(--f-mono);border-radius:6px;padding:6px 9px;white-space:nowrap;transform:translate(-50%,-115%);opacity:0;transition:opacity .12s}
+.legend{display:flex;flex-wrap:wrap;gap:6px 18px;font-size:.82rem;color:var(--muted);align-items:center}
+.legend span{display:inline-flex;gap:6px;align-items:center}
+.legend i{display:inline-block}
+.legend .ln{width:18px;height:2px;background:var(--accent-strong)}
+.legend .ring{width:10px;height:10px;border-radius:50%;border:2px solid var(--h1)}
+.legend .dash{width:18px;border-top:2px dashed var(--faint)}
+
+/* ---------- formula ---------- */
+.formula{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,250px),1fr));gap:12px}
+.formula div{border:1px solid var(--line);border-radius:10px;background:var(--surface);padding:14px 16px;display:grid;gap:6px;align-content:start}
+.formula .f{font:600 1.05rem/1.4 var(--f-mono);color:var(--accent)}
+.formula p{font-size:.88rem;color:var(--muted)}
+
+/* ---------- calculator ---------- */
+.calc-in{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,200px),1fr));gap:14px}
+.calc-in label{display:grid;gap:6px;font-size:.88rem;color:var(--muted)}
+.calc-out{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,160px),1fr));gap:1px;background:var(--line);border:1px solid var(--line);border-radius:var(--r);overflow:hidden}
+.calc-out div{background:var(--surface);padding:14px 16px;display:grid;gap:2px}
+.calc-out b{font:700 1.3rem var(--f-display);font-variant-numeric:tabular-nums}
+.calc-out span{font-size:.8rem;color:var(--muted)}
+.cmp{display:grid;gap:8px}
+.bar{display:grid;grid-template-columns:150px minmax(0,1fr) 120px;gap:10px;align-items:center;font:500 .8rem var(--f-mono)}
+@media (max-width:620px){.bar{grid-template-columns:1fr;gap:3px}.bar span:last-child{text-align:left!important}}
+.bar .track{height:20px;background:var(--sunk);border-radius:4px;overflow:hidden}
+.bar .fill{height:100%;border-radius:0 4px 4px 0;background:var(--accent-strong);transition:width .35s;min-width:3px}
+.bar .fill.alt{background:var(--faint)}
+.bar span:last-child{text-align:right;color:var(--muted);font-variant-numeric:tabular-nums}
+
+/* ---------- use cases ---------- */
+.cases{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,330px),1fr));gap:16px}
+.case{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:18px;display:grid;gap:10px;align-content:start;grid-template-rows:auto auto 1fr auto}
+.case-h{display:flex;justify-content:space-between;gap:10px;align-items:start}
+.case h3{font-size:1.05rem}
+.case p{font-size:.93rem;color:var(--muted)}
+.case p b{color:var(--ink);font-weight:600}
+.pipe{display:flex;flex-wrap:wrap;gap:4px;align-items:center;font:500 .72rem var(--f-mono)}
+.pipe span{padding:4px 7px;border-radius:5px;background:var(--sunk);color:var(--ink)}
+.pipe span.bf{background:var(--accent-soft);color:var(--accent)}
+.pipe i{font-style:normal;color:var(--faint)}
+
+/* ---------- decision helper ---------- */
+.ask{display:grid;gap:14px}
+.ask .q{display:grid;gap:8px}
+.ask .q > span{font:600 .74rem var(--f-mono);letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.verdict{border-radius:12px;padding:18px;display:grid;gap:8px;border:1px solid var(--line);background:var(--sunk)}
+.verdict.yes{background:var(--ok-soft);border-color:color-mix(in srgb,var(--ok) 40%,transparent)}
+.verdict.maybe{background:var(--warn-soft);border-color:color-mix(in srgb,var(--warn) 40%,transparent)}
+.verdict.no{background:var(--bad-soft);border-color:color-mix(in srgb,var(--bad) 40%,transparent)}
+.verdict .vh{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.verdict b{font:700 1.05rem var(--f-display)}
+.verdict p{font-size:.95rem}
+.verdict .alt{font-size:.88rem;color:var(--muted)}
+
+/* ---------- tabs ---------- */
+.tabs{display:flex;gap:4px;overflow-x:auto;border-bottom:1px solid var(--line);scrollbar-width:thin}
+.tabs button{flex:none;font:500 .9rem var(--f-body);background:none;border:0;border-bottom:2px solid transparent;color:var(--muted);padding:10px 12px;cursor:pointer;margin-bottom:-1px}
+.tabs button:hover{color:var(--ink)}
+.tabs button[aria-selected="true"]{color:var(--ink);border-bottom-color:var(--accent-strong);font-weight:600}
+.panel{display:grid;gap:18px;min-width:0}
+
+/* ---------- union demo ---------- */
+.uni{display:grid;gap:6px;font:500 .78rem var(--f-mono)}
+.uni-row{display:grid;grid-template-columns:90px minmax(0,1fr);gap:10px;align-items:center}
+.uni-bits{display:grid;grid-template-columns:repeat(16,minmax(0,1fr));gap:3px}
+.uni-bits i{aspect-ratio:1;border-radius:3px;background:var(--sunk);border:1px solid var(--line)}
+.uni-bits i.on{background:var(--accent-strong);border-color:var(--accent-strong)}
+.uni-row.res .uni-bits i.on{background:var(--ok);border-color:var(--ok)}
+
+/* ---------- quiz ---------- */
+.quiz{display:grid;gap:14px}
+.qq{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:18px;display:grid;gap:10px}
+.qq h3{font-size:1rem;font-weight:600}
+.qq .opts{display:grid;gap:6px}
+.qq .opts button{text-align:left;font:400 .93rem/1.45 var(--f-body);border:1px solid var(--line);background:var(--bg);color:var(--ink);border-radius:8px;padding:9px 12px;cursor:pointer}
+.qq .opts button:hover:not(:disabled){border-color:var(--faint)}
+.qq .opts button:disabled{cursor:default}
+.qq .opts button.right{border-color:var(--ok);background:var(--ok-soft)}
+.qq .opts button.wrong{border-color:var(--bad);background:var(--bad-soft)}
+.qq .why{font-size:.9rem;color:var(--muted);border-left:3px solid var(--line);padding-left:12px}
+.score{display:flex;gap:12px;align-items:center;flex-wrap:wrap;font-size:.95rem}
+.score b{font:700 1.3rem var(--f-display)}
+
+/* ---------- glossary ---------- */
+dl.gloss{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr));gap:0 28px;margin:0}
+dl.gloss div{padding:12px 0;border-bottom:1px solid var(--line);display:grid;gap:2px}
+dl.gloss dt{font:600 .92rem var(--f-mono);color:var(--accent)}
+dl.gloss dd{margin:0;font-size:.92rem;color:var(--muted)}
+
+footer{border-top:1px solid var(--line);padding-block:28px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));text-align:center;font-size:.85rem;color:var(--muted)}
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div class="top-in">
+    <nav class="crumbs" aria-label="Навігація">
+      <a href="../../index.html">AI Pages</a><span>/</span><a href="./index.html">IT</a><span>/</span><b>Фільтр Блума</b>
+    </nav>
+    <button class="theme" id="themeBtn" type="button" aria-label="Перемкнути тему">Тема: авто</button>
+  </div>
+  <nav class="chips" id="chips" aria-label="Розділи"></nav>
+</header>
+
+<div class="wrap">
+  <aside class="rail" aria-label="Зміст">
+    <ol id="toc"></ol>
+  </aside>
+
+  <main>
+    <!-- ============ 1. WHAT ============ -->
+    <section id="what" data-title="Що це таке">
+      <div class="hero">
+        <span class="eyebrow">Інтерактивний посібник</span>
+        <h1>Фільтр Блума: <em>«точно ні»</em> або «можливо так» за кілька біт</h1>
+        <p class="def"><b>Фільтр Блума</b> — компактна структура даних, яка відповідає на одне питання: «чи є цей елемент у множині?». Вона не зберігає самі елементи, лише масив бітів, тому займає в десятки разів менше пам’яті, ніж звичайний список. Плата за це — інколи вона помилково каже «так». Але ніколи не каже «ні» про те, що ви справді додали.</p>
+        <div class="facts">
+          <span>Бартон Блум, 1970</span>
+          <span>≈ 9,6 біта на елемент при 1% помилок</span>
+          <span>без хибних «ні»</span>
+          <span>O(k) на операцію</span>
+          <span>не залежить від довжини ключа</span>
+        </div>
+      </div>
+
+      <div class="prose">
+        <p>Уявіть табло з рядом лампочок і кілька «ворожок», які за будь-яким словом незмінно називають номер лампочки.</p>
+      </div>
+      <div class="analogy">
+        <div><span class="mono">bit array, m</span><b>Табло з лампочками</b><p>m лампочок, на старті всі вимкнені. Більше нічого фільтр не зберігає: ні слів, ні ключів, ні лічильників.</p></div>
+        <div><span class="mono">hash functions, k</span><b>k ворожок</b><p>Кожна ворожка за словом називає свій номер лампочки. Для того самого слова — завжди той самий номер.</p></div>
+        <div><span class="mono">add(x)</span><b>Додати = увімкнути</b><p>Питаємо всіх k ворожок і вмикаємо названі лампочки. Якщо котрась уже горить — так і лишається.</p></div>
+        <div><span class="mono">contains(x)</span><b>Перевірити = подивитися</b><p>Хоч одна з k лампочок темна — слова точно не додавали. Усі горять — мабуть, додавали. Або їх запалили інші слова: це і є хибне «так».</p></div>
+      </div>
+    </section>
+
+    <!-- ============ 2. WHY ============ -->
+    <section id="why" data-title="Навіщо він потрібен">
+      <div class="sec-head">
+        <span class="eyebrow">Проблема</span>
+        <h2>Дешево відсіяти «ні», перш ніж платити за дорогу перевірку</h2>
+        <p class="lead">Найчастіше фільтр Блума стоїть перед чимось повільним: диском, мережею, базою. Якщо більшість запитів — про те, чого немає, фільтр відповідає на них з пам’яті за десятки наносекунд.</p>
+      </div>
+      <div class="lab">
+        <div class="lab-head"><span class="eyebrow">Приклад: база даних шукає ключ, якого немає, у 5 файлах на диску</span></div>
+        <div class="flow">
+          <div class="flow-row">
+            <span class="who">Без фільтра</span>
+            <div class="steps"><span class="st">GET user:777</span><span class="arr">→</span><span class="disk">файл 1: диск</span><span class="disk">файл 2: диск</span><span class="disk">файл 3: диск</span><span class="disk">файл 4: диск</span><span class="disk">файл 5: диск</span></div>
+            <span class="t">5 читань з диска</span>
+          </div>
+          <div class="flow-row">
+            <span class="who">З фільтром на кожен файл</span>
+            <div class="steps"><span class="st">GET user:777</span><span class="arr">→</span><span class="ram">ф1: ні</span><span class="ram">ф2: ні</span><span class="ram">ф3: ні</span><span class="ram">ф4: ні</span><span class="ram">ф5: ні</span></div>
+            <span class="t">0 читань з диска</span>
+          </div>
+          <div class="flow-row">
+            <span class="who">Рідкий випадок</span>
+            <div class="steps"><span class="st">GET user:778</span><span class="arr">→</span><span class="ram">ф1: ні</span><span class="ram">ф2: ні</span><span class="disk">ф3: «можливо» → диск → немає</span><span class="ram">ф4: ні</span><span class="ram">ф5: ні</span></div>
+            <span class="t">1 зайве читання</span>
+          </div>
+        </div>
+        <p class="small">Читання з SSD — порядку 100 мкс, перевірка фільтра в пам’яті — порядку 100 нс. При 1% хибних «так» з п’яти файлів зайве читання трапляється приблизно в одному запиті з двадцяти.</p>
+      </div>
+      <div class="grid3">
+        <div class="cell good"><h3>Що він дає</h3><p>Відповідь «точно немає» без звернення до джерела. Пам’ять — кілька біт на елемент, незалежно від того, чи елемент — це 8-байтовий id чи 2-кілобайтний URL.</p></div>
+        <div class="cell risk"><h3>Чим платите</h3><p>Частка хибних «так», яку ви обираєте заздалегідь: 1%, 0,1%… Що менша частка, то більше біт. І звичайний фільтр не вміє видаляти елементи.</p></div>
+        <div class="cell hot"><h3>Головне правило</h3><p>«Ні» — остаточна відповідь. «Так» — лише привід перевірити в джерелі, якщо помилка неприпустима.</p></div>
+      </div>
+    </section>
+
+    <!-- ============ 3. HOW (main lab) ============ -->
+    <section id="how" data-title="Як працює">
+      <div class="sec-head">
+        <span class="eyebrow">Лабораторія</span>
+        <h2>Додайте слова й зловіть хибне «так»</h2>
+        <p class="lead">Маленький фільтр на 16–64 біти, щоб усе було видно. Додавайте слова, перевіряйте інші. Під кожним бітом його номер; кольорові мітки h1…h5 показують, яка хеш-функція вказала на біт.</p>
+      </div>
+      <div class="lab">
+        <div class="ctl">
+          <div class="ctl-g"><span>Бітів, m</span><div class="seg" id="labM"><button type="button" data-v="16">16</button><button type="button" data-v="32" aria-pressed="true">32</button><button type="button" data-v="64">64</button></div></div>
+          <div class="ctl-g"><span>Хеш-функцій, k</span><div class="seg" id="labK"><button type="button" data-v="1">1</button><button type="button" data-v="2">2</button><button type="button" data-v="3" aria-pressed="true">3</button><button type="button" data-v="4">4</button><button type="button" data-v="5">5</button></div></div>
+          <div class="ctl-g"><span>Різновид</span><div class="seg" id="labMode"><button type="button" data-v="plain" aria-pressed="true">Звичайний</button><button type="button" data-v="count">Лічильний</button></div></div>
+        </div>
+        <p class="small">Зміна m, k чи різновиду очищає фільтр.</p>
+
+        <div class="addrow">
+          <input type="text" id="word" placeholder="Слово, наприклад «кіт»" maxlength="40" autocomplete="off" aria-label="Слово">
+          <button class="btn primary" type="button" id="bAdd">＋ Додати</button>
+          <button class="btn" type="button" id="bCheck">? Перевірити</button>
+          <button class="btn danger" type="button" id="bDel">− Видалити</button>
+        </div>
+        <div class="quick">
+          <span>Швидко:</span>
+          <button type="button" id="bPreset">додати 5 тварин</button>
+          <button type="button" id="bFindFP">знайти хибне «так»</button>
+          <button type="button" id="bClear">очистити</button>
+        </div>
+
+        <div class="bits" id="bits" aria-label="Масив бітів"></div>
+
+        <div class="lab-split">
+          <div class="explain" id="explain" aria-live="polite">
+            <h3>Почніть з «додати 5 тварин»</h3>
+            <p>Потім перевірте слово, якого не додавали, наприклад «вовк». Або натисніть «знайти хибне «так»» — лабораторія сама перебере слова, поки фільтр не помилиться.</p>
+          </div>
+          <div style="display:grid;gap:14px;align-content:start">
+            <div class="stat" id="labStat"></div>
+            <div style="display:grid;gap:6px"><span class="eyebrow" style="color:var(--muted)">Додані (клік — перевірити)</span><div class="members" id="members"></div></div>
+            <div style="display:grid;gap:6px"><span class="eyebrow" style="color:var(--muted)">Журнал</span><div class="log" id="log"></div></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ 4. GUARANTEES ============ -->
+    <section id="rules" data-title="Дві гарантії і одна пастка">
+      <div class="sec-head">
+        <span class="eyebrow">Чому так</span>
+        <h2>Хибне «так» буває, хибне «ні» — ніколи. Поки не почнете видаляти</h2>
+      </div>
+      <div class="grid3">
+        <div class="cell good"><h3><span class="tag ok">гарантія</span> Немає хибних «ні»</h3><p>Додавання тільки вмикає біти і ніколи не вимикає. Тож біти доданого слова горять назавжди, і перевірка його обов’язково знайде.</p></div>
+        <div class="cell hot"><h3><span class="tag warn">ціна</span> Хибні «так» бувають</h3><p>Біти спільні для всіх слів. Коли увімкнено багато, у нового слова всі k позицій можуть випадково виявитися зайнятими чужими словами.</p></div>
+        <div class="cell risk"><h3><span class="tag bad">пастка</span> Видалення ламає фільтр</h3><p>Вимкнути біти слова не можна: ними можуть користуватися інші слова. Спробуйте в лабораторії «Видалити» у звичайному режимі — і побачите, як інше слово отримує «точно ні», хоча його додавали.</p></div>
+      </div>
+      <div class="prose">
+        <p><b>Лічильний фільтр</b> (counting Bloom filter) розв’язує це: замість біта в кожній комірці лічильник, зазвичай 4-бітний. Додавання збільшує k лічильників, видалення зменшує. Перемкніть лабораторію на «Лічильний», щоб спробувати. Ціна — у 4 рази більше пам’яті і нова пастка: якщо «видалити» те, чого не додавали, але фільтр помилково вважав присутнім, зменшаться чужі лічильники.</p>
+      </div>
+    </section>
+
+    <!-- ============ 5. MATH ============ -->
+    <section id="math" data-title="Скільки помилок">
+      <div class="sec-head">
+        <span class="eyebrow">Математика</span>
+        <h2>Три числа визначають усе: m, n і k</h2>
+        <p class="lead">m — скільки бітів, n — скільки елементів додали, k — скільки хеш-функцій. З них виходить частка хибних «так» p.</p>
+      </div>
+      <div class="formula">
+        <div><span class="small">Імовірність хибного «так»</span><span class="f">p ≈ (1 − e<sup>−kn/m</sup>)<sup>k</sup></span><p>У дужках — частка увімкнених бітів. Хибне «так» — коли всі k випадкових позицій влучили в увімкнені.</p></div>
+        <div><span class="small">Найкраще k</span><span class="f">k = (m / n) · ln 2</span><p>Тоді рівно половина бітів увімкнена. Менше k — мало перевірок, більше — фільтр швидко заповнюється.</p></div>
+        <div><span class="small">Скільки бітів на p</span><span class="f">m = −n · ln p / (ln 2)²</span><p>Тобто ≈ 1,44 · log₂(1/p) біта на елемент: 1% → 9,6 біта, 0,1% → 14,4 біта.</p></div>
+      </div>
+
+      <div class="lab">
+        <div class="lab-head"><span class="eyebrow">Стрес-тест: справжній фільтр, справжні вимірювання</span><span class="small">додаємо n ключів, перевіряємо 20 000 інших</span></div>
+        <div class="sliders">
+          <div class="sl"><label for="sM">Бітів, m <b id="sMv"></b></label><input type="range" id="sM" min="256" max="8192" step="256" value="2048"><span class="small" id="sMb"></span></div>
+          <div class="sl"><label for="sN">Елементів, n <b id="sNv"></b></label><input type="range" id="sN" min="0" max="2000" step="10" value="200"><span class="small" id="sNb"></span></div>
+          <div class="sl"><label for="sK">Хеш-функцій, k <b id="sKv"></b></label><input type="range" id="sK" min="1" max="16" step="1" value="7"><span class="small" id="sKb"></span></div>
+        </div>
+        <div class="stat" id="stressStat"></div>
+        <canvas id="bitCanvas" height="120" aria-label="Масив бітів стрес-тесту: увімкнені біти зафарбовано"></canvas>
+        <div style="display:flex;flex-wrap:wrap;gap:10px 18px;align-items:center;justify-content:space-between">
+          <div class="seg" id="chartX"><button type="button" data-v="k" aria-pressed="true">p залежно від k</button><button type="button" data-v="n">p залежно від n</button></div>
+          <div class="legend"><span><i class="ln"></i>теорія</span><span><i class="ring"></i>виміряно на 20 000 ключах</span><span><i class="dash"></i><span id="dashLbl">оптимальне k</span></span></div>
+        </div>
+        <div class="chart-wrap" id="chartWrap">
+          <svg id="chart" viewBox="0 0 640 260" role="img" aria-label="Графік частки хибних спрацювань"></svg>
+          <div class="tip" id="tip"></div>
+        </div>
+        <p class="small" id="chartNote"></p>
+      </div>
+    </section>
+
+    <!-- ============ 6. CALC ============ -->
+    <section id="calc" data-title="Калькулятор розміру">
+      <div class="sec-head">
+        <span class="eyebrow">Практика</span>
+        <h2>Скільки пам’яті потрібно саме вам</h2>
+        <p class="lead">Задайте, скільки елементів очікуєте і яку частку хибних «так» готові терпіти. Калькулятор порахує m і k і порівняє з хеш-множиною, що зберігає самі ключі.</p>
+      </div>
+      <div class="lab">
+        <div class="calc-in">
+          <label>Очікувана кількість елементів, n
+            <input type="number" id="cN" min="1" value="1000000" step="1">
+            <div class="quick"><button type="button" data-n="10000">10 тис.</button><button type="button" data-n="1000000">1 млн</button><button type="button" data-n="100000000">100 млн</button><button type="button" data-n="1000000000">1 млрд</button></div>
+          </label>
+          <label>Допустима частка хибних «так», p
+            <select id="cP">
+              <option value="0.1">10%</option>
+              <option value="0.05">5%</option>
+              <option value="0.01" selected>1%</option>
+              <option value="0.001">0,1%</option>
+              <option value="0.0001">0,01%</option>
+              <option value="0.000001">0,0001% (1 на мільйон)</option>
+            </select>
+          </label>
+          <label>Середній розмір ключа, байт
+            <input type="number" id="cL" min="1" value="60" step="1">
+            <span class="small">id — 8, email — 25, URL — 60–100</span>
+          </label>
+        </div>
+        <div class="calc-out" id="calcOut"></div>
+        <div class="cmp" id="calcCmp"></div>
+        <p class="small">Хеш-множина оцінена як ключ плюс ≈ 48 байт накладних витрат на запис (покажчики, заголовок об’єкта, порожні слоти). У конкретній мові буде інакше, але порядок той самий.</p>
+      </div>
+      <div class="tbl">
+        <table>
+          <thead><tr><th>p</th><th>Біт на елемент</th><th>Оптимальне k</th><th>1 млн елементів</th><th>1 млрд елементів</th></tr></thead>
+          <tbody id="pTable"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- ============ 7. CASES ============ -->
+    <section id="cases" data-title="Де використовують">
+      <div class="sec-head">
+        <span class="eyebrow">Юзкейси</span>
+        <h2>Фільтр Блума працює у ваших інструментах щодня</h2>
+      </div>
+      <div class="cases">
+        <article class="case">
+          <div class="case-h"><h3>Бази на LSM-деревах</h3><span class="tag acc">диск</span></div>
+          <p><b>Cassandra, RocksDB, LevelDB, HBase, ScyllaDB</b> тримають фільтр для кожного файлу на диску (SSTable). Читання ключа спершу питає фільтри і відкриває лише файли з відповіддю «можливо». У Cassandra частку помилок задає параметр таблиці <code>bloom_filter_fp_chance</code>.</p>
+          <div class="pipe"><span>GET key</span><i>→</i><span class="bf">фільтри SSTable</span><i>→</i><span>1 файл з диска</span></div>
+          <span class="small">Найкласичніший юзкейс.</span>
+        </article>
+        <article class="case">
+          <div class="case-h"><h3>Кеш у CDN: «диво одного разу»</h3><span class="tag acc">мережа</span></div>
+          <p>Akamai описували, що близько трьох чвертей об’єктів запитують лише раз. Щоб не засмічувати ними диск кешу, об’єкт <b>кешують лише при другому запиті</b>: перший запит тільки записує URL у фільтр Блума.</p>
+          <div class="pipe"><span>URL</span><i>→</i><span class="bf">бачили раніше?</span><i>→</i><span>так: в кеш</span></div>
+          <span class="small">Хибне «так» — просто один зайвий об’єкт у кеші.</span>
+        </article>
+        <article class="case">
+          <div class="case-h"><h3>Колонкові формати й join-и</h3><span class="tag acc">аналітика</span></div>
+          <p><b>Parquet і ORC</b> зберігають фільтри для колонок, тож Spark чи Trino пропускають цілі блоки файлу. <b>Runtime-фільтри</b> в Spark, Trino, Impala будують фільтр із ключів малої таблиці join-у і відкидають рядки великої ще під час читання.</p>
+          <div class="pipe"><span>WHERE id = 42</span><i>→</i><span class="bf">фільтр row group</span><i>→</i><span>пропустити блок</span></div>
+          <span class="small">Менше I/O і менше даних у shuffle.</span>
+        </article>
+        <article class="case">
+          <div class="case-h"><h3>Redis як спільний фільтр</h3><span class="tag acc">сервіси</span></div>
+          <p>Модуль <b>RedisBloom</b> (у Redis Stack і Redis 8) дає команди <code>BF.ADD</code> та <code>BF.EXISTS</code>. Типово: «чи зайнятий логін», «чи бачили цей email у розсилці», «чи вже показували користувачу цю статтю».</p>
+          <div class="pipe"><span>логін</span><i>→</i><span class="bf">BF.EXISTS</span><i>→</i><span>«можливо» → SELECT у БД</span></div>
+          <span class="small">Фільтр знімає навантаження з бази, але не замінює її.</span>
+        </article>
+        <article class="case">
+          <div class="case-h"><h3>Веб-краулери і дедуплікація</h3><span class="tag acc">потоки</span></div>
+          <p>Краулер, що обходить мільярди сторінок, має пам’ятати, які URL уже відвідав. Множина рядків не влізе в пам’ять, а фільтр на 1 млрд URL при 1% — це ≈ 1,1 ГБ. Хибне «так» означає лише пропущену сторінку.</p>
+          <div class="pipe"><span>новий URL</span><i>→</i><span class="bf">бачили?</span><i>→</i><span>ні: в чергу</span></div>
+          <span class="small">Так само дедуплікують події в потоках.</span>
+        </article>
+        <article class="case">
+          <div class="case-h"><h3>Безпека і легкі клієнти</h3><span class="tag warn">з застереженнями</span></div>
+          <p>Ранні версії <b>Google Safe Browsing</b> у Chrome тримали фільтр небезпечних адрес локально і ходили на сервер лише при збігу. Легкі гаманці <b>Bitcoin</b> (BIP 37) надсилали вузлу фільтр своїх адрес. Обидва згодом замінили: фільтр виявився не таким приватним, як здавалося.</p>
+          <div class="pipe"><span>URL</span><i>→</i><span class="bf">локальний фільтр</span><i>→</i><span>збіг: спитати сервер</span></div>
+          <span class="small">Фільтр — не шифрування: він розкриває багато про вміст.</span>
+        </article>
+      </div>
+    </section>
+
+    <!-- ============ 8. DECIDE ============ -->
+    <section id="decide" data-title="Блум чи щось інше">
+      <div class="sec-head">
+        <span class="eyebrow">Вибір</span>
+        <h2>Фільтр Блума, cuckoo, xor чи звичайна множина?</h2>
+        <p class="lead">Чотири питання — і рекомендація, що взяти.</p>
+      </div>
+      <div class="lab">
+        <div class="ask">
+          <div class="q"><span>Чи допустиме інколи хибне «так»?</span><div class="seg" data-q="fp"><button type="button" data-v="yes" aria-pressed="true">Так, перевіримо в джерелі або не страшно</button><button type="button" data-v="no">Ні, потрібна точна відповідь</button></div></div>
+          <div class="q"><span>Що потрібно знати про елемент?</span><div class="seg" data-q="what"><button type="button" data-v="member" aria-pressed="true">Чи є він у множині</button><button type="button" data-v="count">Скільки разів траплявся</button><button type="button" data-v="card">Скільки різних елементів загалом</button></div></div>
+          <div class="q"><span>Чи треба видаляти елементи?</span><div class="seg" data-q="del"><button type="button" data-v="no" aria-pressed="true">Ні, тільки додаємо</button><button type="button" data-v="yes">Так</button></div></div>
+          <div class="q"><span>Як змінюється множина?</span><div class="seg" data-q="shape"><button type="button" data-v="grow" aria-pressed="true">Росте, розмір приблизно відомий</button><button type="button" data-v="unknown">Росте, розмір невідомий</button><button type="button" data-v="static">Будуємо раз з готового набору</button></div></div>
+        </div>
+        <div class="verdict" id="verdict"></div>
+      </div>
+      <div class="tbl">
+        <table>
+          <thead><tr><th>Структура</th><th>Біт на елемент при 1%</th><th>Видалення</th><th>Доповнення</th><th>Коли брати</th></tr></thead>
+          <tbody>
+            <tr><td><b>Bloom</b></td><td class="num">≈ 9,6</td><td>ні</td><td>так</td><td>Універсальний вибір, є в кожній мові та базі.</td></tr>
+            <tr><td><b>Counting Bloom</b></td><td class="num">≈ 38 (4-біт. лічильники)</td><td>так</td><td>так</td><td>Треба видаляти, а пам’ять не критична.</td></tr>
+            <tr><td><b>Scalable Bloom</b></td><td class="num">трохи більше за Bloom</td><td>ні</td><td>так, без меж</td><td>Розмір наперед невідомий: додає нові шари, що ростуть.</td></tr>
+            <tr><td><b>Cuckoo filter</b></td><td class="num">≈ 9–10</td><td>так</td><td>так, до заповнення</td><td>Видалення; при p нижче ~3% ще й компактніший за Bloom.</td></tr>
+            <tr><td><b>Xor / binary fuse</b></td><td class="num">≈ 8–9</td><td>ні</td><td>ні, лише перебудова</td><td>Набір відомий заздалегідь: файли, релізи, статичні списки.</td></tr>
+            <tr><td><b>Blocked Bloom</b></td><td class="num">трохи більше за Bloom</td><td>ні</td><td>так</td><td>Максимальна швидкість: усі k біт в одному кеш-рядку CPU.</td></tr>
+            <tr><td><b>Хеш-множина</b></td><td class="num">8 × (ключ + накладні)</td><td>так</td><td>так</td><td>Помилки неприпустимі або елементів мало.</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- ============ 9. CODE ============ -->
+    <section id="code" data-title="Код">
+      <div class="sec-head">
+        <span class="eyebrow">Як написати і як узяти готове</span>
+        <h2>Тридцять рядків власноруч або одна бібліотека</h2>
+        <p class="lead">Своя реалізація корисна, щоб зрозуміти. У продакшні беріть готову: там уже є серіалізація, правильні хеші і перевірені параметри.</p>
+      </div>
+      <div class="tabs" role="tablist" id="codeTabs">
+        <button type="button" role="tab" aria-selected="true" data-t="py">Python, з нуля</button>
+        <button type="button" role="tab" aria-selected="false" data-t="java">Java (Guava)</button>
+        <button type="button" role="tab" aria-selected="false" data-t="go">Go</button>
+        <button type="button" role="tab" aria-selected="false" data-t="redis">Redis</button>
+      </div>
+      <div class="panel" data-p="py">
+<pre class="code"><span class="k">import</span> hashlib, math
+
+<span class="k">class</span> <span class="f">BloomFilter</span>:
+    <span class="k">def</span> <span class="f">__init__</span>(self, n, p):
+        self.m = math.ceil(-n * math.log(p) / math.log(<span class="s">2</span>) ** <span class="s">2</span>)  <span class="c"># бітів</span>
+        self.k = max(<span class="s">1</span>, round(self.m / n * math.log(<span class="s">2</span>)))       <span class="c"># хеш-функцій</span>
+        self.bits = bytearray((self.m + <span class="s">7</span>) // <span class="s">8</span>)
+
+    <span class="k">def</span> <span class="f">_positions</span>(self, item):
+        <span class="c"># Подвійне хешування: два хеші дають k позицій</span>
+        d = hashlib.sha256(item.encode()).digest()
+        h1 = int.from_bytes(d[:<span class="s">8</span>], <span class="s">"little"</span>)
+        h2 = int.from_bytes(d[<span class="s">8</span>:<span class="s">16</span>], <span class="s">"little"</span>) | <span class="s">1</span>
+        <span class="k">return</span> [(h1 + i * h2) % self.m <span class="k">for</span> i <span class="k">in</span> range(self.k)]
+
+    <span class="k">def</span> <span class="f">add</span>(self, item):
+        <span class="k">for</span> pos <span class="k">in</span> self._positions(item):
+            self.bits[pos // <span class="s">8</span>] |= <span class="s">1</span> &lt;&lt; (pos % <span class="s">8</span>)
+
+    <span class="k">def</span> <span class="f">__contains__</span>(self, item):
+        <span class="k">return</span> all(self.bits[pos // <span class="s">8</span>] &gt;&gt; (pos % <span class="s">8</span>) &amp; <span class="s">1</span>
+                   <span class="k">for</span> pos <span class="k">in</span> self._positions(item))
+
+
+seen = BloomFilter(n=<span class="s">1_000_000</span>, p=<span class="s">0.01</span>)  <span class="c"># ≈ 1,14 МБ, k = 7</span>
+seen.add(<span class="s">"https://example.com/a"</span>)
+<span class="s">"https://example.com/a"</span> <span class="k">in</span> seen   <span class="c"># True — завжди</span>
+<span class="s">"https://example.com/b"</span> <span class="k">in</span> seen   <span class="c"># False, або True з імовірністю ≈ 1%</span></pre>
+      </div>
+      <div class="panel" data-p="java" hidden>
+<pre class="code"><span class="k">import</span> com.google.common.hash.BloomFilter;
+<span class="k">import</span> com.google.common.hash.Funnels;
+<span class="k">import</span> java.nio.charset.StandardCharsets;
+
+BloomFilter&lt;String&gt; seen = BloomFilter.<span class="f">create</span>(
+        Funnels.<span class="f">stringFunnel</span>(StandardCharsets.UTF_8),
+        <span class="s">1_000_000</span>,   <span class="c">// очікувана кількість елементів</span>
+        <span class="s">0.01</span>);       <span class="c">// допустима частка хибних «так»</span>
+
+seen.<span class="f">put</span>(<span class="s">"alice@example.com"</span>);
+seen.<span class="f">mightContain</span>(<span class="s">"alice@example.com"</span>);  <span class="c">// true</span>
+seen.<span class="f">mightContain</span>(<span class="s">"bob@example.com"</span>);    <span class="c">// false (майже завжди)</span>
+seen.<span class="f">expectedFpp</span>();                      <span class="c">// поточна оцінка p</span></pre>
+        <p class="small">Назва методу <code>mightContain</code> чесно нагадує: «так» означає «можливо».</p>
+      </div>
+      <div class="panel" data-p="go" hidden>
+<pre class="code"><span class="k">import</span> <span class="s">"github.com/bits-and-blooms/bloom/v3"</span>
+
+filter := bloom.<span class="f">NewWithEstimates</span>(<span class="s">1_000_000</span>, <span class="s">0.01</span>)
+
+filter.<span class="f">Add</span>([]<span class="k">byte</span>(<span class="s">"user:42"</span>))
+filter.<span class="f">Test</span>([]<span class="k">byte</span>(<span class="s">"user:42"</span>))  <span class="c">// true</span>
+filter.<span class="f">Test</span>([]<span class="k">byte</span>(<span class="s">"user:43"</span>))  <span class="c">// false (майже завжди)</span>
+
+<span class="c">// Перевірити і додати однією операцією — зручно для дедуплікації</span>
+<span class="k">if</span> filter.<span class="f">TestAndAdd</span>([]<span class="k">byte</span>(eventID)) {
+    <span class="k">return</span> <span class="c">// мабуть, дубль</span>
+}</pre>
+      </div>
+      <div class="panel" data-p="redis" hidden>
+<pre class="code"><span class="c"># Фільтр на 1 млн елементів з 1% помилок</span>
+<span class="k">BF.RESERVE</span> users:seen <span class="s">0.01</span> <span class="s">1000000</span>
+
+<span class="k">BF.ADD</span>     users:seen alice        <span class="c"># (integer) 1 — новий</span>
+<span class="k">BF.ADD</span>     users:seen alice        <span class="c"># (integer) 0 — «вже був»</span>
+<span class="k">BF.EXISTS</span>  users:seen alice        <span class="c"># (integer) 1</span>
+<span class="k">BF.EXISTS</span>  users:seen bob          <span class="c"># (integer) 0 — точно ні</span>
+
+<span class="k">BF.MADD</span>    users:seen carol dave
+<span class="k">BF.MEXISTS</span> users:seen carol eve    <span class="c"># 1) 1  2) 0</span>
+
+<span class="c"># Без RESERVE фільтр створиться з типовими параметрами і при</span>
+<span class="c"># переповненні додаватиме нові шари (scalable Bloom filter)</span>
+<span class="k">BF.INFO</span>    users:seen</pre>
+      </div>
+    </section>
+
+    <!-- ============ 10. DEEP ============ -->
+    <section id="deep" data-title="Поглиблено">
+      <div class="sec-head">
+        <span class="eyebrow">Для інженерів</span>
+        <h2>Подвійне хешування, об’єднання і підводні камені</h2>
+      </div>
+      <div class="tabs" role="tablist" id="deepTabs">
+        <button type="button" role="tab" aria-selected="true" data-t="dh">Два хеші замість k</button>
+        <button type="button" role="tab" aria-selected="false" data-t="half">Чому половина бітів</button>
+        <button type="button" role="tab" aria-selected="false" data-t="union">Об’єднання і оцінка n</button>
+        <button type="button" role="tab" aria-selected="false" data-t="traps">Підводні камені</button>
+      </div>
+      <div class="panel" data-p="dh">
+        <div class="prose">
+          <p>Рахувати k незалежних криптографічних хешів дорого. Кірш і Міценмахер (2006) показали, що досить двох: позиції <code>gᵢ(x) = h₁(x) + i · h₂(x) mod m</code> для i = 0…k−1 дають ту саму асимптотичну частку помилок. Так роблять майже всі бібліотеки, і так влаштована лабораторія на цій сторінці.</p>
+          <p>Дві деталі: h₂ варто робити непарним (або взаємно простим з m), інакше при m = 2ᵗ позиції почнуть повторюватися. І хеш має бути якісним: слабкий хеш на схожих ключах (<code>user:1</code>, <code>user:2</code>…) скупчує позиції, і реальна p виявляється в рази гіршою за формулу.</p>
+        </div>
+        <pre class="code"><span class="c">// Те, що робить лабораторія вище</span>
+<span class="k">const</span> [h1, h2] = twoHashes(word);         <span class="c">// FNV-1a + перемішування, два різні seed</span>
+<span class="k">for</span> (<span class="k">let</span> i = <span class="s">0</span>; i &lt; k; i++) positions.push((h1 + i * (h2 | <span class="s">1</span>)) % m);</pre>
+      </div>
+      <div class="panel" data-p="half" hidden>
+        <div class="prose">
+          <p>Після n вставок біт лишається нулем з імовірністю (1 − 1/m)<sup>kn</sup> ≈ e<sup>−kn/m</sup>. Хибне «так» — коли всі k позицій потрапили на одиниці. Якщо мінімізувати (1 − e<sup>−kn/m</sup>)<sup>k</sup> за k, виходить k = (m/n)·ln 2, і тоді частка одиниць рівно ½.</p>
+          <p>Інтуїція: фільтр, де майже всі біти нулі, марнує пам’ять. Фільтр, де майже всі одиниці, нічого не розрізняє. Максимум інформації в бітовому масиві — коли 0 і 1 рівноймовірні.</p>
+          <p>Звідси практичний сигнал для моніторингу: якщо частка одиниць у робочому фільтрі помітно більша за 50%, він переповнений, і реальна p вища за розрахункову.</p>
+        </div>
+      </div>
+      <div class="panel" data-p="union" hidden>
+        <div class="prose">
+          <p>Два фільтри з однаковими m, k і хеш-функціями можна об’єднати побітовим OR — вийде рівно той фільтр, який ви отримали б, додавши обидві множини. Зручно для розподілених систем: кожен вузол будує свій фільтр, потім їх зливають.</p>
+          <p>AND дає наближення перетину, але з більшою p, ніж у фільтра, побудованого з перетину напряму. А кількість елементів можна оцінити за кількістю одиниць X: <code>n ≈ −(m/k) · ln(1 − X/m)</code>.</p>
+        </div>
+        <div class="lab">
+          <div class="lab-head"><span class="eyebrow">A ∪ B = A OR B</span><button class="btn" type="button" id="uniBtn">Нові випадкові множини</button></div>
+          <div class="uni" id="uni"></div>
+        </div>
+      </div>
+      <div class="panel" data-p="traps" hidden>
+        <div class="grid2">
+          <div class="cell risk"><h3>Розмір не змінити</h3><p>Позиції залежать від m, тож «розширити» фільтр без оригінальних ключів неможливо. Закладайте запас або беріть scalable-варіант.</p></div>
+          <div class="cell risk"><h3>Однакові хеші скрізь</h3><p>Якщо фільтр будує Java-сервіс, а перевіряє Go-сервіс, хеш, seed, m і k мають збігатися до біта. Найпростіше — один сервіс або одна бібліотека.</p></div>
+          <div class="cell risk"><h3>Атаки на хеш</h3><p>Якщо ключі приходять ззовні, зловмисник може підібрати такі, що вмикають потрібні біти, і «отруїти» фільтр. Захист — хеш із секретним ключем, наприклад SipHash.</p></div>
+          <div class="cell risk"><h3>Фільтр розкриває вміст</h3><p>За фільтром можна перевірити будь-яке припущення: «чи є тут ця адреса?». Саме тому від BIP 37 у Bitcoin відмовилися. Не публікуйте фільтри приватних даних.</p></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ 11. QUIZ ============ -->
+    <section id="quiz" data-title="Перевір себе">
+      <div class="sec-head">
+        <span class="eyebrow">Тест</span>
+        <h2>Перевір себе</h2>
+        <p class="lead">Вісім питань від базових до інженерних. Відповідь і пояснення з’являються одразу.</p>
+      </div>
+      <div class="quiz" id="quizBox"></div>
+      <div class="score" id="score"></div>
+    </section>
+
+    <!-- ============ 12. GLOSSARY ============ -->
+    <section id="gloss" data-title="Словник">
+      <div class="sec-head">
+        <span class="eyebrow">Терміни</span>
+        <h2>Короткий словник</h2>
+      </div>
+      <dl class="gloss">
+        <div><dt>Bloom filter</dt><dd>Імовірнісна структура для перевірки належності до множини: «точно ні» або «можливо так».</dd></div>
+        <div><dt>m</dt><dd>Розмір бітового масиву фільтра.</dd></div>
+        <div><dt>n</dt><dd>Кількість доданих елементів.</dd></div>
+        <div><dt>k</dt><dd>Кількість хеш-функцій, тобто бітів, які вмикає і перевіряє кожен елемент.</dd></div>
+        <div><dt>False positive</dt><dd>Хибне «так»: фільтр каже «можливо є», а елемента не додавали.</dd></div>
+        <div><dt>False negative</dt><dd>Хибне «ні». У звичайному фільтрі Блума його не буває, якщо нічого не видаляти.</dd></div>
+        <div><dt>FPR, p</dt><dd>Частка хибних «так» серед перевірок елементів, яких немає.</dd></div>
+        <div><dt>Double hashing</dt><dd>Отримання k позицій з двох хешів: h₁ + i·h₂.</dd></div>
+        <div><dt>Counting Bloom filter</dt><dd>Лічильники замість бітів, тому підтримує видалення.</dd></div>
+        <div><dt>Scalable Bloom filter</dt><dd>Ланцюжок фільтрів, що ростуть, для невідомого наперед n.</dd></div>
+        <div><dt>Cuckoo filter</dt><dd>Зберігає короткі відбитки ключів у хеш-таблиці; підтримує видалення.</dd></div>
+        <div><dt>Xor / binary fuse filter</dt><dd>Статичні фільтри: компактніші за Bloom, але будуються раз із готового набору.</dd></div>
+        <div><dt>SSTable / LSM</dt><dd>Незмінні відсортовані файли в базах на LSM-деревах; кожен має свій фільтр.</dd></div>
+        <div><dt>Count-Min sketch</dt><dd>Родич фільтра Блума для наближеного підрахунку частот.</dd></div>
+        <div><dt>HyperLogLog</dt><dd>Структура для наближеного підрахунку кількості різних елементів.</dd></div>
+      </dl>
+    </section>
+  </main>
+</div>
+
+<footer>© <span id="year"></span> AI Pages · <a href="https://en.wikipedia.org/wiki/Bloom_filter" target="_blank" rel="noopener">Bloom filter у Вікіпедії</a> · <a href="https://redis.io/docs/latest/develop/data-types/probabilistic/bloom-filter/" target="_blank" rel="noopener">Bloom filter у Redis</a></footer>
+
+<script>
+(function(){
+  "use strict";
+  var $ = function(s, r){ return (r || document).querySelector(s); };
+  var $$ = function(s, r){ return Array.prototype.slice.call((r || document).querySelectorAll(s)); };
+  var fmtN = function(n){ return Math.round(n).toLocaleString("uk-UA"); };
+  var esc = function(s){ return String(s).replace(/[&<>"']/g, function(c){ return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]; }); };
+  function fmtP(p){
+    if (p <= 0) return "0%";
+    var pct = p * 100;
+    if (pct >= 10) return pct.toLocaleString("uk-UA", {maximumFractionDigits: 1}) + "%";
+    return pct.toLocaleString("uk-UA", {maximumSignificantDigits: 2}) + "%";
+  }
+  function fmtBytes(b){
+    var u = ["Б", "КБ", "МБ", "ГБ", "ТБ"], i = 0;
+    while (b >= 1024 && i < u.length - 1) { b /= 1024; i++; }
+    return b.toLocaleString("uk-UA", {maximumFractionDigits: b < 10 ? 2 : b < 100 ? 1 : 0}) + " " + u[i];
+  }
+  $("#year").textContent = new Date().getFullYear();
+
+  /* ---------- theme ---------- */
+  var root = document.documentElement, themeBtn = $("#themeBtn");
+  var modes = ["auto", "light", "dark"], names = {auto: "авто", light: "світла", dark: "темна"};
+  var mode = "auto";
+  try { mode = localStorage.getItem("bloom-theme") || "auto"; } catch (e) {}
+  var onTheme = [];
+  function applyTheme(){
+    if (mode === "auto") root.removeAttribute("data-theme"); else root.setAttribute("data-theme", mode);
+    themeBtn.textContent = "Тема: " + names[mode];
+    onTheme.forEach(function(f){ f(); });
+  }
+  themeBtn.addEventListener("click", function(){
+    mode = modes[(modes.indexOf(mode) + 1) % 3];
+    try { localStorage.setItem("bloom-theme", mode); } catch (e) {}
+    applyTheme();
+  });
+  if (window.matchMedia) {
+    var mq = matchMedia("(prefers-color-scheme: dark)");
+    var mqf = function(){ if (mode === "auto") onTheme.forEach(function(f){ f(); }); };
+    if (mq.addEventListener) mq.addEventListener("change", mqf); else if (mq.addListener) mq.addListener(mqf);
+  }
+
+  /* ---------- TOC + scrollspy ---------- */
+  var secs = $$("main > section[data-title]");
+  var toc = $("#toc"), chips = $("#chips");
+  secs.forEach(function(s){
+    var li = document.createElement("li");
+    li.innerHTML = '<a href="#' + s.id + '">' + s.dataset.title + "</a>";
+    toc.appendChild(li);
+    var c = document.createElement("a");
+    c.href = "#" + s.id; c.textContent = s.dataset.title;
+    chips.appendChild(c);
+  });
+  if ("IntersectionObserver" in window) {
+    var io = new IntersectionObserver(function(entries){
+      entries.forEach(function(en){
+        if (!en.isIntersecting) return;
+        var id = en.target.id;
+        $$("#toc a, #chips a").forEach(function(a){
+          var on = a.getAttribute("href") === "#" + id;
+          a.classList.toggle("on", on);
+          if (on && a.parentNode === chips && chips.scrollWidth > chips.clientWidth) {
+            chips.scrollTo({left: a.offsetLeft - 16, behavior: "smooth"});
+          }
+        });
+      });
+    }, {rootMargin: "-30% 0px -60% 0px"});
+    secs.forEach(function(s){ io.observe(s); });
+  }
+
+  /* ---------- segmented controls ---------- */
+  function bindSeg(el, cb){
+    $$("button", el).forEach(function(b){
+      b.addEventListener("click", function(){
+        $$("button", el).forEach(function(x){ x.setAttribute("aria-pressed", x === b ? "true" : "false"); });
+        cb(b.dataset.v);
+      });
+    });
+  }
+  function bindTabs(tabsEl, scope){
+    $$("button", tabsEl).forEach(function(b){
+      b.addEventListener("click", function(){
+        $$("button", tabsEl).forEach(function(x){ x.setAttribute("aria-selected", x === b ? "true" : "false"); });
+        $$(".panel", scope).forEach(function(p){ p.hidden = p.dataset.p !== b.dataset.t; });
+      });
+    });
+  }
+  bindTabs($("#codeTabs"), $("#code"));
+  bindTabs($("#deepTabs"), $("#deep"));
+
+  /* ---------- hashing: FNV-1a + murmur3 finalizer, double hashing ---------- */
+  var enc = window.TextEncoder ? new TextEncoder() : null;
+  function bytesOf(s){
+    if (enc) return enc.encode(s);
+    var u = unescape(encodeURIComponent(s)), a = [];
+    for (var i = 0; i < u.length; i++) a.push(u.charCodeAt(i));
+    return a;
+  }
+  function fnv1a(b, seed){
+    var h = (0x811c9dc5 ^ seed) >>> 0;
+    for (var i = 0; i < b.length; i++) { h ^= b[i]; h = Math.imul(h, 0x01000193) >>> 0; }
+    return h;
+  }
+  function fmix(h){
+    h ^= h >>> 16; h = Math.imul(h, 0x85ebca6b);
+    h ^= h >>> 13; h = Math.imul(h, 0xc2b2ae35);
+    h ^= h >>> 16; return h >>> 0;
+  }
+  function twoHashes(s){
+    var b = bytesOf(s);
+    return [fmix(fnv1a(b, 0)), (fmix(fnv1a(b, 0x9e3779b9)) | 1) >>> 0];
+  }
+  function posFrom(h, m, k){
+    var out = [];
+    for (var i = 0; i < k; i++) out.push(((h[0] + Math.imul(i, h[1])) >>> 0) % m);
+    return out;
+  }
+
+  /* ============ MAIN LAB ============ */
+  var POOL = ["вовк","лев","тигр","заєць","білка","кінь","корова","коза","вівця","свиня","качка","гуска","індик","курка","півень","голуб","ворона","сорока","горобець","ластівка","лелека","чапля","орел","сокіл","яструб","пінгвін","дельфін","кит","акула","краб","рак","жаба","змія","ящірка","черепаха","равлик","бджола","оса","муха","комар","метелик","мурашка","павук","жук","кріт","борсук","видра","бобер","лось","олень","кабан","ведмідь","рись","панда","коала","кенгуру","жираф","зебра","слон","носоріг","бегемот","верблюд","лама","мавпа","горила","папуга","фламінго","страус","павич","сова-сипуха","яблуко","груша","слива","вишня","черешня","абрикос","персик","виноград","кавун","диня","банан","ківі","лимон","апельсин","мандарин","малина","полуниця","смородина","агрус","чорниця","Київ","Львів","Одеса","Харків","Дніпро","Полтава","Чернігів","Ужгород","Луцьк","Рівне","Суми","Херсон","Вінниця","Житомир","Тернопіль","стіл","стілець","лампа","книжка","ручка","олівець","зошит","ключ","двері","вікно","годинник","телефон","чашка","ложка","тарілка","ніж","виделка","парасоля","рюкзак","м’яч"];
+  var PRESET = ["кіт", "пес", "сова", "лис", "їжак"];
+  var L = {m: 32, k: 3, mode: "plain", arr: [], truth: {}, order: [], broken: {}, hit: null, log: []};
+  var bitsEl = $("#bits"), explain = $("#explain");
+
+  function resetLab(){
+    L.arr = new Array(L.m).fill(0); L.truth = {}; L.order = []; L.broken = {}; L.hit = null; L.log = [];
+    explain.innerHTML = "<h3>Фільтр порожній</h3><p>m = " + L.m + " біт, k = " + L.k + ". Додайте кілька слів, потім перевіряйте інші.</p>";
+    renderLab();
+  }
+  function norm(s){ return String(s || "").trim().toLowerCase().slice(0, 40); }
+  function pos(w){ return posFrom(twoHashes(w), L.m, L.k); }
+  function isSet(i){ return L.arr[i] > 0; }
+  function query(w){ return pos(w).every(isSet); }
+  function inTruth(w){ return (L.truth[w] || 0) > 0; }
+
+  function renderLab(flash){
+    var hitMap = {};
+    if (L.hit) L.hit.p.forEach(function(p, i){ (hitMap[p] = hitMap[p] || []).push(i); });
+    var html = "";
+    for (var i = 0; i < L.m; i++) {
+      var on = isSet(i), h = hitMap[i];
+      var cls = "bit" + (on ? " on" : "") + (h ? " hit" + (on ? "" : " zero") : "") + (flash && flash.indexOf(i) >= 0 ? " flash" : "");
+      var content = L.mode === "count" ? (L.arr[i] || "") : (on ? "1" : "0");
+      var bd = h ? '<span class="bd">' + h.map(function(j){ return '<b class="hc' + (j + 1) + '">h' + (j + 1) + "</b>"; }).join("") + "</span>" : "";
+      html += '<div class="' + cls + '" title="біт ' + i + (L.mode === "count" ? ", лічильник " + L.arr[i] : "") + '">' + bd + content + "<i>" + i + "</i></div>";
+    }
+    bitsEl.innerHTML = html;
+
+    var setCount = L.arr.filter(function(v){ return v > 0; }).length;
+    var nUnique = L.order.length;
+    var fill = setCount / L.m;
+    $("#labStat").innerHTML =
+      "<div><b>" + setCount + " / " + L.m + "</b><span>увімкнено бітів (" + Math.round(fill * 100) + "%)</span></div>" +
+      "<div><b>" + nUnique + "</b><span>додано слів</span></div>" +
+      "<div><b>" + fmtP(Math.pow(fill, L.k)) + "</b><span>шанс хибного «так» зараз</span></div>";
+
+    $("#members").innerHTML = L.order.length ? L.order.map(function(w){
+      var c = L.truth[w];
+      return '<button type="button" data-w="' + esc(w) + '"' + (L.broken[w] ? ' class="broken" title="фільтр тепер каже «точно ні»"' : "") + ">" + esc(w) + (c > 1 ? ' <span class="n">×' + c + "</span>" : "") + "</button>";
+    }).join("") : '<span class="small">поки нічого</span>';
+    $$("#members button").forEach(function(b){ b.addEventListener("click", function(){ $("#word").value = b.dataset.w; doCheck(b.dataset.w); }); });
+
+    $("#log").innerHTML = L.log.slice(-8).reverse().map(function(e){ return "<div><span class=\"tag " + e.t + "\">" + e.l + "</span><span>" + e.m + "</span></div>"; }).join("") || '<span class="small">тут з’являтимуться операції</span>';
+  }
+  function logIt(t, l, m){ L.log.push({t: t, l: l, m: m}); }
+
+  function hashLines(w, p){
+    return '<div class="hl-list">' + p.map(function(x, i){
+      var on = isSet(x);
+      return '<div><span class="sw hc' + (i + 1) + '">h' + (i + 1) + "</span>«" + esc(w) + "» → біт " + x + ' <span class="' + (on ? "o" : "z") + '">' + (on ? (L.mode === "count" ? "= " + L.arr[x] : "= 1") : "= 0") + "</span></div>";
+    }).join("") + "</div>";
+  }
+  function recomputeBroken(){
+    L.broken = {};
+    L.order.forEach(function(w){ if (!query(w)) L.broken[w] = true; });
+  }
+
+  function doAdd(w){
+    w = norm(w); if (!w) return;
+    var p = pos(w), fresh = [];
+    var already = query(w);
+    p.forEach(function(x){
+      if (L.mode === "count") { if (!L.arr[x]) fresh.push(x); L.arr[x] = Math.min(15, L.arr[x] + 1); }
+      else if (!L.arr[x]) { L.arr[x] = 1; fresh.push(x); }
+    });
+    if (!inTruth(w)) L.order.push(w);
+    L.truth[w] = (L.truth[w] || 0) + 1;
+    recomputeBroken();
+    L.hit = {w: w, p: p};
+    var note = fresh.length === 0
+      ? "Усі " + L.k + " біти вже горіли" + (already && L.truth[w] === 1 ? " — до додавання фільтр уже відповідав би «можливо так» на це слово. Додавання нічого не змінило в масиві." : ".")
+      : "Увімкнено нових бітів: " + fresh.length + " з " + L.k + ".";
+    if (L.mode === "count") note += " Лічильники цих позицій збільшено на 1.";
+    explain.innerHTML = "<h3>Додано «" + esc(w) + "»</h3>" + hashLines(w, p) + "<p>" + note + "</p>";
+    logIt("acc", "add", "«" + esc(w) + "» → " + p.join(", "));
+    renderLab(fresh);
+  }
+
+  function verdictHTML(w, says, truth){
+    if (!says && !truth) return '<div class="vd no"><b>Точно ні</b><p>Хоч один біт дорівнює 0. Якби «' + esc(w) + '» додавали, цей біт горів би. Фільтр ніколи не помиляється в цей бік.</p></div>';
+    if (says && truth) return '<div class="vd ok"><b>Можливо так — і справді є</b><p>Усі ' + L.k + ' біти горять. Фільтр сам не знає, чи це справжній збіг, але ми знаємо: «' + esc(w) + '» додавали.</p></div>';
+    if (says && !truth) return '<div class="vd warn"><b>Хибне «так»!</b><p>Усі ' + L.k + ' біти горять, але «' + esc(w) + '» ніхто не додавав. Біти запалили інші слова. Саме тому відповідь «так» — лише «можливо».</p></div>';
+    return '<div class="vd bad"><b>Хибне «ні» — фільтр зламано</b><p>«' + esc(w) + '» додавали, але після видалення іншого слова його біт згас. Звичайний фільтр Блума не вміє видаляти.</p></div>';
+  }
+  function doCheck(w, prefix){
+    w = norm(w); if (!w) return;
+    var p = pos(w), says = p.every(isSet), truth = inTruth(w);
+    L.hit = {w: w, p: p};
+    explain.innerHTML = (prefix || "") + "<h3>Перевірка «" + esc(w) + "»</h3>" + hashLines(w, p) + verdictHTML(w, says, truth);
+    if (!says && !truth) logIt("", "ні", "«" + esc(w) + "»: точно ні");
+    else if (says && truth) logIt("ok", "так", "«" + esc(w) + "»: є");
+    else if (says) logIt("warn", "FP", "«" + esc(w) + "»: хибне «так»");
+    else logIt("bad", "FN", "«" + esc(w) + "»: хибне «ні»");
+    renderLab();
+  }
+
+  function doDel(w){
+    w = norm(w); if (!w) return;
+    var p = pos(w), says = p.every(isSet), truth = inTruth(w);
+    L.hit = {w: w, p: p};
+    if (!says) {
+      explain.innerHTML = "<h3>Видалити «" + esc(w) + "»</h3>" + hashLines(w, p) + '<div class="vd no"><b>Нема чого видаляти</b><p>Фільтр каже «точно ні», тож цього слова в ньому немає.</p></div>';
+      renderLab(); return;
+    }
+    var before = {}; L.order.forEach(function(x){ before[x] = query(x); });
+    p.forEach(function(x){ if (L.mode === "count") L.arr[x] = Math.max(0, L.arr[x] - 1); else L.arr[x] = 0; });
+    if (truth) { L.truth[w]--; if (!L.truth[w]) { delete L.truth[w]; L.order = L.order.filter(function(x){ return x !== w; }); } }
+    recomputeBroken();
+    var victims = L.order.filter(function(x){ return before[x] && L.broken[x]; });
+    var msg;
+    if (L.mode === "plain") {
+      msg = victims.length
+        ? '<div class="vd bad"><b>Зламано: ' + victims.map(function(x){ return "«" + esc(x) + "»"; }).join(", ") + '</b><p>Ми обнулили біти ' + p.join(", ") + ', а ними користувались і ' + (victims.length > 1 ? "ці слова. Тепер фільтр каже про них «точно ні», хоча їх додавали." : "це слово. Тепер фільтр каже про нього «точно ні», хоча його додавали.") + ' Порушено головну гарантію.</p></div>'
+        : '<div class="vd warn"><b>Цього разу пощастило</b><p>Біти ' + p.join(", ") + ' обнулено, і жодне інше додане слово на них не спиралось. Але щойно слів більше — видалення ламає чужі. Спробуйте ще з повнішим фільтром.</p></div>';
+    } else {
+      msg = truth
+        ? (victims.length
+          ? '<div class="vd bad"><b>Зламано: ' + victims.map(function(x){ return "«" + esc(x) + "»"; }).join(", ") + '</b><p>Дивно для лічильного фільтра: таке буває лише після видалення того, чого не додавали.</p></div>'
+          : '<div class="vd ok"><b>Видалено коректно</b><p>Лічильники позицій ' + p.join(", ") + ' зменшено на 1. Інші слова, що ділять ці позиції, лишилися на місці: їхні внески в лічильники нікуди не ділися.</p></div>')
+        : '<div class="vd bad"><b>Видалили те, чого не було' + (victims.length ? ": зламано " + victims.map(function(x){ return "«" + esc(x) + "»"; }).join(", ") : "") + '</b><p>«' + esc(w) + '» був хибним «так». Лічильний фільтр цього не знає і зменшив чужі лічильники. ' + (victims.length ? "Тепер інші слова отримують «точно ні»." : "Поки ніхто не постраждав, але лічильники вже неправильні.") + ' Видаляйте лише те, що точно додавали.</p></div>';
+    }
+    explain.innerHTML = "<h3>Видалено «" + esc(w) + "»</h3>" + hashLines(w, p) + msg;
+    logIt(victims.length || !truth ? "bad" : "", "del", "«" + esc(w) + "»" + (victims.length ? " → зламано " + victims.length : ""));
+    renderLab();
+  }
+
+  function findFP(){
+    if (!L.order.length) { doAddMany(PRESET); }
+    var cands = POOL.concat(Array.from({length: 400}, function(_, i){ return "слово" + (i + 1); }));
+    var tried = 0, found = null;
+    for (var i = 0; i < cands.length; i++) {
+      var w = norm(cands[i]);
+      if (inTruth(w)) continue;
+      tried++;
+      if (query(w)) { found = w; break; }
+    }
+    if (found) {
+      $("#word").value = found;
+      doCheck(found, '<p class="small">Перевірено слів, яких не додавали: ' + tried + ". Останнє дало хибне «так».</p>");
+    } else {
+      explain.innerHTML = "<h3>Не знайшлося серед " + tried + " слів</h3><p>Фільтр ще майже порожній: шанс хибного «так» дуже малий. Додайте ще кілька слів або зменште m.</p>";
+      renderLab();
+    }
+  }
+  function doAddMany(list){ list.forEach(function(w){ doAdd(w); }); }
+
+  bindSeg($("#labM"), function(v){ L.m = +v; resetLab(); });
+  bindSeg($("#labK"), function(v){ L.k = +v; resetLab(); });
+  bindSeg($("#labMode"), function(v){ L.mode = v; resetLab(); });
+  $("#bAdd").addEventListener("click", function(){ doAdd($("#word").value); });
+  $("#bCheck").addEventListener("click", function(){ doCheck($("#word").value); });
+  $("#bDel").addEventListener("click", function(){ doDel($("#word").value); });
+  $("#word").addEventListener("keydown", function(e){ if (e.key === "Enter") { e.preventDefault(); doAdd($("#word").value); } });
+  $("#bPreset").addEventListener("click", function(){
+    doAddMany(PRESET);
+    explain.innerHTML = "<h3>Додано 5 тварин</h3><p>Тепер перевірте слово, якого не додавали, наприклад «вовк», або натисніть «знайти хибне «так»». Спробуйте й «Видалити» одне з доданих.</p>";
+  });
+  $("#bFindFP").addEventListener("click", findFP);
+  $("#bClear").addEventListener("click", resetLab);
+  resetLab();
+
+  /* ============ STRESS LAB ============ */
+  var KEYS = [], PROBES = [];
+  for (var i = 0; i < 2000; i++) KEYS.push(twoHashes("key-" + i));
+  for (var j = 0; j < 20000; j++) PROBES.push(twoHashes("probe-" + j));
+  var S = {m: 2048, n: 200, k: 7, x: "k", measured: 0, fill: 0, bits: null};
+  var theory = function(m, n, k){ return n === 0 ? 0 : Math.pow(1 - Math.exp(-k * n / m), k); };
+
+  function runStress(){
+    var m = S.m, n = S.n, k = S.k;
+    var bits = new Uint8Array(m), set = 0;
+    for (var a = 0; a < n; a++) {
+      var h = KEYS[a];
+      for (var i = 0; i < k; i++) { var p = ((h[0] + Math.imul(i, h[1])) >>> 0) % m; if (!bits[p]) { bits[p] = 1; set++; } }
+    }
+    var fp = 0;
+    for (var b = 0; b < PROBES.length; b++) {
+      var g = PROBES[b], all = true;
+      for (var t = 0; t < k; t++) { if (!bits[((g[0] + Math.imul(t, g[1])) >>> 0) % m]) { all = false; break; } }
+      if (all) fp++;
+    }
+    S.bits = bits; S.fill = set / m; S.measured = fp / PROBES.length; S.fp = fp;
+  }
+  function renderStress(){
+    $("#sMv").textContent = fmtN(S.m);
+    $("#sNv").textContent = fmtN(S.n);
+    $("#sKv").textContent = S.k;
+    $("#sMb").textContent = "= " + fmtBytes(S.m / 8) + (S.n ? ", " + (S.m / S.n).toLocaleString("uk-UA", {maximumFractionDigits: 1}) + " біт на елемент" : "");
+    var kopt = S.n ? S.m / S.n * Math.LN2 : 0;
+    $("#sKb").textContent = S.n ? "оптимум для цих m і n: " + kopt.toLocaleString("uk-UA", {maximumFractionDigits: 1}) : "додайте елементи";
+    var nCap = Math.floor(-S.m * Math.LN2 * Math.LN2 / Math.log(0.01));
+    $("#sNb").textContent = "при оптимальному k цей m витримує ≈ " + fmtN(nCap) + " елементів з 1% помилок";
+    var th = theory(S.m, S.n, S.k);
+    $("#stressStat").innerHTML =
+      "<div><b>" + Math.round(S.fill * 100) + "%</b><span>бітів увімкнено</span></div>" +
+      "<div><b>" + fmtP(S.measured) + "</b><span>виміряно: " + fmtN(S.fp) + " хибних «так» з 20 000</span></div>" +
+      "<div><b>" + fmtP(th) + "</b><span>за формулою</span></div>";
+    drawCanvas();
+    drawChart();
+  }
+  function cssVar(n){ return getComputedStyle(root).getPropertyValue(n).trim(); }
+  function drawCanvas(){
+    var cv = $("#bitCanvas"), w = cv.clientWidth || 600, dpr = window.devicePixelRatio || 1;
+    var cols = S.m <= 1024 ? 64 : 128, rows = Math.ceil(S.m / cols);
+    var cell = w / cols, h = Math.max(24, Math.ceil(rows * cell));
+    cv.style.height = h + "px";
+    cv.width = Math.round(w * dpr); cv.height = Math.round(h * dpr);
+    var ctx = cv.getContext("2d"); ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    ctx.clearRect(0, 0, w, h);
+    var on = cssVar("--accent-strong"), off = cssVar("--line"), gap = cell > 6 ? 1 : 0.5;
+    for (var i = 0; i < S.m; i++) {
+      var x = (i % cols) * cell, y = Math.floor(i / cols) * cell;
+      ctx.fillStyle = S.bits[i] ? on : off;
+      ctx.fillRect(x + gap / 2, y + gap / 2, cell - gap, cell - gap);
+    }
+  }
+
+  /* ---------- chart: p vs k or p vs n, log y ---------- */
+  var CH = {w: 640, h: 260, l: 56, r: 16, t: 14, b: 36};
+  var chartEl = $("#chart"), tip = $("#tip");
+  var curPts = [];
+  function drawChart(){
+    var pw = CH.w - CH.l - CH.r, ph = CH.h - CH.t - CH.b;
+    var xs, xMin, xMax, xLabel, cur, opt;
+    if (S.x === "k") {
+      xs = []; for (var k = 1; k <= 16; k++) xs.push(k);
+      xMin = 1; xMax = 16; xLabel = "k — хеш-функцій"; cur = S.k;
+      opt = S.n ? S.m / S.n * Math.LN2 : null;
+    } else {
+      xs = []; for (var n = 0; n <= 2000; n += 20) xs.push(n);
+      xMin = 0; xMax = 2000; xLabel = "n — елементів"; cur = S.n;
+      opt = Math.floor(-S.m * Math.LN2 * Math.LN2 / Math.log(0.01));
+    }
+    var yv = function(x){ return S.x === "k" ? theory(S.m, S.n, x) : theory(S.m, x, S.k); };
+    var YMIN = -6, YMAX = 0;
+    var sx = function(x){ return CH.l + (x - xMin) / (xMax - xMin) * pw; };
+    var sy = function(p){ var l = Math.log10(Math.max(p, Math.pow(10, YMIN))); return CH.t + (YMAX - l) / (YMAX - YMIN) * ph; };
+    var g = "";
+    g += '<g class="grid">';
+    for (var e = YMIN; e <= YMAX; e++) g += '<line x1="' + CH.l + '" x2="' + (CH.l + pw) + '" y1="' + sy(Math.pow(10, e)) + '" y2="' + sy(Math.pow(10, e)) + '"/>';
+    g += "</g>";
+    var ylab = {0: "100%", "-1": "10%", "-2": "1%", "-3": "0,1%", "-4": "0,01%", "-5": "0,001%", "-6": "≤0,0001%"};
+    for (var e2 = YMIN; e2 <= YMAX; e2++) g += '<text x="' + (CH.l - 6) + '" y="' + (sy(Math.pow(10, e2)) + 4) + '" text-anchor="end">' + ylab[e2] + "</text>";
+    var ticks = S.x === "k" ? [1, 2, 4, 6, 8, 10, 12, 14, 16] : [0, 400, 800, 1200, 1600, 2000];
+    ticks.forEach(function(t){ g += '<text x="' + sx(t) + '" y="' + (CH.t + ph + 18) + '" text-anchor="middle">' + fmtN(t) + "</text>"; });
+    g += '<text x="' + (CH.l + pw) + '" y="' + (CH.h - 2) + '" text-anchor="end">' + xLabel + "</text>";
+    g += '<line x1="' + CH.l + '" x2="' + (CH.l + pw) + '" y1="' + (CH.t + ph) + '" y2="' + (CH.t + ph) + '" stroke="' + cssVar("--faint") + '"/>';
+    if (opt !== null && opt >= xMin && opt <= xMax) {
+      g += '<line x1="' + sx(opt) + '" x2="' + sx(opt) + '" y1="' + CH.t + '" y2="' + (CH.t + ph) + '" stroke="' + cssVar("--faint") + '" stroke-width="1.5" stroke-dasharray="4 4"/>';
+    }
+    curPts = xs.map(function(x){ return {x: x, p: yv(x)}; });
+    var d = curPts.map(function(pt, i){ return (i ? "L" : "M") + sx(pt.x).toFixed(1) + " " + sy(pt.p).toFixed(1); }).join(" ");
+    var acc = cssVar("--accent-strong"), surf = cssVar("--surface"), h1 = cssVar("--h1");
+    g += '<path d="' + d + '" fill="none" stroke="' + acc + '" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>';
+    var cp = yv(cur);
+    g += '<circle cx="' + sx(cur) + '" cy="' + sy(cp) + '" r="5" fill="' + acc + '" stroke="' + surf + '" stroke-width="2"/>';
+    if (S.measured > 0) g += '<circle cx="' + sx(cur) + '" cy="' + sy(S.measured) + '" r="7" fill="none" stroke="' + h1 + '" stroke-width="2"/>';
+    g += '<line id="xh" y1="' + CH.t + '" y2="' + (CH.t + ph) + '" stroke="' + cssVar("--muted") + '" stroke-width="1" opacity="0"/>';
+    g += '<circle id="xhp" r="4" fill="' + acc + '" stroke="' + surf + '" stroke-width="2" opacity="0"/>';
+    g += '<rect id="hov" x="' + CH.l + '" y="' + CH.t + '" width="' + pw + '" height="' + ph + '" fill="transparent"/>';
+    chartEl.innerHTML = g;
+    $("#dashLbl").textContent = S.x === "k" ? "оптимальне k" : "ємність для 1%";
+    $("#chartNote").textContent = S.x === "k"
+      ? "Крива спершу падає (більше перевірок), а потім росте (кожне k вмикає більше бітів, фільтр заповнюється). Мінімум — на пунктирі."
+      : "Чим більше елементів у фільтрі з тими самими m і k, тим частіше помилки. Пунктир — скільки елементів цей m витримує при 1% з оптимальним k.";
+    var hov = $("#hov"), xh = $("#xh"), xhp = $("#xhp");
+    function move(ev){
+      var rect = chartEl.getBoundingClientRect();
+      var px = (ev.clientX - rect.left) / rect.width * CH.w;
+      var xv = xMin + (px - CH.l) / pw * (xMax - xMin);
+      var best = curPts[0];
+      curPts.forEach(function(pt){ if (Math.abs(pt.x - xv) < Math.abs(best.x - xv)) best = pt; });
+      var X = sx(best.x), Y = sy(best.p);
+      xh.setAttribute("x1", X); xh.setAttribute("x2", X); xh.setAttribute("opacity", ".5");
+      xhp.setAttribute("cx", X); xhp.setAttribute("cy", Y); xhp.setAttribute("opacity", "1");
+      tip.style.left = (X / CH.w * rect.width) + "px";
+      tip.style.top = (Y / CH.h * rect.height) + "px";
+      tip.textContent = (S.x === "k" ? "k = " + best.x : "n = " + fmtN(best.x)) + " · p ≈ " + fmtP(best.p);
+      tip.style.opacity = "1";
+    }
+    function leave(){ xh.setAttribute("opacity", "0"); xhp.setAttribute("opacity", "0"); tip.style.opacity = "0"; }
+    hov.addEventListener("pointermove", move);
+    hov.addEventListener("pointerdown", move);
+    hov.addEventListener("pointerleave", leave);
+  }
+
+  [["sM", "m"], ["sN", "n"], ["sK", "k"]].forEach(function(p){
+    $("#" + p[0]).addEventListener("input", function(e){ S[p[1]] = +e.target.value; runStress(); renderStress(); });
+  });
+  bindSeg($("#chartX"), function(v){ S.x = v; drawChart(); });
+  runStress(); renderStress();
+  var rt; window.addEventListener("resize", function(){ clearTimeout(rt); rt = setTimeout(drawCanvas, 120); });
+  onTheme.push(function(){ drawCanvas(); drawChart(); });
+
+  /* ============ CALCULATOR ============ */
+  function optM(n, p){ return Math.ceil(-n * Math.log(p) / (Math.LN2 * Math.LN2)); }
+  function calc(){
+    var n = Math.max(1, Math.floor(+$("#cN").value || 1)), p = +$("#cP").value, L2 = Math.max(1, +$("#cL").value || 1);
+    var m = optM(n, p), k = Math.max(1, Math.round(m / n * Math.LN2));
+    var bloomB = m / 8, setB = n * (L2 + 48);
+    $("#calcOut").innerHTML =
+      "<div><b>" + fmtBytes(bloomB) + "</b><span>розмір фільтра</span></div>" +
+      "<div><b>" + fmtN(m) + "</b><span>бітів, m</span></div>" +
+      "<div><b>" + k + "</b><span>хеш-функцій, k</span></div>" +
+      "<div><b>" + (m / n).toLocaleString("uk-UA", {maximumFractionDigits: 1}) + "</b><span>біт на елемент</span></div>";
+    var ratio = setB / bloomB;
+    $("#calcCmp").innerHTML =
+      '<div class="bar"><span>Фільтр Блума</span><div class="track"><div class="fill" style="width:' + Math.max(0.5, 100 / ratio) + '%"></div></div><span>' + fmtBytes(bloomB) + "</span></div>" +
+      '<div class="bar"><span>Хеш-множина</span><div class="track"><div class="fill alt" style="width:100%"></div></div><span>' + fmtBytes(setB) + "</span></div>" +
+      '<p class="small">Фільтр менший приблизно в <b>' + ratio.toLocaleString("uk-UA", {maximumFractionDigits: 0}) + " раз</b>. Ціна — ≈ " + fmtP(p) + " хибних «так» і неможливість дістати самі ключі назад.</p>";
+  }
+  ["cN", "cP", "cL"].forEach(function(id){ $("#" + id).addEventListener("input", calc); });
+  $$("#calc .quick button").forEach(function(b){ b.addEventListener("click", function(){ $("#cN").value = b.dataset.n; calc(); }); });
+  calc();
+  $("#pTable").innerHTML = [0.1, 0.01, 0.001, 0.0001, 0.000001].map(function(p){
+    var bpe = -Math.log(p) / (Math.LN2 * Math.LN2);
+    return "<tr><td class=\"num\">" + fmtP(p) + "</td><td class=\"num\">" + bpe.toLocaleString("uk-UA", {maximumFractionDigits: 1}) + "</td><td class=\"num\">" + Math.round(bpe * Math.LN2) + "</td><td class=\"num\">" + fmtBytes(optM(1e6, p) / 8) + "</td><td class=\"num\">" + fmtBytes(optM(1e9, p) / 8) + "</td></tr>";
+  }).join("");
+
+  /* ============ DECISION HELPER ============ */
+  var A = {fp: "yes", what: "member", del: "no", shape: "grow"};
+  function decide(){
+    var v;
+    if (A.what === "count") v = ["maybe", "Count-Min sketch", "Фільтр Блума відповідає лише «чи було». Для наближених частот («скільки разів бачили цю IP») є його родич — Count-Min sketch: кілька рядків лічильників і ті самі хеші.", "Точні частоти — звичайний словник лічильників, якщо ключів небагато."];
+    else if (A.what === "card") v = ["maybe", "HyperLogLog", "Щоб порахувати кількість різних елементів, фільтр не потрібен: HyperLogLog робить це з похибкою близько 1% у кількох кілобайтах. У Redis — PFADD і PFCOUNT.", "Фільтр Блума теж дає грубу оцінку n за кількістю одиниць, але HLL точніший і менший."];
+    else if (A.fp === "no") v = ["no", "Звичайна множина або індекс", "Фільтр Блума завжди має хибні «так». Якщо потрібна точна відповідь — хеш-множина, B-дерево в базі або Redis SET.", "Найкраще з обох світів: поставити фільтр перед точною множиною. «Ні» з фільтра відповідає одразу, «можливо» — перевіряють точно."];
+    else if (A.del === "yes") v = ["yes", "Cuckoo filter", "Підтримує видалення, а при малих p ще й компактніший за Bloom. Є в RedisBloom (CF.ADD, CF.DEL) і бібліотеках для більшості мов.", "Альтернатива — лічильний фільтр Блума, якщо пам’ять не критична: простіший, але приблизно в 4 рази більший."];
+    else if (A.shape === "static") v = ["yes", "Xor або binary fuse filter", "Набір відомий заздалегідь — тоді статичні фільтри займають на 10–25% менше за Bloom і перевіряються за три звернення до пам’яті.", "Нові елементи додати не можна: тільки перебудувати фільтр з нуля."];
+    else if (A.shape === "unknown") v = ["yes", "Scalable Bloom filter", "Коли поточний шар заповнюється, додається новий, більший і з меншою p, тож загальна частка помилок лишається обмеженою. Так працює BF.ADD у Redis без попереднього RESERVE.", "Якщо можна оцінити верхню межу n — звичайний Bloom із запасом простіший і швидший."];
+    else v = ["yes", "Класичний фільтр Блума", "Ваш випадок — саме для нього: лише додаємо, хибне «так» допустиме, розмір відомий. Порахуйте m і k калькулятором вище і закладіть запас 20–50% на зростання.", "Якщо важлива кожна наносекунда — blocked Bloom filter: усі k біт в одному кеш-рядку."];
+    var tag = v[0] === "yes" ? '<span class="tag ok">підходить</span>' : v[0] === "maybe" ? '<span class="tag warn">інша задача</span>' : '<span class="tag bad">Bloom не підходить</span>';
+    var el = $("#verdict");
+    el.className = "verdict " + v[0];
+    el.innerHTML = '<div class="vh">' + tag + "<b>" + v[1] + "</b></div><p>" + v[2] + '</p><p class="alt">' + v[3] + "</p>";
+  }
+  $$(".ask .seg").forEach(function(s){ bindSeg(s, function(v){ A[s.dataset.q] = v; decide(); }); });
+  decide();
+
+  /* ============ UNION DEMO ============ */
+  function uniDemo(){
+    var m = 32, k = 3;
+    var words = POOL.slice().sort(function(){ return Math.random() - .5; });
+    var a = words.slice(0, 3), b = words.slice(3, 6);
+    var fa = new Array(m).fill(0), fb = new Array(m).fill(0), fab = new Array(m).fill(0);
+    a.forEach(function(w){ posFrom(twoHashes(w), m, k).forEach(function(p){ fa[p] = 1; fab[p] = 1; }); });
+    b.forEach(function(w){ posFrom(twoHashes(w), m, k).forEach(function(p){ fb[p] = 1; fab[p] = 1; }); });
+    var or = fa.map(function(x, i){ return x | fb[i]; });
+    var same = or.every(function(x, i){ return x === fab[i]; });
+    function row(label, arr, cls){ return '<div class="uni-row' + (cls ? " " + cls : "") + '"><span>' + label + '</span><div class="uni-bits">' + arr.map(function(x){ return "<i" + (x ? ' class="on"' : "") + "></i>"; }).join("") + "</div></div>"; }
+    $("#uni").innerHTML =
+      row("A", fa) + '<span class="small" style="padding-left:100px">' + a.map(esc).join(", ") + "</span>" +
+      row("B", fb) + '<span class="small" style="padding-left:100px">' + b.map(esc).join(", ") + "</span>" +
+      row("A OR B", or, "res") +
+      row("A ∪ B", fab) +
+      '<p class="small">' + (same ? "Рядки «A OR B» і «A ∪ B» (фільтр, у який додали всі шість слів) збігаються біт у біт." : "Розбіжність — так не має бути.") + "</p>";
+  }
+  $("#uniBtn").addEventListener("click", uniDemo);
+  uniDemo();
+
+  /* ============ QUIZ ============ */
+  var QUIZ = [
+    {q: "Фільтр Блума відповів «немає». Що це означає?", o: ["Елемента точно немає в множині", "Елемента, мабуть, немає, але треба перевірити", "Фільтр переповнений", "Елемент видалили"], a: 0, w: "Якби елемент додавали, усі його біти горіли б. Хоч один нуль — остаточне «ні»."},
+    {q: "Фільтр відповів «є». Що робити, якщо помилка неприпустима?", o: ["Довіряти: фільтр не помиляється", "Перевірити в джерелі: базі, на диску, у точній множині", "Перевірити ще раз тим самим фільтром", "Збільшити k і перевірити знову"], a: 1, w: "«Так» означає «можливо». Повторна перевірка тим самим фільтром дасть ту саму відповідь."},
+    {q: "Чому зі звичайного фільтра Блума не можна видалити елемент, обнуливши його біти?", o: ["Біти незмінні після створення", "Ці біти можуть належати іншим елементам — вони отримають хибне «ні»", "Це занадто повільно", "Хеш-функції незворотні"], a: 1, w: "Біти спільні. Обнулення ламає головну гарантію. Для видалення є лічильний і cuckoo-фільтри."},
+    {q: "Що станеться, якщо додати втричі більше елементів, ніж розраховано?", o: ["Фільтр кине помилку", "Нічого, p не зміниться", "Частка хибних «так» різко зросте, аж до майже 100%", "Почнуться хибні «ні»"], a: 2, w: "Біти заповнюються, і майже кожна перевірка влучає в одиниці. Хибних «ні» при цьому не буде."},
+    {q: "Скільки приблизно біт на елемент потрібно для p = 1%?", o: ["1 біт", "≈ 9,6 біта, незалежно від розміру ключа", "Стільки ж, скільки займає ключ", "≈ 64 біти"], a: 1, w: "m/n = −ln p / (ln 2)² ≈ 9,6. Ключ не зберігається, тому його довжина не важлива."},
+    {q: "Навіщо Cassandra чи RocksDB тримають фільтр Блума для кожного файлу SSTable?", o: ["Щоб стиснути дані", "Щоб не читати з диска файли, де ключа точно немає", "Щоб шифрувати ключі", "Щоб сортувати записи"], a: 1, w: "Без фільтра пошук відсутнього ключа відкриває всі файли. З фільтром — майже жодного."},
+    {q: "Як зміна k впливає на частку помилок при тих самих m і n?", o: ["Більше k — завжди менше помилок", "Більше k — завжди більше помилок", "Спершу помилок менше, потім більше: оптимум k = (m/n)·ln 2", "k не впливає"], a: 2, w: "Більше перевірок — добре, але кожна функція вмикає ще біти. Оптимум — коли увімкнена половина бітів."},
+    {q: "Два сервіси побудували фільтри з однаковими m, k і хешами. Як отримати фільтр для об’єднання множин?", o: ["Неможливо без оригінальних ключів", "Побітове OR двох фільтрів", "Побітове AND", "Скласти лічильники і поділити на 2"], a: 1, w: "OR дає рівно той фільтр, що вийшов би з обох множин. AND дає лише наближення перетину."}
+  ];
+  function shuffle(a){ for (var i = a.length - 1; i > 0; i--) { var j = Math.floor(Math.random() * (i + 1)), t = a[i]; a[i] = a[j]; a[j] = t; } return a; }
+  var answered = 0, correct = 0, qbox = $("#quizBox");
+  QUIZ.forEach(function(item, qi){
+    var d = document.createElement("div");
+    d.className = "qq";
+    d.innerHTML = "<h3>" + (qi + 1) + ". " + item.q + '</h3><div class="opts">' + shuffle(item.o.map(function(o, oi){ return '<button type="button" data-i="' + oi + '">' + o + "</button>"; })).join("") + '</div><p class="why" hidden></p>';
+    $$("button", d).forEach(function(b){
+      b.addEventListener("click", function(){
+        var ok = +b.dataset.i === item.a;
+        $$("button", d).forEach(function(x){ x.disabled = true; if (+x.dataset.i === item.a) x.classList.add("right"); });
+        if (!ok) b.classList.add("wrong");
+        var why = $(".why", d); why.hidden = false; why.textContent = (ok ? "Правильно. " : "Не зовсім. ") + item.w;
+        answered++; if (ok) correct++;
+        renderScore();
+      });
+    });
+    qbox.appendChild(d);
+  });
+  function renderScore(){
+    var s = $("#score");
+    if (!answered) { s.innerHTML = '<span class="muted">Відповідайте на питання — рахунок з’явиться тут.</span>'; return; }
+    var msg = answered < QUIZ.length ? "" : correct === QUIZ.length ? "Чудово, ви розумієте, як працює фільтр Блума." : correct >= 5 ? "Добре. Перегляньте пояснення до помилок." : "Пройдіться ще раз по лабораторії та розділу «Скільки помилок».";
+    s.innerHTML = "<b>" + correct + " / " + QUIZ.length + "</b><span>правильних з " + answered + " відповідей. " + msg + '</span><button class="btn" type="button" id="qReset">Почати знову</button>';
+    $("#qReset").addEventListener("click", function(){
+      answered = 0; correct = 0;
+      $$(".qq", qbox).forEach(function(d){ $$("button", d).forEach(function(x){ x.disabled = false; x.classList.remove("right", "wrong"); }); $(".why", d).hidden = true; });
+      renderScore();
+    });
+  }
+  renderScore();
+  applyTheme();
+})();
+</script>
+</body>
+</html>
