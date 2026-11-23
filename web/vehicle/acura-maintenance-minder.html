@@ -174,9 +174,10 @@
   .task .code { width: 40px; height: 40px; border-radius: 10px; display: grid; place-items: center; font-weight: 800; font-size: 20px; background: var(--accent); color: #fff; }
   .task.subtask .code { background: var(--surface-2); color: var(--text); border: 1px solid var(--line); }
   .task h3 { font-size: 16px; margin: 0; line-height: 1.3; }
-  .task .en { font-size: 13px; color: var(--muted); margin-top: 2px; }
+  .task .en { font-size: 13px; color: var(--muted); margin-top: 1px; }
+  .task sup { color: var(--accent); font-weight: 700; margin-left: 2px; }
   .task ul { margin: 8px 0 0; padding-left: 18px; }
-  .task li { margin: 2px 0; }
+  .task li { margin: 6px 0; }
   .task .note { font-size: 14px; color: var(--muted); margin-top: 8px; }
   .task .note b { color: var(--text); }
   .empty-state { color: var(--muted); font-size: 15px; margin: 8px 0 0; }
@@ -249,8 +250,9 @@
   <!-- Oil life -->
   <section class="card">
     <h2>1. Oil Life — скільки відсотків?</h2>
-    <p class="hint">Дисплей показує лише такі значення: десятками до 20%, далі 15, 10, 5, 0. Після 0% замість відсотків з'являється мінусовий пробіг.</p>
+    <p class="hint">За посібником дисплей показує тільки такі значення: 100, 90 … 20, далі 15, 10, 5, 0. Коли ресурс вичерпано, після ще 10 км замість відсотків з'являється мінусовий пробіг.</p>
     <div class="chips" id="oilChips" role="group" aria-label="Ресурс масла"></div>
+    <p class="hint" id="calcLine" style="margin:12px 0 0"></p>
     <div class="neg" id="negBox">
       <div class="row">
         <label class="inline" for="negKm">Скільки км у мінусі?</label>
@@ -312,12 +314,22 @@
     <summary>Як відкрити екран Maintenance</summary>
     <div class="body">
       <ol>
-        <li>Увімкніть запалення (кнопка <b>ENGINE START/STOP</b>, двигун можна не заводити).</li>
-        <li>На кермі праворуч — <b>коліщатко-селектор</b>. Натисніть його, щоб на панелі з'явилося меню інформаційних екранів.</li>
-        <li>Прокручуйте коліщатко, поки не з'явиться екран <b>Maintenance</b> з іконкою мастильниці.</li>
-        <li>Там буде <b>Oil Life: XX%</b> і під ним код — літера та, можливо, цифри.</li>
+        <li>Переведіть живлення в режим <b>ON</b>.</li>
+        <li>Натискайте <b>праве коліщатко-селектор</b> на кермі, доки на дисплеї не з'явиться вміст.</li>
+        <li>Прокручуйте праве коліщатко, доки не з'явиться екран <b>Maintenance</b>. На ньому — залишок ресурсу масла і пункти обслуговування, які скоро знадобляться.</li>
       </ol>
-      <p class="hint">Код на екрані — це роботи для <b>наступного</b> ТО. Тому одразу після сервісу видно 100% і код майбутнього візиту.</p>
+      <p class="hint">Коди на екрані — це роботи, які треба виконати <b>під час наступної заміни масла</b>. Тому одразу після ТО ви бачите 100% і код майбутнього візиту. Коли ресурс менше ніж 15%, повідомлення з'являється щоразу, коли вмикаєте живлення.</p>
+    </div>
+  </details>
+
+  <details>
+    <summary>Що означає відсоток (таблиця з посібника)</summary>
+    <div class="body tbl-wrap">
+      <p class="hint">Ресурс масла розраховується за умовами роботи двигуна, а на дисплеї округлюється так:</p>
+      <table>
+        <thead><tr><th>На дисплеї</th><th>Розрахунковий ресурс</th><th>Повідомлення</th></tr></thead>
+        <tbody id="oilTable"></tbody>
+      </table>
     </div>
   </details>
 
@@ -325,23 +337,28 @@
     <summary>Як скинути Maintenance Minder після ТО</summary>
     <div class="body">
       <ol>
-        <li>Запалення в <b>ON</b>, відкрийте екран <b>Maintenance</b> (див. вище).</li>
-        <li>Натисніть і тримайте праве коліщатко приблизно <b>10 секунд</b> — з'явиться режим скидання.</li>
-        <li>Прокруткою оберіть конкретний пункт або <b>All Due Items</b>.</li>
-        <li>Натисніть коліщатко, щоб підтвердити. Для інших пунктів повторіть.</li>
+        <li>Переведіть живлення в режим <b>ON</b>.</li>
+        <li>Натискайте праве коліщатко, доки на дисплеї не з'явиться вміст.</li>
+        <li>Прокручуйте праве коліщатко, доки не з'явиться екран <b>Maintenance</b>.</li>
+        <li>Натисніть і тримайте праве коліщатко <b>приблизно 10 секунд</b> — увімкнеться режим скидання.</li>
+        <li>Прокруткою виберіть пункт, який треба скинути, або <b>All Due Items</b>. Щоб вийти, натисніть коліщатко вліво.</li>
+        <li>Натисніть праве коліщатко, щоб скинути вибраний пункт.</li>
+        <li>Для інших пунктів повторіть із кроку 4.</li>
       </ol>
-      <p class="hint">Скидайте тільки те, що реально зробили. Дилер зазвичай скидає сам. Скинути можна і через центральний екран у налаштуваннях авто.</p>
+      <p class="hint">Дилер скидає показник сам після обслуговування. Якщо ТО робили не в дилера — скиньте самі: без скидання система покаже неправильні інтервали, а це може призвести до серйозних механічних проблем. Скинути можна також на центральному екрані, у Customized Features.</p>
     </div>
   </details>
 
   <details>
-    <summary>Правила за часом, а не за кодом</summary>
+    <summary>Правила з посібника поза кодами</summary>
     <div class="body">
       <ul>
-        <li><b>Масло</b> — щонайменше раз на 12 місяців, навіть якщо Oil Life ще високий.</li>
-        <li><b>Гальмівна рідина</b> — раз на 3 роки, навіть якщо код 7 не з'явився.</li>
-        <li><b>Клапани</b> регулюють під час будь-якого ТО, якщо вони чутно стукають.</li>
-        <li>Взимку, на коротких поїздках, у пробках і в горах ресурс масла падає швидше — це нормально.</li>
+        <li><b>Масло:</b> якщо індикатор і повідомлення Maintenance Minder не з'являлися понад 12 місяців після скидання — міняйте масло щороку.</li>
+        <li><b>Гальмівна рідина:</b> якщо індикатор не з'являвся понад 36 місяців після скидання пункту 7 — міняйте її раз на 3 роки.</li>
+        <li><b>Клапани:</b> якщо шумлять — регулюйте під час робіт A, B, 1, 2 або 3 (на канадських авто — A, 0, 9, 1, 2 або 3).</li>
+        <li><b>Запилені дороги:</b> повітряний фільтр двигуна — кожні 24 000 км (15 000 миль).</li>
+        <li><b>Місто з сажею в повітрі</b> (промисловість, дизельні авто): фільтр салону — кожні 24 000 км (15 000 миль).</li>
+        <li><b>Гори на дуже низькій швидкості або причеп:</b> рідина заднього диференціала — на 12 000 км (7 500 миль), далі кожні 24 000 км (15 000 миль).</li>
       </ul>
     </div>
   </details>
@@ -357,8 +374,9 @@
   </details>
 
   <footer>
-    Джерело: розділ «Maintenance Minder» посібника власника Acura RDX 2019+ (3-тє покоління) і
-    <a href="./acura_rdx_guide.html#maintenance-minder">наш посібник RDX</a>. Остаточний перелік робіт для вашого VIN уточнюйте в дилера.
+    Джерело — офіційний посібник власника Acura RDX 2024, розділ
+    <a href="https://owners.acura.com/utility/download?path=%2Fstatic%2Fpdfs%2F2024%2FRDX%2F2024_RDX_Maintenance_Minder_System.pdf" rel="noopener">Maintenance Minder™ (PDF, owners.acura.com)</a>.
+    Для RDX 2023 і 2025 таблиці кодів такі самі. Англійський текст під кожним пунктом — дослівно з посібника.
   </footer>
 </div>
 <div class="toast" id="toast" role="status"></div>
@@ -367,69 +385,77 @@
 (() => {
   'use strict';
 
-  // ---------- Data ----------
-  const OIL_STEPS = [100, 90, 80, 70, 60, 50, 40, 30, 20, 15, 10, 5, 0, -1]; // -1 = negative km
+  // ---------- Data (Acura RDX 2024 Owner's Manual, Maintenance Minder) ----------
+  const OIL_STEPS = [100, 90, 80, 70, 60, 50, 40, 30, 20, 15, 10, 5, 0, -1]; // -1 = negative distance
+  const CALC = { 100: '100–91', 90: '90–81', 80: '80–71', 70: '70–61', 60: '60–51', 50: '50–41', 40: '40–31',
+                 30: '30–21', 20: '20–16', 15: '15–11', 10: '10–6', 5: '5–1', 0: '0' };
 
-  const INSPECTIONS = [
-    'передні та задні гальма (колодки, диски)',
-    'регулювання стоянкового гальма',
-    'рульові тяги, рульовий механізм, пильники',
-    'елементи підвіски',
-    'пильники приводних валів (ШРУСів)',
-    'гальмівні шланги й трубки (з ABS/VSA)',
-    'рівень і стан усіх рідин',
-    'вихлопна система',
-    'паливні магістралі та з’єднання',
-    'термін придатності герметика в ремкомплекті шини'
-  ];
+  const FN = {
+    '*1': 'Якщо індикатор і повідомлення Maintenance Minder не з’являлися понад 12 місяців після скидання — міняйте моторне масло щороку.',
+    '*2': 'Якщо їздите в запилених умовах — міняйте повітряний фільтр двигуна кожні 24 000 км (15 000 миль).',
+    '*3': 'Якщо їздите переважно в містах із високою концентрацією сажі в повітрі (промисловість, дизельні авто) — міняйте фільтр салону кожні 24 000 км (15 000 миль).',
+    '*4': 'Їзда в горах на дуже низькій швидкості або з причепом дає рідині більше механічне (зсувне) навантаження, тож міняти її треба частіше, ніж підказує Maintenance Minder. Якщо ви регулярно так їздите — заміна на 12 000 км (7 500 миль), далі кожні 24 000 км (15 000 миль).',
+    '*5': 'Якщо індикатор не з’являвся понад 36 місяців після скидання пункту 7 — міняйте гальмівну рідину раз на 3 роки.',
+    '#': 'Див. інформацію про гарантію на обслуговування та систему зниження викидів (emissions warranty).'
+  };
 
+  // [українською, дослівно з посібника, [примітки]]
   const MAIN = {
-    A: {
-      title: 'Заміна моторного масла',
-      en: 'Replace engine oil',
-      items: ['Масло SAE 0W-20 (повна синтетика, Acura Genuine або API SP / ILSAC GF-6).'],
-      note: 'За регламентом фільтр на коді A не міняють — він іде на коді B. Багато СТО міняють його щоразу; це не шкодить і коштує недорого.'
-    },
-    B: {
-      title: 'Масло + масляний фільтр + огляд',
-      en: 'Replace engine oil and oil filter, inspect',
-      items: ['Масло SAE 0W-20 і новий масляний фільтр.'].concat(INSPECTIONS.map(s => 'Огляд: ' + s + '.')),
-      note: 'Це «повне» ТО з оглядом ходової та гальм.'
-    },
-    '0': {
-      title: 'Заміна масла + масляного фільтра',
-      en: 'Replace engine oil and oil filter (Canada)',
-      items: ['Масло SAE 0W-20 і новий масляний фільтр.'],
-      note: 'Канадський аналог B. Огляд гальм і ходової на канадських авто винесено в окремий код 9.'
-    }
+    A: { title: 'Заміна моторного масла', items: [
+      ['Замінити моторне масло', 'Replace engine oil', ['*1']]
+    ] },
+    B: { title: 'Масло + масляний фільтр + огляд', items: [
+      ['Замінити моторне масло і масляний фільтр', 'Replace engine oil and oil filter', ['*1']],
+      ['Перевірити передні й задні гальма', 'Inspect front and rear brakes'],
+      ['Перевірити термін придатності балона ремкомплекту шини (якщо є)', 'Check expiration date for Temporary Tire Repair Kit bottle (If equipped)'],
+      ['Перевірити наконечники рульових тяг, рульовий механізм і пильники', 'Inspect tie rod ends, steering gearbox, and boots'],
+      ['Перевірити елементи підвіски', 'Inspect suspension components'],
+      ['Перевірити пильники приводних валів', 'Inspect driveshaft boots'],
+      ['Перевірити гальмівні шланги й трубки (включно з ABS/VSA)', 'Inspect brake hoses and lines (Including ABS/VSA®)'],
+      ['Перевірити рівні та стан усіх рідин', 'Inspect all fluid levels and condition of fluids'],
+      ['Перевірити вихлопну систему', 'Inspect exhaust system', ['#']],
+      ['Перевірити паливні магістралі та з’єднання', 'Inspect fuel lines and connections', ['#']]
+    ] },
+    '0': { title: 'Масло + масляний фільтр', ca: true, items: [
+      ['Замінити моторне масло і масляний фільтр', 'Replace engine oil and oil filter', ['*1']]
+    ] }
   };
 
   const SUBS = {
-    1: { short: 'Ротація коліс', title: 'Перестановка (ротація) коліс', en: 'Rotate tires',
-         items: ['Переставити колеса за схемою (перед ↔ зад).', 'Перевірити тиск і знос шин.'],
-         note: 'Найчастіша цифра. Шиномонтаж може зробити це й окремо.' },
-    2: { short: 'Фільтри повітря', title: 'Повітряний фільтр двигуна + салонний фільтр', en: 'Replace air cleaner element, replace dust and pollen filter, inspect drive belt',
-         items: ['Замінити повітряний фільтр двигуна.', 'Замінити фільтр салону (пиловий / вугільний).', 'Перевірити привідний ремінь.'],
-         note: 'Обидва фільтри легко замінити самостійно за 15 хвилин. У запиленій місцевості — частіше.' },
-    3: { short: 'Рідина АКПП', title: 'Заміна рідини трансмісії', en: 'Replace transmission fluid (and transfer fluid)',
-         items: ['Замінити рідину 10-ступеневої АКПП — Acura ATF Type 3.1.', 'Замінити рідину роздавальної коробки (transfer) на SH-AWD.'],
-         note: 'Краще робити в дилера або на СТО, що знає Honda/Acura: потрібна саме ATF Type 3.1.' },
-    4: { short: 'Свічки', title: 'Свічки запалювання + клапани', en: 'Replace spark plugs, inspect valve clearance',
-         items: ['Замінити 4 іридієві свічки.', 'Перевірити теплові зазори клапанів.'],
-         note: 'Двигун 2.0T має ланцюг ГРМ, тож заміни ременя ГРМ і помпи (як у старих V6) тут немає.' },
-    5: { short: 'Антифриз', title: 'Заміна охолоджувальної рідини', en: 'Replace engine coolant',
-         items: ['Замінити антифриз — Acura Long Life Coolant Type 2 (синій).'],
-         note: 'Перша заміна зазвичай дуже нескоро (близько 190 тис. км).' },
-    6: { short: 'Задній диф', title: 'Масло заднього диференціала', en: 'Replace rear differential fluid',
-         items: ['Замінити рідину заднього редуктора SH-AWD — Acura Dual Pump Fluid II.'],
-         note: 'Актуально для вашої A-Spec Advance (SH-AWD). Не замінюйте звичайним трансмісійним маслом.' },
-    7: { short: 'Гальмівна рідина', title: 'Заміна гальмівної рідини', en: 'Replace brake fluid',
-         items: ['Замінити гальмівну рідину — DOT 3 (Acura Heavy Duty).'],
-         note: 'Якщо код 7 не з’явився за 3 роки — все одно міняйте за часом. DOT 5 заборонена.' },
-    9: { short: 'Гальма (Канада)', title: 'Обслуговування гальм і огляд ходової', en: 'Service front and rear brakes, inspect (Canada)',
-         items: INSPECTIONS.map(s => 'Огляд: ' + s + '.'),
-         note: 'Лише на канадських авто: це та частина коду B, якої немає в коді 0.',
-         ca: true }
+    1: { short: 'Ротація коліс', title: 'Ротація коліс', items: [
+      ['Переставити колеса (ротація шин)', 'Rotate tires']
+    ] },
+    2: { short: 'Фільтри повітря', title: 'Фільтри повітря + ремінь', items: [
+      ['Замінити повітряний фільтр двигуна', 'Replace air cleaner element', ['*2']],
+      ['Замінити фільтр салону', 'Replace dust and pollen filter', ['*3']],
+      ['Перевірити привідний ремінь', 'Inspect drive belt']
+    ] },
+    3: { short: 'Рідина АКПП', title: 'Рідина трансмісії', items: [
+      ['Замінити рідину трансмісії та роздавальної коробки', 'Replace transmission fluid and transfer fluid']
+    ] },
+    4: { short: 'Свічки', title: 'Свічки + клапани', items: [
+      ['Замінити свічки запалювання', 'Replace spark plugs'],
+      ['Перевірити теплові зазори клапанів', 'Inspect valve clearance']
+    ] },
+    5: { short: 'Антифриз', title: 'Охолоджувальна рідина', items: [
+      ['Замінити охолоджувальну рідину двигуна', 'Replace engine coolant']
+    ] },
+    6: { short: 'Задній диф', title: 'Рідина заднього диференціала', items: [
+      ['Замінити рідину заднього диференціала', 'Replace rear differential fluid', ['*4']]
+    ] },
+    7: { short: 'Гальмівна рідина', title: 'Гальмівна рідина', items: [
+      ['Замінити гальмівну рідину', 'Replace brake fluid', ['*5']]
+    ] },
+    9: { short: 'Гальма + огляд', title: 'Гальма + огляд ходової', ca: true, items: [
+      ['Обслужити передні й задні гальма', 'Service front and rear brakes'],
+      ['Перевірити наконечники рульових тяг, рульовий механізм і пильники', 'Inspect: Tie rod ends, steering gearbox, and boots'],
+      ['Перевірити елементи підвіски', 'Inspect: Suspension components'],
+      ['Перевірити пильники приводних валів', 'Inspect: Driveshaft boots'],
+      ['Перевірити гальмівні шланги й трубки (включно з ABS/VSA)', 'Inspect: Brake hoses and lines (including ABS/VSA®)'],
+      ['Перевірити рівні та стан усіх рідин', 'Inspect: All fluid levels and condition of fluids'],
+      ['Перевірити вихлопну систему', 'Inspect: Exhaust system', ['#']],
+      ['Перевірити паливні магістралі та з’єднання', 'Inspect: Fuel lines and connections', ['#']]
+    ] }
   };
 
   // ---------- State ----------
@@ -454,7 +480,8 @@
 
   function status() {
     const o = state.oil;
-    if (o === -1 || o === 0) return 'past';
+    if (o === -1) return 'past';
+    if (o === 0) return 'zero';
     if (o <= 5) return 'now';
     if (o <= 15) return 'soon';
     return 'ok';
@@ -504,14 +531,15 @@
 
   function buildRef() {
     const rows = [];
-    rows.push(['A', MAIN.A.title + '.']);
-    rows.push(['B', MAIN.B.title + ': гальма, ходова, рульове, рідини, вихлоп, паливні трубки.']);
-    rows.push(['0', MAIN['0'].title + ' (Канада, замість B).']);
-    Object.keys(SUBS).forEach(k => rows.push([k, SUBS[k].title + '.']));
+    ['A', 'B', '0'].forEach(k => rows.push([k, MAIN[k].items.map(i => i[0]).join('; ') + (MAIN[k].ca ? ' (Канада, замість B)' : '') + '.']));
+    Object.keys(SUBS).forEach(k => rows.push([k, SUBS[k].items.map(i => i[0]).join('; ') + (SUBS[k].ca ? ' (лише Канада)' : '') + '.']));
     $('refTable').querySelector('tbody').innerHTML =
       rows.map(r => `<tr><td class="c">${r[0]}</td><td>${esc(r[1])}</td></tr>`).join('');
+    const msg = v => v >= 20 ? '—' : v >= 10 ? 'Maintenance Due Soon' : v === 5 ? 'Maintenance Due Now' : '—';
+    $('oilTable').innerHTML = OIL_STEPS.filter(v => v >= 0).map(v =>
+      `<tr><td class="c">${v}%</td><td>${CALC[v]}%</td><td>${msg(v)}</td></tr>`).join('') +
+      '<tr><td class="c">−км</td><td>&lt; 0</td><td>Maintenance Past Due (після 10 км / 10 миль понад строк)</td></tr>';
   }
-
   // ---------- Render ----------
   function render() {
     // oil chips
@@ -541,7 +569,10 @@
     $('scrOil').textContent = oilLabel();
     $('scrCode').innerHTML = code ? esc(code) : '<span class="empty">код не вибрано</span>';
     const st = status();
-    $('scrMsg').textContent = { ok: '', soon: 'Maintenance Due Soon', now: 'Maintenance Due Now', past: 'Maintenance Past Due' }[st];
+    $('scrMsg').textContent = { ok: '', soon: 'Maintenance Due Soon', now: 'Maintenance Due Now', zero: '', past: 'Maintenance Past Due' }[st];
+    $('calcLine').innerHTML = state.oil === -1
+      ? 'Ресурс масла вичерпано: на дисплеї мінусовий пробіг.'
+      : `На дисплеї <b>${state.oil}%</b> — розрахунковий ресурс <b>${CALC[state.oil]}%</b>.`;
 
     renderVerdict(st, code, subs);
     renderTasks(subs);
@@ -551,57 +582,56 @@
   function renderVerdict(st, code, subs) {
     const v = $('verdict');
     const o = state.oil;
-    const mainWord = state.main === 'A' ? 'лише заміна масла' : 'масло з фільтром' + (state.main === 'B' ? ' і огляд' : '');
+    const mainWord = { A: 'заміна масла', B: 'масло з фільтром і огляд', '0': 'масло з фільтром' }[state.main] || '';
     const extra = subs.length ? ' + ' + subs.map(n => SUBS[n].short.toLowerCase()).join(', ') : '';
     const summary = `Наступне ТО — «${code}»: ${mainWord}${extra}.`;
+    const yearly = '<p>Навіть якщо повідомлення так і не з’явиться, масло міняють щонайменше раз на 12 місяців після скидання.</p>';
     let cls, tag, h, body;
 
     if (st === 'ok') {
-      cls = 'ok'; tag = 'Усе гаразд';
-      // ~8–12 тис. км на повний ресурс; рахуємо до порогу 15%
-      const lo = Math.round((o - 15) * 8) * 10, hi = Math.round((o - 15) * 12) * 10;
-      if (o === 100) {
-        h = 'Масло свіже. На сервіс поки не треба.';
-        body = `<p class="summary">${esc(summary)}</p>
-          <p>100% після ТО означає, що Maintenance Minder скинули. Код на екрані — це не те, що зробили, а те, що чекає <b>наступного разу</b>.</p>
-          <p>Попередження «Maintenance Due Soon» з'явиться при 15%. Орієнтовно це ${fmtKm(lo)}–${fmtKm(hi)} км залежно від стилю їзди, але не пізніше ніж за рік.</p>`;
-      } else {
-        h = `Ресурс масла ${o}%. Просто їздіть.`;
-        body = `<p class="summary">${esc(summary)}</p>
-          <p>До нагадування «Due Soon» (15%) ще приблизно ${fmtKm(lo)}–${fmtKm(hi)} км. Це груба оцінка: зимою й у місті ресурс падає швидше.</p>`;
-      }
+      cls = 'ok'; tag = 'Повідомлень немає';
+      h = o === 100 ? 'Масло свіже — на сервіс поки не треба.' : `Ресурс масла ${o}% — просто їздіть.`;
+      body = `<p class="summary">${esc(summary)}</p>
+        <p>Екран Maintenance показує коди робіт, які треба виконати <b>під час наступної заміни масла</b>.${o === 100 ? ' Тому одразу після ТО там 100% і код майбутнього візиту, а не того, що щойно зробили.' : ''}</p>
+        <p>Нагадування «Maintenance Due Soon» з’явиться, коли ресурс знизиться до 15%.</p>${yearly}`;
     } else if (st === 'soon') {
-      cls = 'warn'; tag = 'Due Soon';
-      h = 'Пора записатися на сервіс.';
+      cls = 'warn'; tag = 'Maintenance Due Soon';
+      h = 'Пора планувати сервіс.';
       body = `<p class="summary">${esc(summary)}</p>
-        <p>Залишилося ${o === 15 ? '15–6' : '10–6'}% ресурсу — орієнтовно кілька сотень — тисяча км. Запишіться найближчими тижнями.</p>`;
+        <p>Залишилося 15–6% ресурсу. Масло наближається до кінця строку служби, тож пункти обслуговування варто перевірити й виконати найближчим часом.</p>
+        <p>Повідомлення з’являється щоразу, коли вмикаєте живлення. Прибрати його можна, прокрутивши праве коліщатко.</p>`;
     } else if (st === 'now') {
-      cls = 'bad'; tag = 'Due Now';
-      h = 'Обслуговування потрібне зараз.';
+      cls = 'bad'; tag = 'Maintenance Due Now';
+      h = 'Обслуговування потрібне якнайшвидше.';
       body = `<p class="summary">${esc(summary)}</p>
-        <p>Ресурс 5–1%. Їхати на сервіс можна, але не відкладайте: робіть ТО в найближчі дні.</p>`;
+        <p>Залишилося 5–1% ресурсу. Масло майже вичерпалося, тож пункти обслуговування треба перевірити й виконати якомога швидше.</p>`;
+    } else if (st === 'zero') {
+      cls = 'bad'; tag = 'Ресурс 0%';
+      h = 'Ресурс масла вичерпано.';
+      body = `<p class="summary">${esc(summary)}</p>
+        <p>Ще трохи — і після 10 км (10 миль у версії для США) замість відсотків з’явиться мінусовий пробіг і повідомлення «Maintenance Past Due». Обслуговування потрібне негайно.</p>`;
     } else {
-      cls = 'bad'; tag = 'Past Due';
-      h = state.oil === -1 && state.neg ? `Прострочено на ${fmtKm(+state.neg)} км.` : 'Ресурс масла вичерпано.';
+      cls = 'bad'; tag = 'Maintenance Past Due';
+      h = state.neg ? `Прострочено на ${fmtKm(+state.neg)} км.` : 'Строк заміни масла минув.';
       body = `<p class="summary">${esc(summary)}</p>
-        <p>Масло вже відпрацювало. Обслуговування потрібне негайно — уникайте довгих поїздок і високих обертів до заміни.</p>`;
+        <p>Ресурс масла вичерпано. Пункти обслуговування треба перевірити й виконати негайно.</p>`;
     }
     v.className = 'verdict ' + cls;
-    v.innerHTML = `<span class="tag">${tag}</span><h2>${esc(h)}</h2>${body}`;
+    v.innerHTML = `<span class="tag">${esc(tag)}</span><h2>${esc(h)}</h2>${body}`;
   }
 
   function taskHTML(code, d, isSub) {
+    const fns = [];
+    d.items.forEach(it => (it[2] || []).forEach(f => { if (!fns.includes(f)) fns.push(f); }));
     return `<li class="task${isSub ? ' subtask' : ''}">
       <div class="code">${esc(code)}</div>
       <div>
         <h3>${esc(d.title)}</h3>
-        <div class="en">${esc(d.en)}</div>
-        <ul>${d.items.map(i => `<li>${esc(i)}</li>`).join('')}</ul>
-        ${d.note ? `<div class="note"><b>Порада:</b> ${esc(d.note)}</div>` : ''}
+        <ul>${d.items.map(it => `<li>${esc(it[0])}${(it[2] || []).map(f => `<sup>${esc(f)}</sup>`).join('')}<div class="en">${esc(it[1])}</div></li>`).join('')}</ul>
+        ${fns.map(f => `<div class="note"><b>${esc(f)}</b> ${esc(FN[f])}</div>`).join('')}
       </div>
     </li>`;
   }
-
   function renderTasks(subs) {
     const html = [];
     if (MAIN[state.main]) html.push(taskHTML(state.main, MAIN[state.main], false));
@@ -613,18 +643,17 @@
   function serviceText() {
     const subs = subList();
     const lines = [];
-    lines.push('Acura RDX 2024 (2.0T, SH-AWD) — Maintenance Minder');
-    lines.push(oilLabel() + ', код: ' + codeText(state.main, subs));
+    lines.push('Acura RDX 2024 — Maintenance Minder');
+    lines.push(oilLabel() + ', code: ' + codeText(state.main, subs));
     lines.push('');
     const add = (c, d) => {
-      lines.push(`${c} — ${d.title} / ${d.en}`);
-      d.items.forEach(i => lines.push('  • ' + i));
+      lines.push(`${c} — ${d.title}`);
+      d.items.forEach(i => lines.push(`  • ${i[1]} (${i[0]})`));
     };
     if (MAIN[state.main]) add(state.main, MAIN[state.main]);
     subs.forEach(n => add(n, SUBS[n]));
     return lines.join('\n');
   }
-
   function toast(msg) {
     const t = $('toast'); t.textContent = msg; t.classList.add('show');
     clearTimeout(toast._t); toast._t = setTimeout(() => t.classList.remove('show'), 1800);
