@@ -1,0 +1,722 @@
+<!doctype html>
+<html lang="uk">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Maintenance Minder RDX</title>
+<meta name="description" content="Декодер Maintenance Minder для Acura RDX 2024: введіть ресурс масла й коди з екрана Maintenance — і побачите, що саме треба зробити на сервісі.">
+<meta name="theme-color" content="#0f1115">
+<style>
+  :root {
+    --bg: #f4f4f1;
+    --surface: #ffffff;
+    --surface-2: #f0efeb;
+    --line: #dddbd4;
+    --text: #1b1c1f;
+    --muted: #63656b;
+    --accent: #c2410c;
+    --accent-soft: #fdeee4;
+    --ok: #15803d;
+    --ok-soft: #e7f5ec;
+    --warn: #b45309;
+    --warn-soft: #fdf3e1;
+    --bad: #b91c1c;
+    --bad-soft: #fdeaea;
+    --screen: #14101a;
+    --screen-text: #f4f1ea;
+    --screen-amber: #f5a524;
+    --radius: 14px;
+    color-scheme: light;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #0f1115;
+      --surface: #171a20;
+      --surface-2: #1e2229;
+      --line: #2c313a;
+      --text: #ecebe6;
+      --muted: #9a9ca3;
+      --accent: #fb923c;
+      --accent-soft: #2e1d12;
+      --ok: #4ade80;
+      --ok-soft: #12261a;
+      --warn: #fbbf24;
+      --warn-soft: #2a2110;
+      --bad: #f87171;
+      --bad-soft: #2c1414;
+      --screen: #0a080d;
+      color-scheme: dark;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #0f1115;
+    --surface: #171a20;
+    --surface-2: #1e2229;
+    --line: #2c313a;
+    --text: #ecebe6;
+    --muted: #9a9ca3;
+    --accent: #fb923c;
+    --accent-soft: #2e1d12;
+    --ok: #4ade80;
+    --ok-soft: #12261a;
+    --warn: #fbbf24;
+    --warn-soft: #2a2110;
+    --bad: #f87171;
+    --bad-soft: #2c1414;
+    --screen: #0a080d;
+    color-scheme: dark;
+  }
+
+  * { box-sizing: border-box; }
+  html { -webkit-text-size-adjust: 100%; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font: 16px/1.5 system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  }
+  a { color: var(--accent); }
+  .wrap { max-width: 760px; margin: 0 auto; padding: 16px 16px 48px; }
+
+  .crumbs { font-size: 14px; color: var(--muted); display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
+  .crumbs a { color: var(--muted); text-decoration: none; }
+  .crumbs a:hover { color: var(--accent); }
+  h1 { font-size: 26px; line-height: 1.2; margin: 10px 0 4px; letter-spacing: -0.01em; }
+  .lead { color: var(--muted); margin: 0 0 20px; }
+
+  /* ---------- Dashboard screen ---------- */
+  .screen {
+    background: radial-gradient(120% 90% at 50% 20%, #2a2030 0%, var(--screen) 70%);
+    color: var(--screen-text);
+    border-radius: 18px;
+    padding: 20px 16px 16px;
+    text-align: center;
+    box-shadow: inset 0 0 0 1px rgba(255,255,255,.06), 0 10px 30px rgba(0,0,0,.18);
+    position: sticky;
+    top: 8px;
+    z-index: 5;
+  }
+  .screen-title { font-size: 20px; font-weight: 600; letter-spacing: .02em; border-top: 2px solid rgba(255,255,255,.35); display: inline-block; padding-top: 6px; }
+  .screen-row { display: flex; align-items: center; justify-content: center; gap: 14px; margin-top: 10px; }
+  .screen svg { width: 54px; height: 30px; flex: none; }
+  .screen-oil { font-size: 26px; font-weight: 600; font-variant-numeric: tabular-nums; }
+  .screen-code { font-size: 28px; font-weight: 600; letter-spacing: .12em; min-height: 40px; margin-top: 2px; }
+  .screen-code .empty { opacity: .35; font-size: 16px; letter-spacing: 0; font-weight: 400; }
+  .screen-msg { margin-top: 4px; font-size: 14px; font-weight: 600; color: var(--screen-amber); min-height: 21px; }
+
+  /* ---------- Cards / inputs ---------- */
+  .card { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 16px; margin-top: 16px; }
+  .card h2 { font-size: 17px; margin: 0 0 4px; }
+  .hint { color: var(--muted); font-size: 14px; margin: 0 0 12px; }
+  .chips { display: flex; flex-wrap: wrap; gap: 8px; }
+  .chip {
+    appearance: none; border: 1px solid var(--line); background: var(--surface-2); color: var(--text);
+    font: inherit; font-weight: 600; font-variant-numeric: tabular-nums;
+    min-width: 52px; height: 44px; padding: 0 12px; border-radius: 10px; cursor: pointer;
+    transition: background .12s, border-color .12s, color .12s;
+  }
+  .chip:hover { border-color: var(--accent); }
+  .chip[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: #fff; }
+  .chip.big { min-width: 64px; height: 56px; font-size: 22px; }
+  .chip small { display: block; font-size: 10px; font-weight: 500; line-height: 1; margin-top: 2px; opacity: .8; }
+  .chip:focus-visible, .seg button:focus-visible, .btn:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+
+  .row { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; margin-top: 12px; }
+  .neg { display: none; margin-top: 12px; }
+  .neg.show { display: block; }
+  label.inline { font-size: 14px; color: var(--muted); }
+  input[type="number"], input[type="text"], input[type="date"] {
+    font: inherit; color: var(--text); background: var(--surface-2);
+    border: 1px solid var(--line); border-radius: 10px; height: 44px; padding: 0 12px; width: 140px;
+  }
+  input:focus { outline: 2px solid var(--accent); outline-offset: 1px; }
+
+  .seg { display: inline-flex; background: var(--surface-2); border: 1px solid var(--line); border-radius: 10px; padding: 3px; }
+  .seg button { appearance: none; border: 0; background: transparent; color: var(--muted); font: inherit; font-size: 14px; font-weight: 600; padding: 7px 12px; border-radius: 8px; cursor: pointer; }
+  .seg button[aria-pressed="true"] { background: var(--surface); color: var(--text); box-shadow: 0 1px 2px rgba(0,0,0,.12); }
+
+  .sub-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 8px; }
+  .sub {
+    appearance: none; text-align: left; display: flex; gap: 10px; align-items: center;
+    border: 1px solid var(--line); background: var(--surface-2); color: var(--text);
+    font: inherit; padding: 8px 10px; border-radius: 10px; cursor: pointer; min-height: 52px;
+  }
+  .sub b { font-size: 20px; width: 28px; height: 28px; display: grid; place-items: center; border-radius: 7px; background: var(--surface); border: 1px solid var(--line); flex: none; }
+  .sub span { font-size: 13px; line-height: 1.25; color: var(--muted); }
+  .sub[aria-pressed="true"] { border-color: var(--accent); background: var(--accent-soft); }
+  .sub[aria-pressed="true"] b { background: var(--accent); border-color: var(--accent); color: #fff; }
+  .sub[aria-pressed="true"] span { color: var(--text); }
+
+  .btn {
+    appearance: none; font: inherit; font-size: 14px; font-weight: 600; cursor: pointer;
+    border: 1px solid var(--line); background: var(--surface-2); color: var(--text);
+    height: 40px; padding: 0 14px; border-radius: 10px;
+  }
+  .btn.primary { background: var(--accent); border-color: var(--accent); color: #fff; }
+  .btn.ghost { background: transparent; }
+
+  /* ---------- Verdict ---------- */
+  .verdict { border-radius: var(--radius); padding: 16px; margin-top: 16px; border: 1px solid; }
+  .verdict.ok { background: var(--ok-soft); border-color: color-mix(in srgb, var(--ok) 35%, transparent); }
+  .verdict.warn { background: var(--warn-soft); border-color: color-mix(in srgb, var(--warn) 35%, transparent); }
+  .verdict.bad { background: var(--bad-soft); border-color: color-mix(in srgb, var(--bad) 35%, transparent); }
+  .verdict .tag { display: inline-block; font-size: 12px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; }
+  .verdict.ok .tag { color: var(--ok); }
+  .verdict.warn .tag { color: var(--warn); }
+  .verdict.bad .tag { color: var(--bad); }
+  .verdict h2 { font-size: 21px; margin: 4px 0 6px; line-height: 1.25; }
+  .verdict p { margin: 6px 0 0; }
+  .verdict .summary { font-weight: 600; }
+
+  /* ---------- Task list ---------- */
+  .tasks { list-style: none; padding: 0; margin: 12px 0 0; display: grid; gap: 10px; }
+  .task { border: 1px solid var(--line); border-radius: 12px; padding: 12px; background: var(--surface); display: grid; grid-template-columns: auto 1fr; gap: 12px; }
+  .task .code { width: 40px; height: 40px; border-radius: 10px; display: grid; place-items: center; font-weight: 800; font-size: 20px; background: var(--accent); color: #fff; }
+  .task.subtask .code { background: var(--surface-2); color: var(--text); border: 1px solid var(--line); }
+  .task h3 { font-size: 16px; margin: 0; line-height: 1.3; }
+  .task .en { font-size: 13px; color: var(--muted); margin-top: 2px; }
+  .task ul { margin: 8px 0 0; padding-left: 18px; }
+  .task li { margin: 2px 0; }
+  .task .note { font-size: 14px; color: var(--muted); margin-top: 8px; }
+  .task .note b { color: var(--text); }
+  .empty-state { color: var(--muted); font-size: 15px; margin: 8px 0 0; }
+
+  details { border: 1px solid var(--line); border-radius: var(--radius); background: var(--surface); margin-top: 12px; }
+  details > summary { cursor: pointer; padding: 14px 16px; font-weight: 600; list-style: none; display: flex; justify-content: space-between; gap: 12px; }
+  details > summary::-webkit-details-marker { display: none; }
+  details > summary::after { content: "+"; color: var(--muted); font-weight: 400; font-size: 20px; line-height: 1; }
+  details[open] > summary::after { content: "–"; }
+  details .body { padding: 0 16px 16px; }
+  details ol, details ul { padding-left: 20px; margin: 8px 0; }
+  details li { margin: 4px 0; }
+
+  table { width: 100%; border-collapse: collapse; font-size: 14px; }
+  th, td { text-align: left; padding: 8px 6px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  th { color: var(--muted); font-weight: 600; font-size: 13px; }
+  td.c { font-weight: 800; white-space: nowrap; }
+  .tbl-wrap { overflow-x: auto; }
+
+  .history { list-style: none; padding: 0; margin: 12px 0 0; }
+  .history li { display: flex; justify-content: space-between; gap: 10px; align-items: center; border-top: 1px solid var(--line); padding: 10px 0; font-size: 14px; }
+  .history li:first-child { border-top: 0; }
+  .history .h-main { display: flex; flex-wrap: wrap; gap: 4px 12px; align-items: baseline; }
+  .history .h-code { font-weight: 800; letter-spacing: .06em; }
+  .history .h-meta { color: var(--muted); }
+  .history button { appearance: none; border: 0; background: transparent; color: var(--muted); font: inherit; cursor: pointer; padding: 6px 8px; border-radius: 8px; }
+  .history button:hover { color: var(--bad); background: var(--bad-soft); }
+
+  .toast { position: fixed; left: 50%; bottom: 20px; transform: translateX(-50%) translateY(20px); background: var(--text); color: var(--bg); padding: 10px 16px; border-radius: 10px; font-size: 14px; opacity: 0; transition: .2s; pointer-events: none; z-index: 20; }
+  .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+  footer { color: var(--muted); font-size: 13px; margin-top: 28px; }
+
+  @media (max-width: 480px) {
+    h1 { font-size: 22px; }
+    .screen { padding: 14px 12px 12px; }
+    .screen-title { font-size: 16px; }
+    .screen-oil { font-size: 21px; }
+    .screen-code { font-size: 23px; min-height: 32px; }
+    .chip { min-width: 48px; padding: 0 10px; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <nav class="crumbs">
+    <a href="../../index.html">AI Pages</a><span>/</span>
+    <a href="./index.html">Транспорт</a><span>/</span>
+    <span>Maintenance Minder</span>
+  </nav>
+  <h1>Що хоче Acura? Декодер Maintenance Minder</h1>
+  <p class="lead">Acura RDX 2024 A-Spec Advance (2.0T, SH-AWD). Натисніть те, що бачите на екрані <b>Maintenance</b>, — нижче з'явиться перелік робіт.</p>
+
+  <!-- Dashboard mirror -->
+  <div class="screen" aria-live="polite">
+    <div class="screen-title">Maintenance</div>
+    <div class="screen-row">
+      <svg viewBox="0 0 60 32" aria-hidden="true">
+        <path d="M4 10 L14 8 L18 12 L40 12 L52 6 L54 8 L42 22 L18 22 L14 16 L4 14 Z" fill="none" stroke="#f4f1ea" stroke-width="1.6" stroke-linejoin="round"/>
+        <path d="M18 15 L42 15 L42 21 L18 21 Z" fill="#f5a524"/>
+        <path d="M26 12 V8 M22 8 H30" stroke="#f4f1ea" stroke-width="1.6"/>
+        <path d="M54 12 q-2 4 0 6 q2 -2 0 -6 Z" fill="#f5a524"/>
+      </svg>
+      <div class="screen-oil" id="scrOil">Oil Life: 100%</div>
+    </div>
+    <div class="screen-code" id="scrCode">A</div>
+    <div class="screen-msg" id="scrMsg"></div>
+  </div>
+
+  <!-- Oil life -->
+  <section class="card">
+    <h2>1. Oil Life — скільки відсотків?</h2>
+    <p class="hint">Дисплей показує лише такі значення: десятками до 20%, далі 15, 10, 5, 0. Після 0% замість відсотків з'являється мінусовий пробіг.</p>
+    <div class="chips" id="oilChips" role="group" aria-label="Ресурс масла"></div>
+    <div class="neg" id="negBox">
+      <div class="row">
+        <label class="inline" for="negKm">Скільки км у мінусі?</label>
+        <input id="negKm" type="number" inputmode="numeric" min="1" max="99999" placeholder="напр. 350">
+        <span class="hint" style="margin:0">км</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- Main code -->
+  <section class="card">
+    <h2>2. Головна літера</h2>
+    <p class="hint">Завжди одна. <span id="specHint"></span></p>
+    <div class="row" style="margin-top:0;margin-bottom:12px">
+      <span class="inline hint" style="margin:0">Специфікація авто:</span>
+      <div class="seg" role="group" aria-label="Специфікація">
+        <button type="button" data-spec="us" aria-pressed="true">США (A / B)</button>
+        <button type="button" data-spec="ca" aria-pressed="false">Канада (A / 0)</button>
+      </div>
+    </div>
+    <div class="chips" id="mainChips" role="group" aria-label="Головний код"></div>
+  </section>
+
+  <!-- Sub codes -->
+  <section class="card">
+    <h2>3. Цифри поруч із літерою</h2>
+    <p class="hint">Може не бути жодної, а може бути кілька (напр. <b>B 1 2</b>). Позначте всі, які бачите.</p>
+    <div class="sub-grid" id="subChips" role="group" aria-label="Субкоди"></div>
+  </section>
+
+  <!-- Result -->
+  <div id="verdict" class="verdict ok" aria-live="polite"></div>
+
+  <section class="card">
+    <div style="display:flex;justify-content:space-between;gap:10px;align-items:center;flex-wrap:wrap">
+      <h2 style="margin:0">Що зробити на сервісі</h2>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <button class="btn" type="button" id="copyBtn">Скопіювати для СТО</button>
+        <button class="btn ghost" type="button" id="linkBtn">Посилання</button>
+      </div>
+    </div>
+    <ul class="tasks" id="tasks"></ul>
+  </section>
+
+  <!-- History -->
+  <section class="card">
+    <h2>Мій журнал</h2>
+    <p class="hint">Записуйте, що показувала машина, щоб наступного разу порівняти. Зберігається лише в цьому браузері.</p>
+    <div class="row" style="margin-top:0">
+      <input id="hDate" type="date" aria-label="Дата">
+      <input id="hKm" type="number" inputmode="numeric" placeholder="Пробіг, км" aria-label="Пробіг, км">
+      <button class="btn primary" type="button" id="hAdd">Записати поточне</button>
+    </div>
+    <ul class="history" id="history"></ul>
+  </section>
+
+  <!-- Reference -->
+  <details>
+    <summary>Як відкрити екран Maintenance</summary>
+    <div class="body">
+      <ol>
+        <li>Увімкніть запалення (кнопка <b>ENGINE START/STOP</b>, двигун можна не заводити).</li>
+        <li>На кермі праворуч — <b>коліщатко-селектор</b>. Натисніть його, щоб на панелі з'явилося меню інформаційних екранів.</li>
+        <li>Прокручуйте коліщатко, поки не з'явиться екран <b>Maintenance</b> з іконкою мастильниці.</li>
+        <li>Там буде <b>Oil Life: XX%</b> і під ним код — літера та, можливо, цифри.</li>
+      </ol>
+      <p class="hint">Код на екрані — це роботи для <b>наступного</b> ТО. Тому одразу після сервісу видно 100% і код майбутнього візиту.</p>
+    </div>
+  </details>
+
+  <details>
+    <summary>Як скинути Maintenance Minder після ТО</summary>
+    <div class="body">
+      <ol>
+        <li>Запалення в <b>ON</b>, відкрийте екран <b>Maintenance</b> (див. вище).</li>
+        <li>Натисніть і тримайте праве коліщатко приблизно <b>10 секунд</b> — з'явиться режим скидання.</li>
+        <li>Прокруткою оберіть конкретний пункт або <b>All Due Items</b>.</li>
+        <li>Натисніть коліщатко, щоб підтвердити. Для інших пунктів повторіть.</li>
+      </ol>
+      <p class="hint">Скидайте тільки те, що реально зробили. Дилер зазвичай скидає сам. Скинути можна і через центральний екран у налаштуваннях авто.</p>
+    </div>
+  </details>
+
+  <details>
+    <summary>Правила за часом, а не за кодом</summary>
+    <div class="body">
+      <ul>
+        <li><b>Масло</b> — щонайменше раз на 12 місяців, навіть якщо Oil Life ще високий.</li>
+        <li><b>Гальмівна рідина</b> — раз на 3 роки, навіть якщо код 7 не з'явився.</li>
+        <li><b>Клапани</b> регулюють під час будь-якого ТО, якщо вони чутно стукають.</li>
+        <li>Взимку, на коротких поїздках, у пробках і в горах ресурс масла падає швидше — це нормально.</li>
+      </ul>
+    </div>
+  </details>
+
+  <details>
+    <summary>Усі коди однією таблицею</summary>
+    <div class="body tbl-wrap">
+      <table id="refTable">
+        <thead><tr><th>Код</th><th>Що робити</th></tr></thead>
+        <tbody></tbody>
+      </table>
+    </div>
+  </details>
+
+  <footer>
+    Джерело: розділ «Maintenance Minder» посібника власника Acura RDX 2019+ (3-тє покоління) і
+    <a href="./acura_rdx_guide.html#maintenance-minder">наш посібник RDX</a>. Остаточний перелік робіт для вашого VIN уточнюйте в дилера.
+  </footer>
+</div>
+<div class="toast" id="toast" role="status"></div>
+
+<script>
+(() => {
+  'use strict';
+
+  // ---------- Data ----------
+  const OIL_STEPS = [100, 90, 80, 70, 60, 50, 40, 30, 20, 15, 10, 5, 0, -1]; // -1 = negative km
+
+  const INSPECTIONS = [
+    'передні та задні гальма (колодки, диски)',
+    'регулювання стоянкового гальма',
+    'рульові тяги, рульовий механізм, пильники',
+    'елементи підвіски',
+    'пильники приводних валів (ШРУСів)',
+    'гальмівні шланги й трубки (з ABS/VSA)',
+    'рівень і стан усіх рідин',
+    'вихлопна система',
+    'паливні магістралі та з’єднання',
+    'термін придатності герметика в ремкомплекті шини'
+  ];
+
+  const MAIN = {
+    A: {
+      title: 'Заміна моторного масла',
+      en: 'Replace engine oil',
+      items: ['Масло SAE 0W-20 (повна синтетика, Acura Genuine або API SP / ILSAC GF-6).'],
+      note: 'За регламентом фільтр на коді A не міняють — він іде на коді B. Багато СТО міняють його щоразу; це не шкодить і коштує недорого.'
+    },
+    B: {
+      title: 'Масло + масляний фільтр + огляд',
+      en: 'Replace engine oil and oil filter, inspect',
+      items: ['Масло SAE 0W-20 і новий масляний фільтр.'].concat(INSPECTIONS.map(s => 'Огляд: ' + s + '.')),
+      note: 'Це «повне» ТО з оглядом ходової та гальм.'
+    },
+    '0': {
+      title: 'Заміна масла + масляного фільтра',
+      en: 'Replace engine oil and oil filter (Canada)',
+      items: ['Масло SAE 0W-20 і новий масляний фільтр.'],
+      note: 'Канадський аналог B. Огляд гальм і ходової на канадських авто винесено в окремий код 9.'
+    }
+  };
+
+  const SUBS = {
+    1: { short: 'Ротація коліс', title: 'Перестановка (ротація) коліс', en: 'Rotate tires',
+         items: ['Переставити колеса за схемою (перед ↔ зад).', 'Перевірити тиск і знос шин.'],
+         note: 'Найчастіша цифра. Шиномонтаж може зробити це й окремо.' },
+    2: { short: 'Фільтри повітря', title: 'Повітряний фільтр двигуна + салонний фільтр', en: 'Replace air cleaner element, replace dust and pollen filter, inspect drive belt',
+         items: ['Замінити повітряний фільтр двигуна.', 'Замінити фільтр салону (пиловий / вугільний).', 'Перевірити привідний ремінь.'],
+         note: 'Обидва фільтри легко замінити самостійно за 15 хвилин. У запиленій місцевості — частіше.' },
+    3: { short: 'Рідина АКПП', title: 'Заміна рідини трансмісії', en: 'Replace transmission fluid (and transfer fluid)',
+         items: ['Замінити рідину 10-ступеневої АКПП — Acura ATF Type 3.1.', 'Замінити рідину роздавальної коробки (transfer) на SH-AWD.'],
+         note: 'Краще робити в дилера або на СТО, що знає Honda/Acura: потрібна саме ATF Type 3.1.' },
+    4: { short: 'Свічки', title: 'Свічки запалювання + клапани', en: 'Replace spark plugs, inspect valve clearance',
+         items: ['Замінити 4 іридієві свічки.', 'Перевірити теплові зазори клапанів.'],
+         note: 'Двигун 2.0T має ланцюг ГРМ, тож заміни ременя ГРМ і помпи (як у старих V6) тут немає.' },
+    5: { short: 'Антифриз', title: 'Заміна охолоджувальної рідини', en: 'Replace engine coolant',
+         items: ['Замінити антифриз — Acura Long Life Coolant Type 2 (синій).'],
+         note: 'Перша заміна зазвичай дуже нескоро (близько 190 тис. км).' },
+    6: { short: 'Задній диф', title: 'Масло заднього диференціала', en: 'Replace rear differential fluid',
+         items: ['Замінити рідину заднього редуктора SH-AWD — Acura Dual Pump Fluid II.'],
+         note: 'Актуально для вашої A-Spec Advance (SH-AWD). Не замінюйте звичайним трансмісійним маслом.' },
+    7: { short: 'Гальмівна рідина', title: 'Заміна гальмівної рідини', en: 'Replace brake fluid',
+         items: ['Замінити гальмівну рідину — DOT 3 (Acura Heavy Duty).'],
+         note: 'Якщо код 7 не з’явився за 3 роки — все одно міняйте за часом. DOT 5 заборонена.' },
+    9: { short: 'Гальма (Канада)', title: 'Обслуговування гальм і огляд ходової', en: 'Service front and rear brakes, inspect (Canada)',
+         items: INSPECTIONS.map(s => 'Огляд: ' + s + '.'),
+         note: 'Лише на канадських авто: це та частина коду B, якої немає в коді 0.',
+         ca: true }
+  };
+
+  // ---------- State ----------
+  const state = { oil: 100, neg: '', main: 'A', subs: new Set(), spec: 'us' };
+
+  const store = {
+    get(k, d) { try { const v = localStorage.getItem(k); return v == null ? d : JSON.parse(v); } catch (e) { return d; } },
+    set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) { /* ignore */ } }
+  };
+
+  // ---------- Helpers ----------
+  const $ = id => document.getElementById(id);
+  const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+  const subList = () => [...state.subs].sort((a, b) => a - b);
+  const codeText = (main, subs) => [main].concat(subs).filter(x => x !== '' && x != null).join(' ');
+  const fmtKm = n => n.toLocaleString('uk-UA').replace(/ /g, ' ');
+
+  function oilLabel() {
+    if (state.oil === -1) return state.neg ? '−' + fmtKm(+state.neg) + ' km' : '−… km';
+    return 'Oil Life: ' + state.oil + '%';
+  }
+
+  function status() {
+    const o = state.oil;
+    if (o === -1 || o === 0) return 'past';
+    if (o <= 5) return 'now';
+    if (o <= 15) return 'soon';
+    return 'ok';
+  }
+
+  // ---------- Build controls ----------
+  function buildOil() {
+    const box = $('oilChips');
+    box.innerHTML = OIL_STEPS.map(v => {
+      const label = v === -1 ? '−км' : v + '%';
+      return `<button type="button" class="chip" data-oil="${v}" aria-pressed="false">${label}</button>`;
+    }).join('');
+    box.addEventListener('click', e => {
+      const b = e.target.closest('[data-oil]'); if (!b) return;
+      state.oil = +b.dataset.oil; render();
+      if (state.oil === -1) $('negKm').focus();
+    });
+    $('negKm').addEventListener('input', e => { state.neg = e.target.value.replace(/\D/g, '').slice(0, 5); render(); });
+  }
+
+  function buildMain() {
+    const box = $('mainChips');
+    box.addEventListener('click', e => {
+      const b = e.target.closest('[data-main]'); if (!b) return;
+      state.main = b.dataset.main; render();
+    });
+    document.querySelectorAll('[data-spec]').forEach(b => b.addEventListener('click', () => {
+      setSpec(b.dataset.spec); render();
+    }));
+  }
+
+  function setSpec(spec) {
+    state.spec = spec === 'ca' ? 'ca' : 'us';
+    if (state.spec === 'us') { if (state.main === '0') state.main = 'B'; state.subs.delete(9); }
+    else if (state.main === 'B') state.main = '0';
+    store.set('mm.spec', state.spec);
+  }
+
+  function buildSubs() {
+    $('subChips').addEventListener('click', e => {
+      const b = e.target.closest('[data-sub]'); if (!b) return;
+      const n = +b.dataset.sub;
+      state.subs.has(n) ? state.subs.delete(n) : state.subs.add(n);
+      render();
+    });
+  }
+
+  function buildRef() {
+    const rows = [];
+    rows.push(['A', MAIN.A.title + '.']);
+    rows.push(['B', MAIN.B.title + ': гальма, ходова, рульове, рідини, вихлоп, паливні трубки.']);
+    rows.push(['0', MAIN['0'].title + ' (Канада, замість B).']);
+    Object.keys(SUBS).forEach(k => rows.push([k, SUBS[k].title + '.']));
+    $('refTable').querySelector('tbody').innerHTML =
+      rows.map(r => `<tr><td class="c">${r[0]}</td><td>${esc(r[1])}</td></tr>`).join('');
+  }
+
+  // ---------- Render ----------
+  function render() {
+    // oil chips
+    document.querySelectorAll('[data-oil]').forEach(b => b.setAttribute('aria-pressed', String(+b.dataset.oil === state.oil)));
+    $('negBox').classList.toggle('show', state.oil === -1);
+    if ($('negKm').value !== state.neg) $('negKm').value = state.neg;
+
+    // spec
+    document.querySelectorAll('[data-spec]').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.spec === state.spec)));
+    const mains = state.spec === 'ca' ? ['A', '0'] : ['A', 'B'];
+    $('mainChips').innerHTML = mains.map(m =>
+      `<button type="button" class="chip big" data-main="${m}" aria-pressed="${state.main === m}">${m}<small>${m === 'A' ? 'масло' : 'масло+фільтр'}</small></button>`
+    ).join('');
+    $('specHint').textContent = state.spec === 'ca'
+      ? 'Канадські авто показують 0 замість B і мають додаткову цифру 9.'
+      : 'Якщо бачите «0» замість «B» — у вас канадська версія, перемкніть нижче.';
+
+    // subs
+    const subKeys = Object.keys(SUBS).map(Number).filter(n => state.spec === 'ca' || !SUBS[n].ca);
+    $('subChips').innerHTML = subKeys.map(n =>
+      `<button type="button" class="sub" data-sub="${n}" aria-pressed="${state.subs.has(n)}"><b>${n}</b><span>${esc(SUBS[n].short)}</span></button>`
+    ).join('');
+
+    // screen
+    const subs = subList();
+    const code = codeText(state.main, subs);
+    $('scrOil').textContent = oilLabel();
+    $('scrCode').innerHTML = code ? esc(code) : '<span class="empty">код не вибрано</span>';
+    const st = status();
+    $('scrMsg').textContent = { ok: '', soon: 'Maintenance Due Soon', now: 'Maintenance Due Now', past: 'Maintenance Past Due' }[st];
+
+    renderVerdict(st, code, subs);
+    renderTasks(subs);
+    writeHash(code);
+  }
+
+  function renderVerdict(st, code, subs) {
+    const v = $('verdict');
+    const o = state.oil;
+    const mainWord = state.main === 'A' ? 'лише заміна масла' : 'масло з фільтром' + (state.main === 'B' ? ' і огляд' : '');
+    const extra = subs.length ? ' + ' + subs.map(n => SUBS[n].short.toLowerCase()).join(', ') : '';
+    const summary = `Наступне ТО — «${code}»: ${mainWord}${extra}.`;
+    let cls, tag, h, body;
+
+    if (st === 'ok') {
+      cls = 'ok'; tag = 'Усе гаразд';
+      // ~8–12 тис. км на повний ресурс; рахуємо до порогу 15%
+      const lo = Math.round((o - 15) * 8) * 10, hi = Math.round((o - 15) * 12) * 10;
+      if (o === 100) {
+        h = 'Масло свіже. На сервіс поки не треба.';
+        body = `<p class="summary">${esc(summary)}</p>
+          <p>100% після ТО означає, що Maintenance Minder скинули. Код на екрані — це не те, що зробили, а те, що чекає <b>наступного разу</b>.</p>
+          <p>Попередження «Maintenance Due Soon» з'явиться при 15%. Орієнтовно це ${fmtKm(lo)}–${fmtKm(hi)} км залежно від стилю їзди, але не пізніше ніж за рік.</p>`;
+      } else {
+        h = `Ресурс масла ${o}%. Просто їздіть.`;
+        body = `<p class="summary">${esc(summary)}</p>
+          <p>До нагадування «Due Soon» (15%) ще приблизно ${fmtKm(lo)}–${fmtKm(hi)} км. Це груба оцінка: зимою й у місті ресурс падає швидше.</p>`;
+      }
+    } else if (st === 'soon') {
+      cls = 'warn'; tag = 'Due Soon';
+      h = 'Пора записатися на сервіс.';
+      body = `<p class="summary">${esc(summary)}</p>
+        <p>Залишилося ${o === 15 ? '15–6' : '10–6'}% ресурсу — орієнтовно кілька сотень — тисяча км. Запишіться найближчими тижнями.</p>`;
+    } else if (st === 'now') {
+      cls = 'bad'; tag = 'Due Now';
+      h = 'Обслуговування потрібне зараз.';
+      body = `<p class="summary">${esc(summary)}</p>
+        <p>Ресурс 5–1%. Їхати на сервіс можна, але не відкладайте: робіть ТО в найближчі дні.</p>`;
+    } else {
+      cls = 'bad'; tag = 'Past Due';
+      h = state.oil === -1 && state.neg ? `Прострочено на ${fmtKm(+state.neg)} км.` : 'Ресурс масла вичерпано.';
+      body = `<p class="summary">${esc(summary)}</p>
+        <p>Масло вже відпрацювало. Обслуговування потрібне негайно — уникайте довгих поїздок і високих обертів до заміни.</p>`;
+    }
+    v.className = 'verdict ' + cls;
+    v.innerHTML = `<span class="tag">${tag}</span><h2>${esc(h)}</h2>${body}`;
+  }
+
+  function taskHTML(code, d, isSub) {
+    return `<li class="task${isSub ? ' subtask' : ''}">
+      <div class="code">${esc(code)}</div>
+      <div>
+        <h3>${esc(d.title)}</h3>
+        <div class="en">${esc(d.en)}</div>
+        <ul>${d.items.map(i => `<li>${esc(i)}</li>`).join('')}</ul>
+        ${d.note ? `<div class="note"><b>Порада:</b> ${esc(d.note)}</div>` : ''}
+      </div>
+    </li>`;
+  }
+
+  function renderTasks(subs) {
+    const html = [];
+    if (MAIN[state.main]) html.push(taskHTML(state.main, MAIN[state.main], false));
+    subs.forEach(n => html.push(taskHTML(n, SUBS[n], true)));
+    $('tasks').innerHTML = html.join('') || '<p class="empty-state">Виберіть код вище.</p>';
+  }
+
+  // ---------- Copy / link ----------
+  function serviceText() {
+    const subs = subList();
+    const lines = [];
+    lines.push('Acura RDX 2024 (2.0T, SH-AWD) — Maintenance Minder');
+    lines.push(oilLabel() + ', код: ' + codeText(state.main, subs));
+    lines.push('');
+    const add = (c, d) => {
+      lines.push(`${c} — ${d.title} / ${d.en}`);
+      d.items.forEach(i => lines.push('  • ' + i));
+    };
+    if (MAIN[state.main]) add(state.main, MAIN[state.main]);
+    subs.forEach(n => add(n, SUBS[n]));
+    return lines.join('\n');
+  }
+
+  function toast(msg) {
+    const t = $('toast'); t.textContent = msg; t.classList.add('show');
+    clearTimeout(toast._t); toast._t = setTimeout(() => t.classList.remove('show'), 1800);
+  }
+
+  async function copy(text, ok) {
+    try { await navigator.clipboard.writeText(text); toast(ok); }
+    catch (e) {
+      const ta = document.createElement('textarea'); ta.value = text; document.body.appendChild(ta); ta.select();
+      try { document.execCommand('copy'); toast(ok); } catch (e2) { toast('Не вдалося скопіювати'); }
+      ta.remove();
+    }
+  }
+
+  $('copyBtn').addEventListener('click', () => copy(serviceText(), 'Перелік робіт скопійовано'));
+  $('linkBtn').addEventListener('click', () => copy(location.href, 'Посилання скопійовано'));
+
+  // ---------- URL hash: #oil=100&code=A13&spec=us ----------
+  function writeHash() {
+    const oil = state.oil === -1 ? 'neg' + (state.neg || '') : String(state.oil);
+    const h = `#oil=${oil}&code=${state.main}${subList().join('')}&spec=${state.spec}`;
+    if (location.hash !== h) history.replaceState(null, '', h);
+  }
+
+  function readHash() {
+    const p = new URLSearchParams(location.hash.slice(1));
+    if (![...p.keys()].length) return false;
+    if (p.get('spec')) state.spec = p.get('spec') === 'ca' ? 'ca' : 'us';
+    const oil = p.get('oil') || '';
+    if (oil.startsWith('neg')) { state.oil = -1; state.neg = oil.slice(3).replace(/\D/g, '').slice(0, 5); }
+    else if (OIL_STEPS.includes(+oil) && oil !== '') state.oil = +oil;
+    const code = (p.get('code') || '').toUpperCase();
+    if (/^[AB0]/.test(code)) {
+      state.main = code[0];
+      state.subs = new Set([...code.slice(1)].map(Number).filter(n => SUBS[n]));
+    }
+    setSpec(state.spec);
+    return true;
+  }
+
+  // ---------- History ----------
+  function renderHistory() {
+    const list = store.get('mm.history', []);
+    $('history').innerHTML = list.length ? list.map((r, i) => `
+      <li>
+        <div class="h-main">
+          <span class="h-code">${esc(r.code)}</span>
+          <span>${esc(r.oil)}</span>
+          <span class="h-meta">${esc(r.date || '')}${r.km ? ' · ' + esc(fmtKm(+r.km)) + ' км' : ''}</span>
+        </div>
+        <span style="display:flex;gap:2px">
+          <button type="button" data-load="${i}" title="Показати">Показати</button>
+          <button type="button" data-del="${i}" aria-label="Видалити запис">✕</button>
+        </span>
+      </li>`).join('') : '<li class="h-meta">Поки порожньо.</li>';
+  }
+
+  $('history').addEventListener('click', e => {
+    const list = store.get('mm.history', []);
+    const del = e.target.closest('[data-del]');
+    const load = e.target.closest('[data-load]');
+    if (del) { list.splice(+del.dataset.del, 1); store.set('mm.history', list); renderHistory(); }
+    if (load) {
+      const r = list[+load.dataset.load]; if (!r || !r.hash) return;
+      history.replaceState(null, '', r.hash); state.subs = new Set(); readHash(); render();
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  });
+
+  $('hAdd').addEventListener('click', () => {
+    const list = store.get('mm.history', []);
+    list.unshift({
+      date: $('hDate').value,
+      km: $('hKm').value.replace(/\D/g, ''),
+      oil: oilLabel(),
+      code: codeText(state.main, subList()),
+      hash: location.hash
+    });
+    store.set('mm.history', list.slice(0, 50));
+    $('hKm').value = '';
+    renderHistory(); toast('Записано');
+  });
+
+  // ---------- Init ----------
+  state.spec = store.get('mm.spec', 'us');
+  readHash();
+  setSpec(state.spec);
+  try { $('hDate').value = new Date().toISOString().slice(0, 10); } catch (e) { /* ignore */ }
+  buildOil(); buildMain(); buildSubs(); buildRef();
+  render(); renderHistory();
+  window.addEventListener('hashchange', () => { state.subs = new Set(); readHash(); render(); });
+})();
+</script>
+</body>
+</html>
